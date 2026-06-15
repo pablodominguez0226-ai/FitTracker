@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+
+# Env / secrets
+.env
+*.env
+.env.local
+.env.production
+.env.development
+
+# Database / user data
+data/
+backend/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads / private files
+uploads/
+photos/
+backend/uploads/
+backend/photos/
+frontend/public/uploads/
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Docker temporary
+*.pid
+*.err
+backend.err

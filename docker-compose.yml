@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - FITTRACKER_SECRET_KEY=${FITTRACKER_SECRET_KEY:?Configura FITTRACKER_SECRET_KEY antes de iniciar FitTracker}
+      - FITTRACKER_TOKEN_EXPIRE_MINUTES=${FITTRACKER_TOKEN_EXPIRE_MINUTES:-480}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health').read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
