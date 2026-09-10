@@ -1,91 +1,55 @@
-# FitTracker
+# FitTracker - Dark Purple Iron Edition
 
-Aplicación personal estilo Strong App para registrar entrenamientos, progresión, medidas corporales, fotos y récords personales.
+Aplicación personal de alto rendimiento para registrar entrenamientos en el gimnasio, enfocado 100% en **Grupos Musculares**, **Cargas de Peso**, **Series & Repeticiones** y **Récords Personales (PR)** con una interfaz optimizada *"Dark Purple Iron"*.
 
-## Stack
+## Stack Tecnológico
 
-- Frontend: React 19, Vite, TailwindCSS, React Router, Axios, Recharts
-- Backend: Python 3.12, FastAPI, SQLAlchemy, Pydantic, Uvicorn
-- Base de datos: SQLite
-- Infraestructura: Docker, Docker Compose, Nginx
+- **Frontend**: React 19, Vite, TailwindCSS (Dark Purple Iron Theme), Lucide Icons, Axios, React Router.
+- **Backend**: Python 3.12, FastAPI, SQLAlchemy 2.0, Pydantic v2, Uvicorn.
+- **Base de datos**: SQLite persistente en `./data/fittracker.db`.
+- **Infraestructura**: Docker Compose y Nginx Reverse Proxy.
 
-## Desarrollo local
+## Jerarquía de Datos Simplificada
+
+1. **`MuscleGroup`**: Grupos musculares principales (Pecho, Espalda, Pierna, Hombro, Brazos, Core).
+2. **`Exercise`**: Ejercicios vinculados directamente a un grupo muscular (`muscle_group_id`).
+3. **`WorkoutSession`**: Sesión de entrenamiento por fecha con notas opcionales.
+4. **`WorkoutSet`**: Serie registrada con número de serie, peso (kg), repeticiones y estado completado.
+
+## Endpoints de la API (`/api`)
+
+- `GET /api/muscle-groups` & `POST /api/muscle-groups`: Listar y crear grupos musculares al instante.
+- `GET /api/exercises?muscle_group_id=...` & `POST /api/exercises`: Listar ejercicios por músculo y agregar nuevos en 1 clic.
+- `POST /api/workouts`: Guardar sesión de entrenamiento con sus series y cargas.
+- `GET /api/workouts`: Consultar historial de sesiones guardadas.
+- `GET /api/records`: Consultar el récord personal (PR) y el último peso levantado por ejercicio como referencia de superación.
+- `GET /api/health`: Chequeo de estado para Docker healthcheck.
+
+## Flujo de Usuario en el Gimnasio
+
+1. **Pantalla Principal (Entrenar)**:
+   - Vista limpia de la fecha actual.
+   - Selector visual táctil de Grupo Muscular (tarjetas con glow morado).
+   - Botón rápido `+ Músculo` para dar de alta nuevos grupos en cualquier momento.
+2. **Selección y Creación Rápida de Ejercicios**:
+   - Muestra los ejercicios del grupo seleccionado con 1 toque para sumar a la sesión.
+   - Input rápido con botón `+ Ejercicio` para crear y añadir ejercicios sin salir de pantalla.
+3. **Registro de Cargas (In-Workout)**:
+   - Tarjetas por ejercicio con visualización destacada de **PR** y **Último peso**.
+   - Tabla clara: `[Set #] | [Peso (kg)] | [Reps] | [Botón Check/Listo]`.
+   - Botón táctil `+ Agregar Serie`: auto-rellena con el peso y repeticiones de la serie previa para máxima velocidad de registro entre descansos.
+4. **Cierre de Sesión**:
+   - Resumen en tiempo real (volumen total en kg, series completadas).
+   - Notas opcionales del día y guardado definitivo de la sesión.
+
+## Despliegue con Docker Compose
 
 ```bash
-cd fittracker
 docker compose up -d --build
 ```
 
-Abrir `http://localhost`.
+La aplicación queda disponible en `http://localhost`.
 
-La API queda disponible en `http://localhost/api` y la documentación interactiva en `http://localhost/api/docs` cuando se accede directamente al backend en desarrollo. En producción, Nginx publica los endpoints bajo `/api`.
+- Nginx sirve el frontend compilado y redirige `/api/` hacia el contenedor FastAPI backend.
+- Los datos se conservan en `./data/fittracker.db`.
 
-## Datos persistentes
-
-SQLite y fotos se guardan en:
-
-```text
-fittracker/data/
-```
-
-En el primer arranque se crea `fittracker.db` y se precarga la rutina:
-
-- Lunes/Jueves
-- Martes/Viernes
-
-## Endpoints principales
-
-- `GET /api/dashboard`
-- `GET|POST /api/exercises`
-- `GET|POST /api/routines`
-- `GET|POST /api/workouts`
-- `GET|POST /api/measurements`
-- `GET|POST /api/photos`
-- `GET /api/records`
-
-## Despliegue Ubuntu 24.04
-
-1. Instalar Docker:
-
-```bash
-sudo apt update
-sudo apt install -y ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
-
-2. Copiar el proyecto al servidor:
-
-```bash
-scp -r fittracker usuario@TU_SERVIDOR:/opt/fittracker
-```
-
-3. Levantar la aplicación:
-
-```bash
-ssh usuario@TU_SERVIDOR
-cd /opt/fittracker
-sudo docker compose up -d --build
-```
-
-4. Ver logs:
-
-```bash
-sudo docker compose logs -f
-```
-
-5. Backup de SQLite y fotos:
-
-```bash
-sudo tar -czf fittracker-backup-$(date +%F).tar.gz data/
-```
-
-## Producción
-
-- La app no tiene login porque está pensada para un solo usuario.
-- Para exponerla a internet, usar firewall y un reverse proxy con TLS, por ejemplo Caddy, Traefik o Nginx con Certbot.
-- Mantener copias de seguridad periódicas de `data/`.

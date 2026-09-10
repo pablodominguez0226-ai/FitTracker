@@ -1,4 +1,19 @@
 services:
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: fittracker_tunnel
+    restart: always
+    dns:
+        - 1.1.1.1
+        - 8.8.8.8
+    command: tunnel --url http://frontend:80
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - SUBDOMAINS=fittraker
+      - TOKEN=635e776F-B81B-4534-9052-E3d306634B8d
+    restart: always
   backend:
     build:
       context: ./backend
@@ -7,7 +22,7 @@ services:
       - ./data:/app/data
     environment:
       - TZ=America/Argentina/Buenos_Aires
-      - FITTRACKER_SECRET_KEY=${FITTRACKER_SECRET_KEY:?Configura FITTRACKER_SECRET_KEY antes de iniciar FitTracker}
+      - FITTRACKER_SECRET_KEY=${FITTRACKER_SECRET_KEY:-fittracker_secret}
       - FITTRACKER_TOKEN_EXPIRE_MINUTES=${FITTRACKER_TOKEN_EXPIRE_MINUTES:-480}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health').read()"]

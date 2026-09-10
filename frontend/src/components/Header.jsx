@@ -1,14 +1,26 @@
 import React from "react";
+import { Dumbbell } from "lucide-react";
 
-export default function Header({ title, subtitle }) {
+export default function Header({ title, subtitle, rightElement }) {
   return (
-    <header className="mb-5 sm:mb-6">
-      <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-200">
-        <span className="h-1.5 w-1.5 rounded-full bg-fitPrimary" />
-        FitTracker
+    <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#A855F7]/30 bg-[#9333EA]/15 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#C084FC]">
+          <Dumbbell size={13} className="text-[#A855F7]" />
+          <span>FITTRACKER • OLED GYM</span>
+        </div>
+        <h1 className="mt-1.5 text-2xl font-black tracking-tight text-white sm:text-3xl">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="mt-0.5 text-xs sm:text-sm font-medium text-[#A1A1AA]">
+            {subtitle}
+          </p>
+        )}
       </div>
-      <h1 className="mt-3 text-3xl font-black tracking-normal text-fitText sm:text-5xl">{title}</h1>
-      {subtitle ? <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400 sm:text-base">{subtitle}</p> : null}
+      {rightElement && <div>{rightElement}</div>}
     </header>
   );
 }
+
+

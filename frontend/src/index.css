@@ -3,90 +3,146 @@
 @tailwind utilities;
 
 :root {
-  color: #f8fafc;
-  background: #070a12;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-synthesis: none;
+  color: #FFFFFF;
+  background-color: #09060E;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   text-rendering: optimizeLegibility;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 18% -10%, rgba(47, 128, 255, 0.16), transparent 30rem),
-    radial-gradient(circle at 95% 5%, rgba(14, 165, 233, 0.08), transparent 26rem),
-    linear-gradient(180deg, #090d18 0%, #070a12 48%, #05070c 100%);
-  color: #f8fafc;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
+  -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  background-color: #09060E;
+  color: #FFFFFF;
+  touch-action: manipulation;
+}
+
+body {
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(147, 51, 234, 0.15), transparent 70%),
+    radial-gradient(circle 350px at 90% 15%, rgba(168, 85, 247, 0.07), transparent 70%),
+    radial-gradient(circle 300px at 10% 85%, rgba(126, 34, 206, 0.05), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09060E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2D1B4E;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9333EA;
+}
+
 ::selection {
-  background: rgba(47, 128, 255, 0.35);
+  background: rgba(168, 85, 247, 0.45);
+  color: #FFFFFF;
+}
+
+/* Safe areas for notched phones */
+.safe-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
 }
 
 .safe-bottom {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
 }
 
 @layer components {
-  .ft-card {
-    @apply rounded-2xl border border-white/10 bg-fitCard/90 p-4 shadow-card backdrop-blur sm:p-5;
+  /* Gym OLED Card Container */
+  .iron-card,
+  .oled-card {
+    @apply rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 shadow-card transition-all sm:p-5;
   }
 
-  .ft-panel {
-    @apply rounded-2xl border border-white/10 bg-fitSurface/80;
+  .iron-card-interactive,
+  .oled-card-interactive {
+    @apply rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 shadow-card transition-all duration-150 hover:border-[#A855F7]/50 hover:bg-[#1C1433] hover:shadow-neon cursor-pointer sm:p-5 active:scale-[0.98];
   }
 
-  .ft-input {
-    @apply w-full rounded-2xl border border-white/10 bg-white/[0.045] px-3.5 py-2.5 text-sm text-fitText outline-none transition placeholder:text-slate-500 focus:border-fitPrimary/70 focus:bg-white/[0.07];
+  .iron-card-active,
+  .oled-card-active {
+    @apply rounded-2xl border-2 border-[#A855F7] bg-[#1C1433] p-4 shadow-cardActive transition-all duration-150 sm:p-5;
   }
 
-  .ft-select {
-    @apply w-full rounded-2xl border border-white/10 bg-fitSurface px-3.5 py-2.5 text-sm text-fitText outline-none transition focus:border-fitPrimary/70;
+  /* Large Tactile Mobile Inputs (Min 48px height, Font >= 16px prevents iOS auto-zoom) */
+  .iron-input,
+  .oled-input {
+    @apply w-full min-h-[48px] rounded-xl border border-[#2D1B4E] bg-[#0E0919] px-3.5 py-3 text-base font-semibold text-white outline-none transition placeholder:text-[#71717A] focus:border-[#A855F7] focus:ring-2 focus:ring-[#A855F7]/25;
   }
 
-  .ft-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-300/20 bg-blue-500/90 px-4 py-2.5 font-semibold text-white shadow-soft transition hover:bg-blue-400/95 focus:outline-none focus:ring-2 focus:ring-fitPrimary/45 active:scale-[0.99];
+  .iron-number-input,
+  .oled-number-input {
+    @apply w-20 min-h-[48px] text-center rounded-xl border border-[#2D1B4E] bg-[#0E0919] py-2 px-1 text-lg font-black tracking-tight text-white outline-none transition focus:border-[#A855F7] focus:ring-2 focus:ring-[#A855F7]/30 sm:w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none;
   }
 
-  .ft-button-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 font-semibold text-slate-200 transition hover:border-white/20 hover:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-fitPrimary/40;
+  /* Primary Electric Tactile Buttons (Min 48px - 52px height) */
+  .iron-btn-primary,
+  .oled-btn-primary {
+    @apply inline-flex min-h-[48px] sm:min-h-[52px] items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#9333EA] via-[#8B2BE2] to-[#7E22CE] px-5 py-3.5 font-extrabold text-white shadow-neon transition duration-150 hover:from-[#7E22CE] hover:to-[#9333EA] hover:shadow-neonLg active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
   }
 
-  .ft-button-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-2.5 font-semibold text-red-100 transition hover:bg-red-500/15 focus:outline-none focus:ring-2 focus:ring-red-400/35;
+  .iron-btn-secondary,
+  .oled-btn-secondary {
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-[#2D1B4E] bg-[#140E24] px-4 py-3 font-bold text-white transition hover:border-[#A855F7]/50 hover:bg-[#1C1433] active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
   }
 
-  .ft-icon-button {
-    @apply flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-slate-300 transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-35;
+  .iron-btn-ghost,
+  .oled-btn-ghost {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 font-semibold text-[#A1A1AA] transition hover:bg-[#1C1433] hover:text-white active:scale-[0.97];
   }
 
-  .ft-chip {
-    @apply rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-medium text-slate-300;
+  .iron-btn-danger,
+  .oled-btn-danger {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 font-bold text-red-300 transition hover:bg-red-500/20 active:scale-[0.97];
   }
 
-  .ft-label {
-    @apply text-sm font-medium text-slate-300;
+  /* Giant In-Workout Check/Listo Button (Min 48x48px with #34D399 emerald green success) */
+  .iron-check-btn,
+  .oled-check-btn {
+    @apply h-12 w-12 rounded-xl flex items-center justify-center font-black transition-all duration-150 active:scale-90 flex-shrink-0 cursor-pointer select-none;
   }
 
-  .ft-scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  .iron-check-btn-pending,
+  .oled-check-btn-pending {
+    @apply border-2 border-[#2D1B4E] bg-[#0E0919] text-[#71717A] hover:border-[#A855F7] hover:text-[#A855F7];
   }
 
-  .ft-scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  .iron-check-btn-done,
+  .oled-check-btn-done {
+    @apply border-2 border-[#34D399] bg-[#34D399] text-[#09060E] shadow-successGlow scale-105;
+  }
+
+  /* Stepper Quick-Tap Buttons (+ / -) */
+  .oled-stepper-btn {
+    @apply h-12 w-11 flex items-center justify-center rounded-xl border border-[#2D1B4E] bg-[#0E0919] text-[#A1A1AA] hover:border-[#A855F7] hover:text-white active:scale-90 transition select-none flex-shrink-0 text-base font-bold;
+  }
+
+  /* PR & Muscle Badges */
+  .iron-pr-badge,
+  .oled-pr-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-[#C084FC]/40 bg-[#C084FC]/10 px-3 py-1 text-xs font-black text-[#C084FC] shadow-prGlow;
+  }
+
+  .iron-badge,
+  .oled-badge {
+    @apply inline-flex items-center gap-1 rounded-full border border-[#2D1B4E] bg-[#140E24] px-2.5 py-1 text-xs font-semibold text-[#A1A1AA];
   }
 }
+
+
