@@ -42,6 +42,8 @@ class WorkoutSetIn(BaseModel):
     reps: int = 0
     completed: bool = True
     rest_effort: str | None = None
+    rir: int | None = None
+    set_type: str | None = "normal"
 
 
 class WorkoutSetCreate(BaseModel):
@@ -51,6 +53,8 @@ class WorkoutSetCreate(BaseModel):
     reps: int = 0
     completed: bool = False
     rest_effort: str | None = None
+    rir: int | None = None
+    set_type: str | None = "normal"
 
 
 class WorkoutSetUpdate(BaseModel):
@@ -59,6 +63,8 @@ class WorkoutSetUpdate(BaseModel):
     completed: bool | None = None
     set_number: int | None = None
     rest_effort: str | None = None
+    rir: int | None = None
+    set_type: str | None = None
 
 
 class WorkoutSetOut(BaseModel):
@@ -72,6 +78,8 @@ class WorkoutSetOut(BaseModel):
     reps: int
     completed: bool
     rest_effort: str | None = None
+    rir: int | None = None
+    set_type: str | None = "normal"
     created_at: dt.datetime | None = None
 
 
@@ -299,11 +307,15 @@ class ProfileExplanationsResponse(BaseModel):
 class RecordOut(BaseModel):
     exercise_id: int
     exercise_name: str
-    muscle_group_id: int
+    muscle_group: str | None = None
+    muscle_group_id: int | None = None
     muscle_group_name: str | None = None
     pr_weight: float | None = None
     pr_reps: int | None = None
     pr_date: dt.date | None = None
+    previous_pr_weight: float | None = None
+    previous_pr_date: dt.date | None = None
+    best_estimated_1rm: float | None = None
     last_weight: float | None = None
     last_reps: int | None = None
     last_date: dt.date | None = None

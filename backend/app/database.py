@@ -129,6 +129,10 @@ def ensure_database_migration() -> None:
             connection.execute(text("ALTER TABLE workout_sets ADD COLUMN created_at DATETIME"))
         if "rest_effort" not in set_cols:
             connection.execute(text("ALTER TABLE workout_sets ADD COLUMN rest_effort VARCHAR(30)"))
+        if "rir" not in set_cols:
+            connection.execute(text("ALTER TABLE workout_sets ADD COLUMN rir INTEGER"))
+        if "set_type" not in set_cols:
+            connection.execute(text("ALTER TABLE workout_sets ADD COLUMN set_type VARCHAR(20) DEFAULT 'normal'"))
 
         # Support requests table
         connection.execute(text("""

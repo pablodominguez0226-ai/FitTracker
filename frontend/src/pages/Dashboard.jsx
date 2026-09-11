@@ -52,8 +52,8 @@ import { formatDateSafe, getLocalDateString, parseDateSafe } from "../utils/date
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-[#2D1B4E] bg-[#140E24]/95 p-3 shadow-neon text-xs text-white backdrop-blur-md">
-        <p className="font-black text-[#C084FC] mb-1">{label}</p>
+      <div className="rounded-xl border border-[#2A1B14] bg-[#181210]/95 p-3 shadow-neon text-xs text-white backdrop-blur-md">
+        <p className="font-black text-[#FF6D00] mb-1">{label}</p>
         {payload.map((entry, index) => (
           <p key={`item-${index}`} className="flex justify-between gap-4 font-semibold">
             <span className="text-[#A1A1AA]">{entry.name}:</span>
@@ -164,7 +164,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[55vh] flex-col items-center justify-center gap-3 text-[#A855F7]">
+      <div className="flex min-h-[55vh] flex-col items-center justify-center gap-3 text-[#FF5722]">
         <Loader2 size={36} className="animate-spin" />
         <p className="text-sm font-bold text-[#A1A1AA]">
           Analizando esfuerzo y sobrecarga progresiva...
@@ -180,7 +180,7 @@ export default function Dashboard() {
           title="Métricas &amp; Voluntad"
           subtitle="Análisis de sobrecarga progresiva, consistencia y esfuerzo real"
         />
-        <div className="rounded-2xl border border-dashed border-[#2D1B4E] bg-[#140E24]/60 p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-[#2A1B14] bg-[#181210]/60 p-12 text-center">
           <Dumbbell size={40} className="mx-auto text-[#71717A]" />
           <h3 className="mt-3 text-base font-black text-white">
             Aún no hay entrenamientos suficientes para analizar
@@ -200,7 +200,7 @@ export default function Dashboard() {
         subtitle="Los números miden tu entrenamiento; FitTracker entiende tu esfuerzo"
         rightElement={
           <div className="flex items-center gap-2">
-            <div className="rounded-xl border border-[#2D1B4E] bg-[#140E24] px-3.5 py-2 text-right">
+            <div className="rounded-xl border border-[#2A1B14] bg-[#181210] px-3.5 py-2 text-right">
               <span className="text-[10px] uppercase font-bold text-[#71717A] block">
                 Sesiones Listas
               </span>
@@ -221,7 +221,7 @@ export default function Dashboard() {
       />
 
       {/* 1. Tarjeta Hero: Métrica de Voluntad & Retención de Carga */}
-      <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-[#1C1433] via-[#140E24] to-[#1C1226] p-4.5 sm:p-6 shadow-neonLg">
+      <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-[#2A1B14] via-[#181210] to-[#1C1226] p-4.5 sm:p-6 shadow-neonLg">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-300">
@@ -237,7 +237,7 @@ export default function Dashboard() {
           </div>
 
           {/* KPI Circular / Tarjeta de Retención de Rendimiento */}
-          <div className="rounded-2xl border border-amber-500/30 bg-[#09060E]/80 p-4 min-w-[240px] text-center space-y-2.5">
+          <div className="rounded-2xl border border-amber-500/30 bg-[#050505]/80 p-4 min-w-[240px] text-center space-y-2.5">
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 block">
               Retención de Carga en Días Bajos
             </span>
@@ -263,15 +263,15 @@ export default function Dashboard() {
 
       {/* 2. Resumen Rápido de Números Globales */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5 shadow-card text-center">
+        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card text-center">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A] block">
             Tonelaje Movido
           </span>
-          <p className="mt-1 text-xl sm:text-2xl font-black text-[#C084FC]">
+          <p className="mt-1 text-xl sm:text-2xl font-black text-[#FF6D00]">
             {Math.round(data.total_volume_kg).toLocaleString()} <span className="text-xs font-semibold text-[#A1A1AA]">kg</span>
           </p>
         </div>
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5 shadow-card text-center">
+        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card text-center">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A] block">
             Series Totales
           </span>
@@ -279,7 +279,7 @@ export default function Dashboard() {
             {data.total_sets.toLocaleString()}
           </p>
         </div>
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5 shadow-card text-center">
+        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card text-center">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A] block">
             Repeticiones
           </span>
@@ -287,7 +287,7 @@ export default function Dashboard() {
             {data.total_reps.toLocaleString()}
           </p>
         </div>
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5 shadow-card text-center">
+        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card text-center">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A] block">
             Sesiones de Voluntad
           </span>
@@ -305,10 +305,10 @@ export default function Dashboard() {
           DEFAULT_LEVEL_EXPLANATIONS.intermedio;
 
         return (
-          <div className="rounded-2xl border border-[#A855F7]/40 bg-gradient-to-br from-[#1C1433] via-[#140E24] to-[#0E0919] p-4 sm:p-5 shadow-neon space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2D1B4E] pb-3">
+          <div className="rounded-2xl border border-[#FF5722]/40 bg-gradient-to-br from-[#2A1B14] via-[#181210] to-[#121113] p-4 sm:p-5 shadow-neon space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2A1B14] pb-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#9333EA] to-[#A855F7] text-white shadow-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#C84218] to-[#FF5722] text-white shadow-sm">
                   <BookOpen size={18} />
                 </div>
                 <div>
@@ -329,9 +329,9 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("fittracker:openProfile"))}
-                className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-[#2D1B4E] bg-[#140E24] px-3 py-1.5 text-xs font-bold text-[#C084FC] hover:border-[#A855F7] hover:bg-[#1C1433] transition active:scale-95"
+                className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-[#2A1B14] bg-[#181210] px-3 py-1.5 text-xs font-bold text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#2A1B14] transition active:scale-95"
               >
-                <User size={13} className="text-[#A855F7]" />
+                <User size={13} className="text-[#FF5722]" />
                 <span>Cambiar Nivel</span>
               </button>
             </div>
@@ -347,7 +347,7 @@ export default function Dashboard() {
                   return (
                     <div
                       key={item.id}
-                      className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-3 transition hover:border-[#A855F7]/40 space-y-1.5"
+                      className="rounded-xl border border-[#2A1B14] bg-[#121113] p-3 transition hover:border-[#FF5722]/40 space-y-1.5"
                     >
                       <button
                         type="button"
@@ -355,7 +355,7 @@ export default function Dashboard() {
                         className="w-full text-left flex items-start justify-between gap-2"
                       >
                         <div>
-                          <span className="text-[10px] font-black uppercase text-[#C084FC] tracking-wider block">
+                          <span className="text-[10px] font-black uppercase text-[#FF6D00] tracking-wider block">
                             {item.topic.replace("_", " ")}
                           </span>
                           <h4 className="text-xs font-black text-white mt-0.5">{item.title}</h4>
@@ -368,10 +368,10 @@ export default function Dashboard() {
                         {item.summary}
                       </p>
                       {isExpanded && item.details && (
-                        <div className="pt-2 border-t border-[#2D1B4E]/60 space-y-1.5 animate-in fade-in duration-150">
+                        <div className="pt-2 border-t border-[#2A1B14]/60 space-y-1.5 animate-in fade-in duration-150">
                           {item.details.map((d, dIdx) => (
                             <p key={dIdx} className="text-[11px] text-[#D4D4D8] leading-normal flex items-start gap-1.5">
-                              <span className="text-[#A855F7] font-bold">•</span>
+                              <span className="text-[#FF5722] font-bold">•</span>
                               <span>{d}</span>
                             </p>
                           ))}
@@ -385,7 +385,7 @@ export default function Dashboard() {
 
             {/* Tips contextuales del nivel */}
             {tips.length > 0 && (
-              <div className="pt-2 border-t border-[#2D1B4E]/60 space-y-2">
+              <div className="pt-2 border-t border-[#2A1B14]/60 space-y-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#A1A1AA] block flex items-center gap-1.5">
                   <Sparkles size={13} className="text-amber-400" />
                   Consejos Rápidos del Coach para {currentExpObj.title}:
@@ -394,7 +394,7 @@ export default function Dashboard() {
                   {tips.slice(0, 4).map((tip, idx) => (
                     <div
                       key={idx}
-                      className="rounded-xl border border-[#2D1B4E]/70 bg-[#140E24]/60 p-2.5 space-y-1"
+                      className="rounded-xl border border-[#2A1B14]/70 bg-[#181210]/60 p-2.5 space-y-1"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[9px] font-black uppercase text-[#34D399]">
@@ -415,10 +415,10 @@ export default function Dashboard() {
 
 
       {/* 2.8. Coach IA: Diagnóstico Semanal & Asistente Interactivo (Fase 5) */}
-      <div className="rounded-2xl border border-[#A855F7]/30 bg-gradient-to-br from-[#1C1433] via-[#140E24] to-[#0E0919] p-4 sm:p-5 shadow-neon space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#2D1B4E]/80 pb-3">
+      <div className="rounded-2xl border border-[#FF5722]/30 bg-gradient-to-br from-[#2A1B14] via-[#181210] to-[#121113] p-4 sm:p-5 shadow-neon space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#2A1B14]/80 pb-3">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#9333EA] to-[#A855F7] text-white shadow-sm">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#C84218] to-[#FF5722] text-white shadow-sm">
               <Bot size={18} />
             </span>
             <div>
@@ -440,7 +440,7 @@ export default function Dashboard() {
             type="button"
             onClick={handleRefreshBriefing}
             disabled={loadingBriefing}
-            className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-[#2D1B4E] bg-[#140E24] px-3 py-1.5 text-xs font-bold text-[#C084FC] hover:border-[#A855F7] hover:bg-[#1C1433] transition active:scale-95 disabled:opacity-50"
+            className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-[#2A1B14] bg-[#181210] px-3 py-1.5 text-xs font-bold text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#2A1B14] transition active:scale-95 disabled:opacity-50"
           >
             <RefreshCw size={13} className={loadingBriefing ? "animate-spin" : ""} />
             <span>Actualizar Diagnóstico</span>
@@ -450,7 +450,7 @@ export default function Dashboard() {
         {aiBriefing && (
           <div className="space-y-4">
             {/* Headline & Summary */}
-            <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919]/70 p-3.5 space-y-2">
+            <div className="rounded-xl border border-[#2A1B14] bg-[#121113]/70 p-3.5 space-y-2">
               <div className="flex items-center gap-2 text-xs font-black text-amber-300">
                 <Sparkles size={15} />
                 <span>{aiBriefing.headline}</span>
@@ -462,28 +462,28 @@ export default function Dashboard() {
 
             {/* Status Badges Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-              <div className="rounded-xl border border-[#2D1B4E] bg-[#140E24] p-2.5">
+              <div className="rounded-xl border border-[#2A1B14] bg-[#181210] p-2.5">
                 <span className="text-[10px] uppercase font-bold text-[#71717A] block">Sesiones 7d</span>
                 <span className="text-base font-black text-white">{aiBriefing.total_workouts}</span>
               </div>
-              <div className="rounded-xl border border-[#2D1B4E] bg-[#140E24] p-2.5">
+              <div className="rounded-xl border border-[#2A1B14] bg-[#181210] p-2.5">
                 <span className="text-[10px] uppercase font-bold text-[#71717A] block">Volumen 7d</span>
                 <span className="text-base font-black text-[#34D399]">{Math.round(aiBriefing.total_volume_kg).toLocaleString()} kg</span>
               </div>
-              <div className="rounded-xl border border-[#2D1B4E] bg-[#140E24] p-2.5">
+              <div className="rounded-xl border border-[#2A1B14] bg-[#181210] p-2.5">
                 <span className="text-[10px] uppercase font-bold text-[#71717A] block">Voluntad de Hierro</span>
                 <span className="text-base font-black text-amber-300">{aiBriefing.willpower_sessions} sesiones</span>
               </div>
-              <div className="rounded-xl border border-[#2D1B4E] bg-[#140E24] p-2.5">
+              <div className="rounded-xl border border-[#2A1B14] bg-[#181210] p-2.5">
                 <span className="text-[10px] uppercase font-bold text-[#71717A] block">Recuperación</span>
-                <span className="text-base font-black text-[#C084FC]">{aiBriefing.recovery_status}</span>
+                <span className="text-base font-black text-[#FF6D00]">{aiBriefing.recovery_status}</span>
               </div>
             </div>
 
             {/* Achievements & Recommendations */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {aiBriefing.achievements?.length > 0 && (
-                <div className="rounded-xl border border-[#2D1B4E] bg-[#140E24]/60 p-3 space-y-2">
+                <div className="rounded-xl border border-[#2A1B14] bg-[#181210]/60 p-3 space-y-2">
                   <h4 className="text-xs font-black uppercase text-[#34D399] flex items-center gap-1.5">
                     <CheckCircle2 size={14} />
                     Hitos y Rendimiento Destacado
@@ -500,15 +500,15 @@ export default function Dashboard() {
               )}
 
               {aiBriefing.overload_recommendations?.length > 0 && (
-                <div className="rounded-xl border border-[#2D1B4E] bg-[#140E24]/60 p-3 space-y-2">
-                  <h4 className="text-xs font-black uppercase text-[#C084FC] flex items-center gap-1.5">
+                <div className="rounded-xl border border-[#2A1B14] bg-[#181210]/60 p-3 space-y-2">
+                  <h4 className="text-xs font-black uppercase text-[#FF6D00] flex items-center gap-1.5">
                     <Target size={14} />
                     Estrategia de Sobrecarga Progresiva
                   </h4>
                   <ul className="space-y-1.5 text-xs text-[#A1A1AA]">
                     {aiBriefing.overload_recommendations.map((rec, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="text-[#C084FC] font-bold">→</span>
+                        <span className="text-[#FF6D00] font-bold">→</span>
                         <span className="text-white font-medium">{rec}</span>
                       </li>
                     ))}
@@ -520,10 +520,10 @@ export default function Dashboard() {
         )}
 
         {/* Interactive Q&A Bar */}
-        <div className="pt-2 border-t border-[#2D1B4E]/60 space-y-2.5">
+        <div className="pt-2 border-t border-[#2A1B14]/60 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#E4E4E7] flex items-center gap-1.5">
-              <Brain size={14} className="text-[#A855F7]" />
+              <Brain size={14} className="text-[#FF5722]" />
               Consultale al Coach IA
             </span>
             <span className="text-[10px] text-[#71717A]">
@@ -563,7 +563,7 @@ export default function Dashboard() {
                     setAiQuestion(chip);
                     handleAsk(chip);
                   }}
-                  className="rounded-lg border border-[#2D1B4E] bg-[#0E0919] px-2.5 py-1 text-[11px] font-medium text-[#A1A1AA] hover:border-[#A855F7] hover:text-white transition"
+                  className="rounded-lg border border-[#2A1B14] bg-[#121113] px-2.5 py-1 text-[11px] font-medium text-[#A1A1AA] hover:border-[#FF5722] hover:text-white transition"
                 >
                   {chip}
                 </button>
@@ -585,7 +585,7 @@ export default function Dashboard() {
               placeholder="Preguntale al Coach IA sobre tu entrenamiento..."
               value={aiQuestion}
               onChange={(e) => setAiQuestion(e.target.value)}
-              className="flex-1 min-h-[40px] rounded-xl border border-[#2D1B4E] bg-[#0E0919] px-3.5 py-2 text-xs text-white outline-none focus:border-[#A855F7]"
+              className="flex-1 min-h-[40px] rounded-xl border border-[#2A1B14] bg-[#121113] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FF5722]"
             />
             <button
               type="submit"
@@ -599,9 +599,9 @@ export default function Dashboard() {
 
           {/* AI Response Card */}
           {aiAnswer && (
-            <div className="rounded-xl border border-[#A855F7]/40 bg-[#0E0919] p-3.5 space-y-2 animate-in fade-in duration-200 shadow-neon">
+            <div className="rounded-xl border border-[#FF5722]/40 bg-[#121113] p-3.5 space-y-2 animate-in fade-in duration-200 shadow-neon">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-[#C084FC] flex items-center gap-1.5">
+                <span className="font-bold text-[#FF6D00] flex items-center gap-1.5">
                   <Bot size={15} />
                   Respuesta del Coach ({aiAnswer.category})
                 </span>
@@ -613,14 +613,14 @@ export default function Dashboard() {
                 {aiAnswer.answer}
               </p>
               {aiAnswer.cited_data?.length > 0 && (
-                <div className="pt-2 border-t border-[#2D1B4E]/60 flex flex-wrap gap-1.5 items-center">
+                <div className="pt-2 border-t border-[#2A1B14]/60 flex flex-wrap gap-1.5 items-center">
                   <span className="text-[10px] font-bold uppercase text-[#71717A]">
                     Datos citados:
                   </span>
                   {aiAnswer.cited_data.map((c, i) => (
                     <span
                       key={i}
-                      className="rounded-md border border-[#2D1B4E] bg-[#140E24] px-2 py-0.5 text-[10px] text-amber-300 font-mono"
+                      className="rounded-md border border-[#2A1B14] bg-[#181210] px-2 py-0.5 text-[10px] text-amber-300 font-mono"
                     >
                       {c}
                     </span>
@@ -633,11 +633,11 @@ export default function Dashboard() {
       </div>
 
       {/* 3. Consistencia Semanal (Últimas 8 Semanas - No Punitiva) */}
-      <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 sm:p-5 shadow-card space-y-3.5">
+      <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 sm:p-5 shadow-card space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#9333EA]/20 text-xs font-black text-[#C084FC]">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
                 <TrendingUp size={14} />
               </span>
               <h3 className="text-sm sm:text-base font-black text-white">
@@ -673,7 +673,7 @@ export default function Dashboard() {
                 {data.weekly_consistency.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={entry.sessions_count > 0 ? "#A855F7" : "#2D1B4E"}
+                    fill={entry.sessions_count > 0 ? "#FF5722" : "#2A1B14"}
                   />
                 ))}
               </Bar>
@@ -688,8 +688,8 @@ export default function Dashboard() {
               key={idx}
               className={`rounded-xl border p-2 text-center ${
                 w.sessions_count > 0
-                  ? "border-[#A855F7]/40 bg-[#1C1433]/70"
-                  : "border-[#2D1B4E]/40 bg-[#0E0919]"
+                  ? "border-[#FF5722]/40 bg-[#2A1B14]/70"
+                  : "border-[#2A1B14]/40 bg-[#121113]"
               }`}
             >
               <span className="text-[9px] uppercase font-bold text-[#71717A] block truncate">
@@ -706,9 +706,9 @@ export default function Dashboard() {
       {/* 4. Distribución por Grupo Muscular & Días de la Semana */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Distribución Muscular */}
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 sm:p-5 shadow-card space-y-3">
+        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 sm:p-5 shadow-card space-y-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#9333EA]/20 text-xs font-black text-[#C084FC]">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
               <Layers size={14} />
             </span>
             <h3 className="text-sm sm:text-base font-black text-white">
@@ -727,13 +727,13 @@ export default function Dashboard() {
                 <div key={idx} className="space-y-1">
                   <div className="flex justify-between text-xs font-bold">
                     <span className="text-white">{m.name}</span>
-                    <span className="text-[#C084FC]">
+                    <span className="text-[#FF6D00]">
                       {Math.round(m.volume).toLocaleString()} kg ({m.percentage}%)
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#0E0919]">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#121113]">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#9333EA] to-[#A855F7]"
+                      className="h-full rounded-full bg-gradient-to-r from-[#C84218] to-[#FF5722]"
                       style={{ width: `${Math.min(100, m.percentage)}%` }}
                     />
                   </div>
@@ -744,9 +744,9 @@ export default function Dashboard() {
         </div>
 
         {/* Frecuencia por Día de la Semana */}
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 sm:p-5 shadow-card space-y-3">
+        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 sm:p-5 shadow-card space-y-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#9333EA]/20 text-xs font-black text-[#C084FC]">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
               <Calendar size={14} />
             </span>
             <h3 className="text-sm sm:text-base font-black text-white">
@@ -766,10 +766,10 @@ export default function Dashboard() {
                   <span className="text-[11px] font-bold text-white">
                     {d.count}
                   </span>
-                  <div className="h-24 w-full rounded-xl bg-[#0E0919] flex items-end p-1">
+                  <div className="h-24 w-full rounded-xl bg-[#121113] flex items-end p-1">
                     <div
                       className={`w-full rounded-lg transition-all ${
-                        d.count > 0 ? "bg-gradient-to-t from-[#9333EA] to-[#A855F7]" : "bg-transparent"
+                        d.count > 0 ? "bg-gradient-to-t from-[#C84218] to-[#FF5722]" : "bg-transparent"
                       }`}
                       style={{ height: `${Math.max(8, heightPct)}%` }}
                     />
@@ -786,7 +786,7 @@ export default function Dashboard() {
 
       {/* 5. Muro de Hitos de Voluntad de Hierro */}
       {data.recent_willpower_sessions.length > 0 && (
-        <div className="rounded-2xl border border-amber-500/30 bg-[#140E24] p-4 sm:p-5 shadow-card space-y-3">
+        <div className="rounded-2xl border border-amber-500/30 bg-[#181210] p-4 sm:p-5 shadow-card space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-amber-400" />
@@ -806,14 +806,14 @@ export default function Dashboard() {
             {data.recent_willpower_sessions.map((s, idx) => (
               <div
                 key={idx}
-                className="rounded-xl border border-amber-500/25 bg-gradient-to-br from-[#1C1433] to-[#0E0919] p-3.5 space-y-2 shadow-sm"
+                className="rounded-xl border border-amber-500/25 bg-gradient-to-br from-[#2A1B14] to-[#121113] p-3.5 space-y-2 shadow-sm"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black capitalize text-white">
                     {formatDate(s.date)}
                   </span>
                   {s.muscle_group_name && (
-                    <span className="rounded-md border border-[#2D1B4E] bg-[#140E24] px-2 py-0.5 text-[10px] font-bold text-[#C084FC]">
+                    <span className="rounded-md border border-[#2A1B14] bg-[#181210] px-2 py-0.5 text-[10px] font-bold text-[#FF6D00]">
                       {s.muscle_group_name}
                     </span>
                   )}
@@ -832,7 +832,7 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                <div className="text-xs text-[#A1A1AA] pt-1 border-t border-[#2D1B4E]/60 flex justify-between">
+                <div className="text-xs text-[#A1A1AA] pt-1 border-t border-[#2A1B14]/60 flex justify-between">
                   <span>{s.sets_count} series completadas</span>
                   <span className="font-bold text-white">{Math.round(s.total_volume)} kg</span>
                 </div>

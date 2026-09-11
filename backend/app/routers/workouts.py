@@ -5,8 +5,25 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from .. import models, schemas
 from ..database import get_db
 from ..security import get_current_user
+from .records import get_records as records_get_records
 
 router = APIRouter()
+
+
+@router.get("/records", response_model=list[schemas.RecordOut])
+def get_user_records(
+    exercise_id: int | None = Query(None, description="Filtrar por ID de ejercicio"),
+    muscle_group_id: int | None = Query(None, description="Filtrar por grupo muscular"),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return records_get_records(
+        exercise_id=exercise_id,
+        muscle_group_id=muscle_group_id,
+        current_user=current_user,
+        db=db,
+    )
+
 
 
 def _format_workout_session(s: models.WorkoutSession) -> schemas.WorkoutSessionOut:
@@ -21,6 +38,8 @@ def _format_workout_session(s: models.WorkoutSession) -> schemas.WorkoutSessionO
             reps=ws.reps,
             completed=ws.completed,
             rest_effort=ws.rest_effort,
+            rir=ws.rir,
+            set_type=ws.set_type or "normal",
             created_at=ws.created_at,
         )
         for ws in s.sets
@@ -202,6 +221,8 @@ def add_workout_set(
         reps=int(payload.reps),
         completed=bool(payload.completed),
         rest_effort=payload.rest_effort,
+        rir=payload.rir,
+        set_type=payload.set_type or "normal",
         created_at=dt.datetime.now(dt.timezone.utc),
     )
     db.add(workout_set)
@@ -218,6 +239,8 @@ def add_workout_set(
         reps=workout_set.reps,
         completed=workout_set.completed,
         rest_effort=workout_set.rest_effort,
+        rir=workout_set.rir,
+        set_type=workout_set.set_type or "normal",
         created_at=workout_set.created_at,
     )
 
@@ -254,6 +277,10 @@ def update_workout_set(
         workout_set.set_number = int(payload.set_number)
     if payload.rest_effort is not None:
         workout_set.rest_effort = payload.rest_effort
+    if payload.rir is not None:
+        workout_set.rir = payload.rir
+    if payload.set_type is not None:
+        workout_set.set_type = payload.set_type
 
     db.commit()
     db.refresh(workout_set)
@@ -268,6 +295,8 @@ def update_workout_set(
         reps=workout_set.reps,
         completed=workout_set.completed,
         rest_effort=workout_set.rest_effort,
+        rir=workout_set.rir,
+        set_type=workout_set.set_type or "normal",
         created_at=workout_set.created_at,
     )
 
@@ -446,6 +475,8 @@ def create_workout(
             reps=int(item.reps),
             completed=bool(item.completed),
             rest_effort=item.rest_effort,
+            rir=item.rir,
+            set_type=item.set_type or "normal",
             created_at=dt.datetime.now(dt.timezone.utc),
         )
         session.sets.append(workout_set)

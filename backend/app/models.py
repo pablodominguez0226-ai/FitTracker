@@ -70,6 +70,8 @@ class WorkoutSet(Base):
     reps: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     completed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     rest_effort: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    rir: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    set_type: Mapped[str] = mapped_column(String(20), default="normal", nullable=False)
     created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
 
     session: Mapped[WorkoutSession] = relationship(back_populates="sets")

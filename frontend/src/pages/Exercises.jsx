@@ -181,7 +181,7 @@ export default function Exercises() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-[#A855F7]">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-[#FF5722]">
         <Loader2 size={34} className="animate-spin" />
         <p className="text-sm font-semibold text-[#A1A1AA]">Cargando catálogo...</p>
       </div>
@@ -196,13 +196,13 @@ export default function Exercises() {
       />
 
       {/* View Switcher: Ejercicios vs Grupos Musculares */}
-      <div className="flex items-center gap-2 rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-1.5 shadow-card">
+      <div className="flex items-center gap-2 rounded-2xl border border-[#2A1B14] bg-[#181210] p-1.5 shadow-card">
         <button
           type="button"
           onClick={() => setActiveTab("exercises")}
           className={`flex-1 min-h-[42px] rounded-xl text-xs font-black transition active:scale-95 ${
             activeTab === "exercises"
-              ? "bg-gradient-to-r from-[#9333EA] to-[#7E22CE] text-white shadow-neon"
+              ? "bg-gradient-to-r from-[#C84218] to-[#7E22CE] text-white shadow-neon"
               : "text-[#A1A1AA] hover:text-white"
           }`}
         >
@@ -213,7 +213,7 @@ export default function Exercises() {
           onClick={() => setActiveTab("groups")}
           className={`flex-1 min-h-[42px] rounded-xl text-xs font-black transition active:scale-95 ${
             activeTab === "groups"
-              ? "bg-gradient-to-r from-[#9333EA] to-[#7E22CE] text-white shadow-neon"
+              ? "bg-gradient-to-r from-[#C84218] to-[#7E22CE] text-white shadow-neon"
               : "text-[#A1A1AA] hover:text-white"
           }`}
         >
@@ -224,9 +224,9 @@ export default function Exercises() {
       {activeTab === "exercises" ? (
         <>
           {/* Catálogo Oficial Banner */}
-          <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#C084FC]">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#FF6D00]">
                 ★ Catálogo Oficial de Gimnasio
               </h3>
               <p className="mt-0.5 text-xs text-[#A1A1AA]">
@@ -240,7 +240,7 @@ export default function Exercises() {
           </div>
 
           {/* 2. Filters & Search */}
-          <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 shadow-card space-y-3">
+          <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 shadow-card space-y-3">
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center justify-between">
               <div className="relative flex-1">
                 <Search
@@ -277,8 +277,8 @@ export default function Exercises() {
                 onClick={() => setSelectedGroupId("all")}
                 className={`min-h-[38px] rounded-xl px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
                   selectedGroupId === "all"
-                    ? "bg-gradient-to-r from-[#9333EA] to-[#7E22CE] text-white shadow-neon"
-                    : "border border-[#2D1B4E] bg-[#0E0919] text-[#A1A1AA] hover:border-[#A855F7]/40 hover:text-white"
+                    ? "bg-gradient-to-r from-[#C84218] to-[#7E22CE] text-white shadow-neon"
+                    : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/40 hover:text-white"
                 }`}
               >
                 Todos ({exercises.length})
@@ -290,8 +290,8 @@ export default function Exercises() {
                   onClick={() => setSelectedGroupId(String(g.id))}
                   className={`min-h-[38px] rounded-xl px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
                     selectedGroupId === String(g.id)
-                      ? "bg-gradient-to-r from-[#9333EA] to-[#7E22CE] text-white shadow-neon"
-                      : "border border-[#2D1B4E] bg-[#0E0919] text-[#A1A1AA] hover:border-[#A855F7]/40 hover:text-white"
+                      ? "bg-gradient-to-r from-[#C84218] to-[#7E22CE] text-white shadow-neon"
+                      : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/40 hover:text-white"
                   }`}
                 >
                   <span className="truncate break-words max-w-[120px] inline-block">{g.name}</span>
@@ -305,13 +305,13 @@ export default function Exercises() {
             {filteredExercises.map((ex) => (
               <div
                 key={ex.id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 shadow-card hover:border-[#A855F7]/40 hover:bg-[#1C1433] transition"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 shadow-card hover:border-[#FF5722]/40 hover:bg-[#2A1B14] transition"
               >
                 <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-extrabold text-white truncate break-words">
                     {ex.name}
                   </h4>
-                  <span className="mt-0.5 inline-block text-[11px] font-bold text-[#C084FC] truncate break-words">
+                  <span className="mt-0.5 inline-block text-[11px] font-bold text-[#FF6D00] truncate break-words">
                     {ex.muscle_group_name || "Músculo"}
                   </span>
                 </div>
@@ -328,7 +328,7 @@ export default function Exercises() {
             ))}
 
             {filteredExercises.length === 0 && (
-              <div className="col-span-full rounded-2xl border border-dashed border-[#2D1B4E] bg-[#140E24]/60 p-8 text-center sm:p-12">
+              <div className="col-span-full rounded-2xl border border-dashed border-[#2A1B14] bg-[#181210]/60 p-8 text-center sm:p-12">
                 <Layers size={36} className="mx-auto text-[#71717A]" />
                 <h3 className="mt-3 text-base font-bold text-white">
                   No hay ejercicios con este filtro
@@ -344,7 +344,7 @@ export default function Exercises() {
         /* GRUPOS MUSCULARES VIEW */
         <div className="space-y-4">
           {/* Top Add Group Card */}
-          <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 shadow-card sm:p-5">
+          <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 shadow-card sm:p-5">
             <div className="flex items-center justify-between gap-2 mb-3">
               <div>
                 <h3 className="text-sm font-black text-white">
@@ -367,7 +367,7 @@ export default function Exercises() {
             {isAddingGroup && (
               <form
                 onSubmit={handleCreateGroup}
-                className="mt-3 flex items-center gap-2 rounded-xl border border-[#A855F7]/50 bg-[#0E0919] p-3 shadow-neon"
+                className="mt-3 flex items-center gap-2 rounded-xl border border-[#FF5722]/50 bg-[#121113] p-3 shadow-neon"
               >
                 <input
                   type="text"
@@ -375,7 +375,7 @@ export default function Exercises() {
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
                   autoFocus
-                  className="min-h-[44px] flex-1 rounded-xl border border-[#2D1B4E] bg-[#140E24] px-3.5 py-2 text-sm text-white outline-none focus:border-[#A855F7]"
+                  className="min-h-[44px] flex-1 rounded-xl border border-[#2A1B14] bg-[#181210] px-3.5 py-2 text-sm text-white outline-none focus:border-[#FF5722]"
                 />
                 <button type="submit" className="iron-btn-primary min-h-[44px] px-4 text-xs font-bold">
                   Guardar
@@ -396,14 +396,14 @@ export default function Exercises() {
             {muscleGroups.map((group) => (
               <div
                 key={group.id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 shadow-card hover:border-[#A855F7]/40 hover:bg-[#1C1433] transition"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 shadow-card hover:border-[#FF5722]/40 hover:bg-[#2A1B14] transition"
               >
                 <div className="min-w-0 flex-1">
                   <h4 className="text-base font-black text-white truncate break-words">
                     {group.name}
                   </h4>
                   <div className="mt-1 flex items-center gap-1.5 text-xs text-[#A1A1AA]">
-                    <span className="rounded-md border border-[#2D1B4E] bg-[#0E0919] px-2 py-0.5 text-[11px] font-bold text-[#C084FC]">
+                    <span className="rounded-md border border-[#2A1B14] bg-[#121113] px-2 py-0.5 text-[11px] font-bold text-[#FF6D00]">
                       {group.exercise_count || 0} {group.exercise_count === 1 ? "ejercicio" : "ejercicios"}
                     </span>
                   </div>
@@ -415,7 +415,7 @@ export default function Exercises() {
                     type="button"
                     onClick={() => handleStartEditGroup(group)}
                     title="Editar nombre del grupo muscular"
-                    className="h-10 w-10 rounded-xl border border-[#2D1B4E] bg-[#0E0919] flex items-center justify-center text-[#A1A1AA] hover:border-[#A855F7] hover:text-[#C084FC] active:scale-95 transition"
+                    className="h-10 w-10 rounded-xl border border-[#2A1B14] bg-[#121113] flex items-center justify-center text-[#A1A1AA] hover:border-[#FF5722] hover:text-[#FF6D00] active:scale-95 transition"
                   >
                     <Pencil size={16} />
                   </button>
@@ -424,7 +424,7 @@ export default function Exercises() {
                     type="button"
                     onClick={() => setDeletingGroup(group)}
                     title="Eliminar grupo muscular"
-                    className="h-10 w-10 rounded-xl border border-[#2D1B4E] bg-[#0E0919] flex items-center justify-center text-[#71717A] hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 active:scale-95 transition"
+                    className="h-10 w-10 rounded-xl border border-[#2A1B14] bg-[#121113] flex items-center justify-center text-[#71717A] hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 active:scale-95 transition"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -438,14 +438,14 @@ export default function Exercises() {
       {/* Edit Muscle Group Modal */}
       {editingGroup && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#09060E]/80 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/80 backdrop-blur-sm p-4"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md rounded-2xl border border-[#A855F7]/50 bg-[#140E24] p-5 shadow-neon space-y-4 animate-fadeIn">
-            <div className="flex items-center justify-between border-b border-[#2D1B4E] pb-3">
+          <div className="w-full max-w-md rounded-2xl border border-[#FF5722]/50 bg-[#181210] p-5 shadow-neon space-y-4 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-[#2A1B14] pb-3">
               <div className="flex items-center gap-2 text-white font-black">
-                <Pencil size={18} className="text-[#A855F7]" />
+                <Pencil size={18} className="text-[#FF5722]" />
                 <span>Editar Grupo Muscular</span>
               </div>
               <button
@@ -499,11 +499,11 @@ export default function Exercises() {
       {/* Delete Muscle Group Confirmation Modal */}
       {deletingGroup && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#09060E]/85 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/85 backdrop-blur-sm p-4"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md rounded-2xl border-2 border-red-500/50 bg-[#140E24] p-5 shadow-[0_0_30px_rgba(239,68,68,0.25)] space-y-4 animate-fadeIn">
+          <div className="w-full max-w-md rounded-2xl border-2 border-red-500/50 bg-[#181210] p-5 shadow-[0_0_30px_rgba(239,68,68,0.25)] space-y-4 animate-fadeIn">
             <div className="flex items-center gap-3 text-red-400">
               <div className="h-10 w-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle size={22} />
@@ -518,7 +518,7 @@ export default function Exercises() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-3 text-xs text-[#A1A1AA] space-y-1.5">
+            <div className="rounded-xl border border-[#2A1B14] bg-[#121113] p-3 text-xs text-[#A1A1AA] space-y-1.5">
               <p>
                 Este grupo contiene{" "}
                 <strong className="text-white">

@@ -50,9 +50,25 @@ import {
   updateWorkoutSet,
 } from "../api/client";
 import RestTimerModal from "../components/RestTimerModal";
+import FloatingRestTimer from "../components/FloatingRestTimer";
+import PlateCalculatorModal from "../components/PlateCalculatorModal";
+import WorkoutDrawer from "../components/WorkoutDrawer";
 import { getLocalDateString, formatDateLong, formatDateSafe, parseDateSafe } from "../utils/dateUtils";
 import { enqueueSyncAction, getPendingQueue, isOnline, processSyncQueue } from "../utils/syncQueue";
 
+const RIR_OPTIONS = [
+  { value: 0, label: "RIR 0 (Fallo)", short: "Fallo" },
+  { value: 1, label: "RIR 1", short: "RIR 1" },
+  { value: 2, label: "RIR 2", short: "RIR 2" },
+  { value: 3, label: "RIR 3+", short: "RIR 3+" },
+];
+
+const SET_TYPES = [
+  { key: "normal", label: "Normal", badge: "N" },
+  { key: "warmup", label: "Calentamiento (W)", badge: "W" },
+  { key: "dropset", label: "Drop Set (D)", badge: "D" },
+  { key: "failure", label: "Al Fallo (F)", badge: "F" },
+];
 
 // Helper for muscle icon
 function getMuscleIcon(name = "") {
@@ -135,7 +151,7 @@ function getProgressionBadge(currentSet, prevSet) {
     return {
       type: "new",
       label: "★ Nueva serie",
-      className: "text-[#C084FC] border-[#C084FC]/30 bg-[#C084FC]/10",
+      className: "text-[#FF6D00] border-[#FF6D00]/30 bg-[#FF6D00]/10",
     };
   }
 
@@ -183,7 +199,7 @@ function getProgressionBadge(currentSet, prevSet) {
     return {
       type: "equal",
       label: "✓ Carga consolidada",
-      className: "text-[#C084FC] border-[#C084FC]/40 bg-[#C084FC]/10 font-bold",
+      className: "text-[#FF6D00] border-[#FF6D00]/40 bg-[#FF6D00]/10 font-bold",
     };
   }
 
@@ -191,13 +207,14 @@ function getProgressionBadge(currentSet, prevSet) {
   return {
     type: "deload",
     label: "↓ Control / Descarga",
-    className: "text-[#A1A1AA] border-[#2D1B4E] bg-[#140E24] font-medium",
+    className: "text-[#A1A1AA] border-[#2A1B14] bg-[#181210] font-medium",
   };
 }
 
 // Exercise Volume (Tonaje) stats calculator
 function getExerciseVolumeStats(activeExercise, prevSession) {
   const currentVolume = activeExercise.sets.reduce((sum, s) => {
+    if (s.set_type === "warmup" || s.set_type === "W") return sum;
     const w = parseFloat(s.weight) || 0;
     const r = parseInt(s.reps, 10) || 0;
     return sum + w * r;
@@ -258,7 +275,7 @@ export function getLoadAdvisor({ weight, reps, trainingGoal = "hipertrofia", bod
         badge = {
           label: "⚡ Carga de transición (6-8 reps)",
           sublabel: "Fuerza submáxima / Hipertrofia",
-          className: "border-purple-500/40 bg-purple-500/15 text-[#C084FC]",
+          className: "border-purple-500/40 bg-purple-500/15 text-[#FF6D00]",
         };
       } else if (r > 8) {
         badge = {
@@ -320,7 +337,7 @@ export function getLoadAdvisor({ weight, reps, trainingGoal = "hipertrofia", bod
         badge = {
           label: "⚡ En rango de Hipertrofia óptimo",
           sublabel: "8-12 reps • 65-80% 1RM • RPE 7-9",
-          className: "border-[#A855F7]/60 bg-[#9333EA]/20 text-[#C084FC] shadow-neon",
+          className: "border-[#FF5722]/60 bg-[#C84218]/20 text-[#FF6D00] shadow-neon",
         };
       } else if (r >= 5 && r < 8) {
         badge = {
@@ -391,10 +408,26 @@ export default function Workouts() {
   const [isDeviceOnline, setIsDeviceOnline] = useState(() => isOnline());
   const [pendingQueueCount, setPendingQueueCount] = useState(() => getPendingQueue().length);
   const [workoutNotes, setWorkoutNotes] = useState("");
-  const [activeExercises, setActiveExercises] = useState([]); // [{ exerciseId, exerciseName, muscleGroupId, sets: [{ id, setNumber, weight, reps, completed, rest_effort }] }]
+  const [activeExercises, setActiveExercises] = useState([]); // [{ exerciseId, exerciseName, muscleGroupId, sets: [{ id, setNumber, weight, reps, completed, rest_effort, rir, set_type }] }]
   const [showRestTimer, setShowRestTimer] = useState(false); // Explicit trigger for RestTimerModal
   const [currentRestInfo, setCurrentRestInfo] = useState(null); // Context for active rest set
   const [previousSessions, setPreviousSessions] = useState({}); // { [exerciseId]: PreviousExerciseSessionOut }
+
+  // Advanced Gym Tools: Bottom Sheet Drawer, Floating Rest Timer & Plate Calculator
+  const [drawerExerciseId, setDrawerExerciseId] = useState(null);
+  const [floatingRestTimer, setFloatingRestTimer] = useState({
+    isOpen: false,
+    exerciseName: "",
+    setNumber: null,
+    initialSeconds: 90,
+  });
+  const [plateCalcModal, setPlateCalcModal] = useState({
+    isOpen: false,
+    exerciseName: "",
+    weight: 60,
+    exerciseId: null,
+    setIndex: null,
+  });
 
   // Save / Finish state
   const [isSaving, setIsSaving] = useState(false);
@@ -941,8 +974,8 @@ export default function Workouts() {
     }
   };
 
-  // Add a new set to an exercise (Prefills with ghost set or previous set)
-  const handleAddSet = async (exerciseId) => {
+  // Add a new set to an exercise (Prefills with initialData, ghost set or previous set)
+  const handleAddSet = async (exerciseId, initialData = {}) => {
     const exItem = activeExercises.find((ae) => ae.exerciseId === exerciseId);
     if (!exItem) return;
 
@@ -954,18 +987,33 @@ export default function Workouts() {
     let nextWeight = 20.0;
     let nextReps = 10;
 
-    if (ghostSet) {
+    if (initialData.weight !== undefined) {
+      nextWeight = parseFloat(initialData.weight) || 0.0;
+    } else if (ghostSet) {
       nextWeight = ghostSet.weight;
-      nextReps = ghostSet.reps;
     } else if (sets.length > 0) {
       const lastSet = sets[sets.length - 1];
       nextWeight = lastSet.weight;
-      nextReps = lastSet.reps;
     } else {
       const rec = recordsMap[exerciseId];
       if (rec?.last_weight) nextWeight = rec.last_weight;
+    }
+
+    if (initialData.reps !== undefined) {
+      nextReps = parseInt(initialData.reps, 10) || 0;
+    } else if (ghostSet) {
+      nextReps = ghostSet.reps;
+    } else if (sets.length > 0) {
+      const lastSet = sets[sets.length - 1];
+      nextReps = lastSet.reps;
+    } else {
+      const rec = recordsMap[exerciseId];
       if (rec?.last_reps) nextReps = rec.last_reps;
     }
+
+    const nextRir = initialData.rir !== undefined ? initialData.rir : 2;
+    const nextType = initialData.set_type || "normal";
+    const nextCompleted = Boolean(initialData.completed);
 
     const nextSetNumber = sets.length + 1;
     const tempSetId = `temp_set_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -975,7 +1023,9 @@ export default function Workouts() {
       setNumber: nextSetNumber,
       weight: nextWeight,
       reps: nextReps,
-      completed: false,
+      completed: nextCompleted,
+      rir: nextRir,
+      set_type: nextType,
       rest_effort: null,
     };
 
@@ -1003,7 +1053,9 @@ export default function Workouts() {
             set_number: nextSetNumber,
             weight: nextWeight,
             reps: nextReps,
-            completed: false,
+            completed: nextCompleted,
+            rir: nextRir,
+            set_type: nextType,
           });
           setActiveExercises((prev) =>
             prev.map((item) => {
@@ -1030,7 +1082,9 @@ export default function Workouts() {
               set_number: nextSetNumber,
               weight: nextWeight,
               reps: nextReps,
-              completed: false,
+              completed: nextCompleted,
+              rir: nextRir,
+              set_type: nextType,
             },
           },
         });
@@ -1231,6 +1285,8 @@ export default function Workouts() {
         const payload = {};
         if (field === "weight") payload.weight = parseFloat(value) || 0.0;
         if (field === "reps") payload.reps = parseInt(value, 10) || 0;
+        if (field === "rir") payload.rir = value !== null && value !== undefined ? parseInt(value, 10) : null;
+        if (field === "set_type") payload.set_type = value;
 
         if (String(targetSetId).startsWith("temp_")) {
           enqueueSyncAction({
@@ -1290,7 +1346,7 @@ export default function Workouts() {
       return next;
     });
 
-    // 2. CRUCIAL: Trigger Rest Timer Modal explicitly when set is marked completed!
+    // 2. CRUCIAL: Trigger Floating Rest Timer automatically when set is marked completed!
     if (nextCompleted) {
       setCurrentRestInfo({
         setId: targetSet.id || null,
@@ -1302,7 +1358,12 @@ export default function Workouts() {
         reps: parseInt(targetSet.reps, 10) || 0,
         totalSets: exItem.sets.length,
       });
-      setShowRestTimer(true);
+      setFloatingRestTimer({
+        isOpen: true,
+        exerciseName: exItem.exerciseName || "Ejercicio",
+        setNumber: setIndex + 1,
+        initialSeconds: 90,
+      });
     }
 
     // 3. Persist check state to backend or enqueue if offline
@@ -1397,6 +1458,7 @@ export default function Workouts() {
   const totalVolume = useMemo(() => {
     return activeExercises.reduce((acc, ex) => {
       const exerciseVol = ex.sets.reduce((sum, s) => {
+        if (s.set_type === "warmup" || s.set_type === "W") return sum;
         const wt = parseFloat(s.weight) || 0;
         const rp = parseInt(s.reps, 10) || 0;
         return sum + wt * rp;
@@ -1419,6 +1481,8 @@ export default function Workouts() {
             reps: parseInt(s.reps, 10) || 0,
             completed: Boolean(s.completed),
             rest_effort: s.rest_effort || null,
+            rir: s.rir !== undefined ? s.rir : null,
+            set_type: s.set_type || "normal",
           });
         }
       });
@@ -1611,7 +1675,7 @@ export default function Workouts() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-[#A855F7]">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-[#FF5722]">
         <Loader2 size={36} className="animate-spin" />
         <p className="text-sm font-semibold tracking-wide text-[#A1A1AA]">
           Cargando FitTracker OLED...
@@ -1623,21 +1687,21 @@ export default function Workouts() {
   return (
     <div className="w-full max-w-md sm:max-w-4xl mx-auto space-y-5 pb-24 px-1 sm:px-0">
       {/* 1. Header & Date Section */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#2D1B4E] bg-gradient-to-r from-[#140E24] via-[#1C1433] to-[#140E24] p-4 shadow-card sm:p-5">
+      <div className="relative overflow-hidden rounded-2xl border border-[#2A1B14] bg-gradient-to-r from-[#181210] via-[#2A1B14] to-[#181210] p-4 shadow-card sm:p-5">
         <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#A855F7]/30 bg-[#9333EA]/15 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#C084FC]">
-                <Flame size={14} className="text-[#A855F7]" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#FF5722]/30 bg-[#C84218]/15 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#FF6D00]">
+                <Flame size={14} className="text-[#FF5722]" />
                 <span>SESIÓN DE ENTRENAMIENTO</span>
               </div>
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("fittracker:openProfile"))}
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#A855F7]/40 bg-[#140E24] px-2.5 py-1 text-[10px] font-black uppercase text-[#C084FC] hover:border-[#A855F7] hover:bg-[#1C1433] transition"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#FF5722]/40 bg-[#181210] px-2.5 py-1 text-[10px] font-black uppercase text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#2A1B14] transition"
                 title="Cambiar nivel o ver explicaciones de entrenamiento"
               >
-                <User size={11} className="text-[#A855F7]" />
+                <User size={11} className="text-[#FF5722]" />
                 <span className="capitalize">{userLevel}</span>
               </button>
               {(!isDeviceOnline || pendingQueueCount > 0) ? (
@@ -1684,7 +1748,7 @@ export default function Workouts() {
               type="date"
               value={workoutDate}
               onChange={(e) => handleDateChange(e.target.value)}
-              className="min-h-[44px] rounded-xl border border-[#2D1B4E] bg-[#0E0919] px-3 py-2 text-xs font-bold text-white outline-none focus:border-[#A855F7]"
+              className="min-h-[44px] rounded-xl border border-[#2A1B14] bg-[#121113] px-3 py-2 text-xs font-bold text-white outline-none focus:border-[#FF5722]"
             />
             {activeExercises.length > 0 && (
               <button
@@ -1707,16 +1771,16 @@ export default function Workouts() {
       )}
 
       {/* Duelo en Vivo 1 vs 1 Shortcut Banner */}
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#A855F7]/40 bg-gradient-to-r from-[#1C1433] via-[#140E24] to-[#1C1433] p-3.5 shadow-neon">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#FF5722]/40 bg-gradient-to-r from-[#2A1B14] via-[#181210] to-[#2A1B14] p-3.5 shadow-neon">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#9333EA] to-[#A855F7] flex items-center justify-center text-white flex-shrink-0 shadow-neon">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#C84218] to-[#FF5722] flex items-center justify-center text-white flex-shrink-0 shadow-neon">
             <Swords size={20} />
           </div>
           <div className="min-w-0">
             <h4 className="text-xs sm:text-sm font-black text-white truncate">
               ¿Entrenando con un compañero hoy?
             </h4>
-            <p className="text-[11px] text-[#C084FC] truncate">
+            <p className="text-[11px] text-[#FF6D00] truncate">
               Lanzá un Duelo 1 vs 1 en vivo con fuerza relativa (normalizada por peso corporal)
             </p>
           </div>
@@ -1732,7 +1796,7 @@ export default function Workouts() {
 
 
       {/* 1.5. Estado del Día (Readiness Check-in - Opcional & 1-Tap) */}
-      <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5 sm:p-4 shadow-card space-y-3">
+      <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 sm:p-4 shadow-card space-y-3">
         <div
           onClick={() => setIsReadinessOpen(!isReadinessOpen)}
           className="flex items-center justify-between cursor-pointer select-none"
@@ -1781,7 +1845,7 @@ export default function Workouts() {
 
         {/* Collapsible content */}
         {isReadinessOpen && (
-          <div className="space-y-3 pt-2 border-t border-[#2D1B4E]/60 animate-in fade-in duration-150">
+          <div className="space-y-3 pt-2 border-t border-[#2A1B14]/60 animate-in fade-in duration-150">
             {/* Energy selector */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
@@ -1807,7 +1871,7 @@ export default function Workouts() {
                     className={`min-h-[44px] rounded-xl border text-xs sm:text-sm font-black transition active:scale-95 flex items-center justify-center ${
                       readinessEnergy === val
                         ? "border-amber-400 bg-amber-500/25 text-amber-300 shadow-neon"
-                        : "border-[#2D1B4E] bg-[#0E0919] text-[#A1A1AA] hover:border-amber-400/40 hover:text-white"
+                        : "border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-amber-400/40 hover:text-white"
                     }`}
                   >
                     {val}
@@ -1841,7 +1905,7 @@ export default function Workouts() {
                     className={`min-h-[44px] rounded-xl border text-xs sm:text-sm font-black transition active:scale-95 flex items-center justify-center ${
                       readinessMotivation === val
                         ? "border-orange-400 bg-orange-500/25 text-orange-300 shadow-neon"
-                        : "border-[#2D1B4E] bg-[#0E0919] text-[#A1A1AA] hover:border-orange-400/40 hover:text-white"
+                        : "border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-orange-400/40 hover:text-white"
                     }`}
                   >
                     {val}
@@ -1863,7 +1927,7 @@ export default function Workouts() {
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#9333EA]/20 text-xs font-black text-[#C084FC]">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
               1
             </span>
             <h2 className="text-xs font-black uppercase tracking-wider text-[#A1A1AA]">
@@ -1888,15 +1952,15 @@ export default function Workouts() {
                 }}
                 className={`relative flex min-h-[82px] flex-col items-center justify-center gap-1.5 rounded-2xl p-2.5 text-center transition duration-150 active:scale-95 ${
                   isSelected
-                    ? "border-2 border-[#A855F7] bg-[#1C1433] shadow-cardActive text-white"
-                    : "border border-[#2D1B4E] bg-[#140E24] text-[#A1A1AA] hover:border-[#A855F7]/40 hover:bg-[#1C1433] hover:text-white"
+                    ? "border-2 border-[#FF5722] bg-[#2A1B14] shadow-cardActive text-white"
+                    : "border border-[#2A1B14] bg-[#181210] text-[#A1A1AA] hover:border-[#FF5722]/40 hover:bg-[#2A1B14] hover:text-white"
                 }`}
               >
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
                     isSelected
-                      ? "bg-gradient-to-br from-[#9333EA] to-[#7E22CE] text-white shadow-neon"
-                      : "border border-[#2D1B4E] bg-[#0E0919] text-[#C084FC]"
+                      ? "bg-gradient-to-br from-[#C84218] to-[#7E22CE] text-white shadow-neon"
+                      : "border border-[#2A1B14] bg-[#121113] text-[#FF6D00]"
                   }`}
                 >
                   <MuscleIcon size={20} />
@@ -1910,7 +1974,7 @@ export default function Workouts() {
                   </span>
                 </div>
                 {isSelected && (
-                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#A855F7] shadow-neon" />
+                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#FF5722] shadow-neon" />
                 )}
               </button>
             );
@@ -1920,10 +1984,10 @@ export default function Workouts() {
 
       {/* 3. Selección Rápida del Catálogo Oficial (10 Ejercicios) */}
       {selectedMuscleId && (
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-4 shadow-card space-y-3.5 sm:p-5">
+        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 shadow-card space-y-3.5 sm:p-5">
           <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#9333EA]/20 text-xs font-black text-[#C084FC]">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
                 2
               </span>
               <h2 className="text-xs font-black uppercase tracking-wider text-[#A1A1AA]">
@@ -1942,8 +2006,8 @@ export default function Workouts() {
                     onClick={() => setEquipmentFilter(chip)}
                     className={`rounded-xl px-2.5 py-1 text-xs font-bold transition active:scale-95 ${
                       isSelected
-                        ? "border border-[#A855F7] bg-[#9333EA]/30 text-white shadow-neon"
-                        : "border border-[#2D1B4E] bg-[#0E0919] text-[#A1A1AA] hover:border-[#A855F7]/40 hover:text-white"
+                        ? "border border-[#FF5722] bg-[#C84218]/30 text-white shadow-neon"
+                        : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/40 hover:text-white"
                     }`}
                   >
                     {chip}
@@ -1960,7 +2024,7 @@ export default function Workouts() {
               placeholder="🔍 Buscar ejercicio..."
               value={exerciseFilter}
               onChange={(e) => setExerciseFilter(e.target.value)}
-              className="w-full rounded-xl border border-[#2D1B4E] bg-[#0E0919] px-3.5 py-2.5 text-xs font-bold text-white placeholder-[#71717A] outline-none transition focus:border-[#A855F7] focus:shadow-neon"
+              className="w-full rounded-xl border border-[#2A1B14] bg-[#121113] px-3.5 py-2.5 text-xs font-bold text-white placeholder-[#71717A] outline-none transition focus:border-[#FF5722] focus:shadow-neon"
             />
             {exerciseFilter && (
               <button
@@ -1986,11 +2050,16 @@ export default function Workouts() {
                 <button
                   key={ex.id}
                   type="button"
-                  onClick={() => handleAddExerciseToWorkout(ex)}
+                  onClick={async () => {
+                    if (!isAdded) {
+                      await handleAddExerciseToWorkout(ex);
+                    }
+                    setDrawerExerciseId(ex.id);
+                  }}
                   className={`flex items-center justify-between gap-3 rounded-xl p-3 text-left transition duration-150 active:scale-[0.98] ${
                     isAdded
-                      ? "border-2 border-[#A855F7] bg-[#1C1433] text-white shadow-prGlow cursor-default"
-                      : "border border-[#2D1B4E] bg-[#0E0919] text-white hover:border-[#A855F7]/70 hover:bg-[#1C1433]"
+                      ? "border-2 border-[#FF5722] bg-[#2A1B14] text-white shadow-prGlow"
+                      : "border border-[#2A1B14] bg-[#121113] text-white hover:border-[#FF5722]/70 hover:bg-[#1C1412]"
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -1998,7 +2067,7 @@ export default function Workouts() {
                       className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg transition ${
                         isAdded
                           ? "bg-[#34D399]/20 text-[#34D399]"
-                          : "bg-[#2D1B4E] text-[#C084FC]"
+                          : "bg-[#2A1B14] text-[#FF6D00]"
                       }`}
                     >
                       {isAdded ? <Check size={16} /> : <Plus size={16} />}
@@ -2013,18 +2082,23 @@ export default function Workouts() {
                     </div>
                   </div>
 
-                  {rec?.pr_weight ? (
-                    <span className="flex-shrink-0 rounded-md border border-[#A855F7]/30 bg-[#2D1B4E] px-2 py-0.5 text-[10px] font-black text-[#C084FC]">
-                      PR {rec.pr_weight}kg
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {rec?.pr_weight ? (
+                      <span className="rounded-md border border-[#FF5722]/30 bg-[#2A1B14] px-2 py-0.5 text-[10px] font-black text-[#FF6D00]">
+                        PR {rec.pr_weight}kg
+                      </span>
+                    ) : null}
+                    <span className="rounded-lg bg-[#FF5722]/15 border border-[#FF5722]/30 px-1.5 py-0.5 text-[10px] font-black text-[#FF5722]">
+                      ⚡ Cargar
                     </span>
-                  ) : null}
+                  </div>
                 </button>
               );
             })}
           </div>
 
           {filteredExercisesForSelection.length === 0 && (
-            <div className="rounded-xl border border-dashed border-[#2D1B4E] bg-[#0E0919] p-6 text-center">
+            <div className="rounded-xl border border-dashed border-[#2A1B14] bg-[#121113] p-6 text-center">
               <p className="text-xs font-bold text-[#A1A1AA]">
                 No se encontraron ejercicios con ese filtro.
               </p>
@@ -2034,7 +2108,7 @@ export default function Workouts() {
                   setExerciseFilter("");
                   setEquipmentFilter("Todos");
                 }}
-                className="mt-2 text-xs font-bold text-[#C084FC] hover:underline"
+                className="mt-2 text-xs font-bold text-[#FF6D00] hover:underline"
               >
                 Restablecer filtros
               </button>
@@ -2051,20 +2125,20 @@ export default function Workouts() {
           const isOverload = currentTip.category === "overload";
           const isRecovery = currentTip.category === "recovery";
 
-          let borderBg = "border-[#A855F7]/40 bg-gradient-to-r from-[#9333EA]/15 via-[#140E24] to-[#140E24]";
-          let iconColor = "text-[#C084FC]";
-          let categoryBadge = "border-[#A855F7]/30 bg-[#9333EA]/20 text-[#C084FC]";
+          let borderBg = "border-[#FF5722]/40 bg-gradient-to-r from-[#C84218]/15 via-[#181210] to-[#181210]";
+          let iconColor = "text-[#FF6D00]";
+          let categoryBadge = "border-[#FF5722]/30 bg-[#C84218]/20 text-[#FF6D00]";
 
           if (isWillpower) {
-            borderBg = "border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-[#140E24] to-[#140E24]";
+            borderBg = "border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-[#181210] to-[#181210]";
             iconColor = "text-amber-400";
             categoryBadge = "border-amber-500/40 bg-amber-500/20 text-amber-300";
           } else if (isRecovery) {
-            borderBg = "border-blue-500/40 bg-gradient-to-r from-blue-500/15 via-[#140E24] to-[#140E24]";
+            borderBg = "border-blue-500/40 bg-gradient-to-r from-blue-500/15 via-[#181210] to-[#181210]";
             iconColor = "text-blue-400";
             categoryBadge = "border-blue-500/40 bg-blue-500/20 text-blue-300";
           } else if (isOverload) {
-            borderBg = "border-[#34D399]/40 bg-gradient-to-r from-[#34D399]/15 via-[#140E24] to-[#140E24]";
+            borderBg = "border-[#34D399]/40 bg-gradient-to-r from-[#34D399]/15 via-[#181210] to-[#181210]";
             iconColor = "text-[#34D399]";
             categoryBadge = "border-[#34D399]/40 bg-[#34D399]/20 text-[#34D399]";
           }
@@ -2086,7 +2160,7 @@ export default function Workouts() {
             <div className={`relative rounded-2xl border p-3.5 sm:p-4 shadow-neon transition duration-200 ${borderBg}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl bg-[#0E0919] flex-shrink-0 ${iconColor}`}>
+                  <div className={`mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl bg-[#121113] flex-shrink-0 ${iconColor}`}>
                     <TipIcon size={18} />
                   </div>
                   <div className="space-y-1">
@@ -2110,7 +2184,7 @@ export default function Workouts() {
                       type="button"
                       onClick={() => setCurrentTipIdx((prev) => (prev + 1) % contextualTips.length)}
                       title="Siguiente consejo"
-                      className="rounded-lg border border-[#2D1B4E] bg-[#0E0919] p-1.5 text-[#A1A1AA] hover:text-white hover:border-[#A855F7] transition"
+                      className="rounded-lg border border-[#2A1B14] bg-[#121113] p-1.5 text-[#A1A1AA] hover:text-white hover:border-[#FF5722] transition"
                     >
                       <Sparkles size={14} />
                     </button>
@@ -2134,7 +2208,7 @@ export default function Workouts() {
       <div className="space-y-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#9333EA]/20 text-xs font-black text-[#C084FC]">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
               3
             </span>
             <h2 className="text-xs font-black uppercase tracking-wider text-[#A1A1AA]">
@@ -2150,8 +2224,8 @@ export default function Workouts() {
         </div>
 
         {activeExercises.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#2D1B4E] bg-[#140E24]/60 p-8 text-center sm:p-12">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0E0919] text-[#A855F7] shadow-neon">
+          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#2A1B14] bg-[#181210]/60 p-8 text-center sm:p-12">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#121113] text-[#FF5722] shadow-neon">
               <Dumbbell size={28} />
             </div>
             <h3 className="mt-3.5 text-base font-bold text-white">
@@ -2182,17 +2256,17 @@ export default function Workouts() {
               return (
                 <div
                   key={ae.exerciseId}
-                  className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5 shadow-card sm:p-5 space-y-3"
+                  className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card sm:p-5 space-y-3"
                 >
                   {/* Exercise Header */}
-                  <div className="flex flex-col gap-2.5 border-b border-[#2D1B4E] pb-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-2.5 border-b border-[#2A1B14] pb-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-base sm:text-lg font-black text-white truncate max-w-full break-words leading-tight">
                           {ae.exerciseName}
                         </h3>
                         {isBreakingPr && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#9333EA] to-[#7E22CE] px-2 py-0.5 text-[10px] font-black text-white shadow-neon animate-pulse flex-shrink-0">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#C84218] to-[#7E22CE] px-2 py-0.5 text-[10px] font-black text-white shadow-neon animate-pulse flex-shrink-0">
                             <Sparkles size={11} /> ¡PR!
                           </span>
                         )}
@@ -2201,7 +2275,7 @@ export default function Workouts() {
                       {/* Benchmarks & Hypertrophy Overload Bar */}
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
                         <div className="oled-pr-badge">
-                          <Trophy size={13} className="text-[#C084FC]" />
+                          <Trophy size={13} className="text-[#FF6D00]" />
                           <span>
                             PR: {prWeight ? `${prWeight}kg × ${prReps}` : "Sin PR"}
                             {prWeight && (userProfile?.bodyweight ?? 70) ? (
@@ -2214,12 +2288,12 @@ export default function Workouts() {
 
                         {/* Carga Máxima de Hoy & Ratio Relativo */}
                         {currentMaxWeight > 0 && (
-                          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#A855F7]/40 bg-[#1C1433] px-2.5 py-1 text-xs font-bold text-white shadow-sm">
-                            <Scale size={13} className="text-[#A855F7]" />
+                          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#FF5722]/40 bg-[#2A1B14] px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                            <Scale size={13} className="text-[#FF5722]" />
                             <span>
                               Hoy máx: <strong className="text-white">{currentMaxWeight}kg</strong>
                               {(userProfile?.bodyweight ?? 70) ? (
-                                <span className="text-[#C084FC] ml-1 font-black">
+                                <span className="text-[#FF6D00] ml-1 font-black">
                                   ({currentMaxWeight}kg = {(currentMaxWeight / (userProfile?.bodyweight ?? 70)).toFixed(2)}× tu peso)
                                 </span>
                               ) : null}
@@ -2232,16 +2306,16 @@ export default function Workouts() {
                           <button
                             type="button"
                             onClick={() => window.dispatchEvent(new CustomEvent("fittracker:openProfile"))}
-                            className="inline-flex items-center gap-1 rounded-full border border-dashed border-[#2D1B4E] bg-[#0E0919] px-2.5 py-1 text-[11px] font-bold text-[#A1A1AA] hover:border-[#A855F7]/50 hover:text-[#C084FC] transition"
+                            className="inline-flex items-center gap-1 rounded-full border border-dashed border-[#2A1B14] bg-[#121113] px-2.5 py-1 text-[11px] font-bold text-[#A1A1AA] hover:border-[#FF5722]/50 hover:text-[#FF6D00] transition"
                             title="Ingresá tu peso corporal en Mi Perfil para calcular la fuerza relativa"
                           >
-                            <Scale size={12} className="text-[#A855F7]" />
+                            <Scale size={12} className="text-[#FF5722]" />
                             <span>+ Ingresar peso (ratio)</span>
                           </button>
                         )}
 
                         {/* Volume (Tonaje) Comparison Pill */}
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-[#2D1B4E] bg-[#0E0919] px-2.5 py-1 text-xs font-semibold">
+                        <div className="inline-flex items-center gap-1.5 rounded-full border border-[#2A1B14] bg-[#121113] px-2.5 py-1 text-xs font-semibold">
                           <span className="text-[#71717A]">Volumen:</span>
                           <span className="text-white font-black">
                             {Math.round(exVolStats.currentVolume).toLocaleString()} kg
@@ -2256,7 +2330,7 @@ export default function Workouts() {
                                   className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-black ${
                                     exVolStats.diffVolume > 0
                                       ? "text-[#34D399] bg-[#34D399]/15 border border-[#34D399]/30"
-                                      : "text-[#A1A1AA] bg-[#140E24] border border-[#2D1B4E]"
+                                      : "text-[#A1A1AA] bg-[#181210] border border-[#2A1B14]"
                                   }`}
                                 >
                                   {exVolStats.diffVolume > 0
@@ -2273,6 +2347,16 @@ export default function Workouts() {
                     <div className="flex flex-wrap items-center gap-1.5 self-end sm:self-center">
                       <button
                         type="button"
+                        onClick={() => setDrawerExerciseId(ae.exerciseId)}
+                        className="inline-flex items-center gap-1 rounded-xl border border-[#FF5722]/50 bg-[#FF5722]/15 px-2.5 py-1.5 text-[11px] font-black text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#FF5722] hover:text-white transition active:scale-95 shadow-sm"
+                        title="Abrir panel inferior de carga rápida"
+                      >
+                        <Zap size={12} />
+                        <span>⚡ Carga Rápida</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => {
                           const lastSet = ae.sets[ae.sets.length - 1];
                           setCurrentRestInfo({
@@ -2283,9 +2367,14 @@ export default function Workouts() {
                             weight: parseFloat(lastSet?.weight) || 0,
                             reps: parseInt(lastSet?.reps, 10) || 0,
                           });
-                          setShowRestTimer(true);
+                          setFloatingRestTimer({
+                            isOpen: true,
+                            exerciseName: ae.exerciseName,
+                            setNumber: ae.sets.length,
+                            initialSeconds: 90,
+                          });
                         }}
-                        className="inline-flex items-center gap-1 rounded-xl border border-[#A855F7]/40 bg-[#1C1433] px-2.5 py-1.5 text-[11px] font-black text-[#C084FC] hover:border-[#A855F7] hover:bg-[#251A45] hover:text-white transition active:scale-95 shadow-neon"
+                        className="inline-flex items-center gap-1 rounded-xl border border-[#2A1B14] bg-[#121113] px-2.5 py-1.5 text-[11px] font-black text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#2A1B14] hover:text-white transition active:scale-95 shadow-sm"
                         title="Abrir temporizador de descanso"
                       >
                         <Clock size={12} />
@@ -2296,7 +2385,7 @@ export default function Workouts() {
                         <button
                           type="button"
                           onClick={() => handleCopyFullPreviousSession(ae.exerciseId)}
-                          className="inline-flex items-center gap-1 rounded-xl border border-[#2D1B4E] bg-[#0E0919] px-2.5 py-1.5 text-[11px] font-bold text-[#C084FC] hover:border-[#A855F7] hover:bg-[#1C1433] transition active:scale-95"
+                          className="inline-flex items-center gap-1 rounded-xl border border-[#2A1B14] bg-[#121113] px-2.5 py-1.5 text-[11px] font-bold text-[#A1A1AA] hover:border-[#FF5722] hover:bg-[#2A1B14] hover:text-white transition active:scale-95"
                           title="Copiar todas las series y cargas de la sesión anterior"
                         >
                           <RotateCcw size={12} />
@@ -2319,11 +2408,39 @@ export default function Workouts() {
                   <div className="space-y-2.5">
                     {ae.sets.map((set, setIdx) => {
                       const isDone = set.completed;
+                      const isWarmup = set.set_type === "warmup" || set.set_type === "W";
                       const prevSet = prevSession?.sets?.[setIdx];
                       const progression = getProgressionBadge(set, prevSet);
 
                       const setWeight = parseFloat(set.weight) || 0;
                       const setReps = parseInt(set.reps, 10) || 0;
+
+                      // PR detection logic in real time (warmup sets excluded)
+                      const max_weight_previo = rec?.pr_weight ? parseFloat(rec.pr_weight) : 0;
+                      const max_1rm_previo = rec?.best_estimated_1rm
+                        ? parseFloat(rec.best_estimated_1rm)
+                        : (max_weight_previo > 0 && rec?.pr_reps
+                            ? parseFloat(rec.pr_weight) * (1 + parseInt(rec.pr_reps, 10) / 30)
+                            : 0);
+
+                      // 1RM estimado en tiempo real usando fórmula Epley/Brzycki: peso * (1 + reps / 30)
+                      const est1RM =
+                        !isWarmup && setWeight > 0 && setReps > 0
+                          ? setReps === 1
+                            ? setWeight
+                            : Math.round(setWeight * (1 + setReps / 30) * 10) / 10
+                          : 0;
+
+                      // 1. Si peso > max_weight_previo: Activar estado isWeightPR = true
+                      const isWeightPR =
+                        !isWarmup && setWeight > 0 && max_weight_previo > 0 && setWeight > max_weight_previo;
+                      const weightDiff = isWeightPR ? +(setWeight - max_weight_previo).toFixed(1) : 0;
+
+                      // 2. Si 1RM_actual > max_1rm_previo: Activar estado is1RMPR = true
+                      const is1RMPR =
+                        !isWarmup && est1RM > 0 && max_1rm_previo > 0 && est1RM > max_1rm_previo;
+                      const oneRmDiff = is1RMPR ? +(est1RM - max_1rm_previo).toFixed(1) : 0;
+
                       const loadAdvice = getLoadAdvisor({
                         weight: setWeight,
                         reps: setReps,
@@ -2332,13 +2449,19 @@ export default function Workouts() {
                         prWeight: rec?.pr_weight,
                       });
 
+                      const isBarbell = getExerciseEquipment(ae.exerciseName) === "Barra";
+
                       return (
                         <div
                           key={set.id ? `set-${set.id}` : `num-${set.setNumber}`}
                           className={`rounded-xl border p-2.5 transition duration-150 ${
-                            isDone
+                            isWeightPR
+                              ? "border-amber-400/80 bg-gradient-to-r from-amber-500/[0.08] via-yellow-500/[0.04] to-amber-500/[0.08] shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+                              : !isWeightPR && is1RMPR
+                              ? "border-[#FF5722]/70 bg-[#FF5722]/[0.08] shadow-[0_0_12px_rgba(255,87,34,0.25)]"
+                              : isDone
                               ? "border-[#34D399]/40 bg-[#34D399]/[0.06]"
-                              : "border-[#2D1B4E] bg-[#0E0919]"
+                              : "border-[#2A1B14] bg-[#0D0C0E]"
                           }`}
                         >
                           {/* Main Numeric Controls Row with Wrapping Flexbox for Mobile */}
@@ -2346,7 +2469,7 @@ export default function Workouts() {
                             {/* Left Group: Set Badge + Weight + Reps */}
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap flex-1 min-w-0">
                               {/* Set Badge */}
-                              <div className="flex h-11 w-9 sm:h-12 sm:w-10 flex-col items-center justify-center rounded-lg bg-[#140E24] border border-[#2D1B4E] text-xs font-black text-white flex-shrink-0">
+                              <div className="flex h-11 w-9 sm:h-12 sm:w-10 flex-col items-center justify-center rounded-lg bg-[#181210] border border-[#2A1B14] text-xs font-black text-white flex-shrink-0">
                                 <span>#{set.setNumber}</span>
                                 {set.rest_effort && (
                                   <span className="text-[10px] leading-none mt-0.5" title={`Descanso: ${set.rest_effort}`}>
@@ -2355,8 +2478,27 @@ export default function Workouts() {
                                 )}
                               </div>
 
-                              {/* Weight Input (kg) */}
+                              {/* Weight Input (kg) + Plate Calculator Button */}
                               <div className="flex items-center gap-1">
+                                {isBarbell && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setPlateCalcModal({
+                                        isOpen: true,
+                                        exerciseName: ae.exerciseName,
+                                        weight: parseFloat(set.weight) || 60,
+                                        exerciseId: ae.exerciseId,
+                                        setIndex: setIdx,
+                                      })
+                                    }
+                                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#2A1B14] bg-[#121113] text-xs font-black text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#2A1B14] transition active:scale-95 flex-shrink-0"
+                                    title="Calculadora de Discos para Barra Olímpica (20kg)"
+                                  >
+                                    ⚖️
+                                  </button>
+                                )}
+
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -2388,7 +2530,7 @@ export default function Workouts() {
                                         e.target.value
                                       )
                                     }
-                                    className="w-20 text-center px-2 py-2 text-base font-black rounded-lg border border-[#2D1B4E] bg-[#0E0919] text-white outline-none focus:border-[#A855F7] focus:ring-1 focus:ring-[#A855F7] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-20 text-center px-2 py-2 text-base font-black rounded-lg border border-[#2A1B14] bg-[#121113] text-white outline-none focus:border-[#FF5722] focus:ring-1 focus:ring-[#FF5722] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     placeholder={prevSet ? `${prevSet.weight}` : "kg"}
                                   />
                                   <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-[#71717A]">
@@ -2447,7 +2589,7 @@ export default function Workouts() {
                                         e.target.value
                                       )
                                     }
-                                    className="w-20 text-center px-2 py-2 text-base font-black rounded-lg border border-[#2D1B4E] bg-[#0E0919] text-white outline-none focus:border-[#A855F7] focus:ring-1 focus:ring-[#A855F7] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-20 text-center px-2 py-2 text-base font-black rounded-lg border border-[#2A1B14] bg-[#121113] text-white outline-none focus:border-[#FF5722] focus:ring-1 focus:ring-[#FF5722] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     placeholder={prevSet ? `${prevSet.reps}` : "reps"}
                                   />
                                   <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-[#71717A]">
@@ -2503,8 +2645,106 @@ export default function Workouts() {
                             </div>
                           </div>
 
+                          {/* Selector rápido de Tipo de Serie & RIR */}
+                          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[#2A1B14]/60 pt-2 text-xs">
+                            {/* Tipo de Serie */}
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className="text-[10px] font-bold text-[#71717A] uppercase mr-1">
+                                Tipo:
+                              </span>
+                              {SET_TYPES.map((t) => (
+                                <button
+                                  key={t.key}
+                                  type="button"
+                                  onClick={() =>
+                                    handleUpdateSet(ae.exerciseId, setIdx, "set_type", t.key)
+                                  }
+                                  className={`rounded px-1.5 py-0.5 text-[10px] font-black transition active:scale-95 ${
+                                    (set.set_type || "normal") === t.key
+                                      ? t.key === "warmup"
+                                        ? "border border-amber-500 bg-amber-500 text-black font-black"
+                                        : t.key === "failure"
+                                        ? "border border-red-500 bg-red-500 text-white font-black"
+                                        : "border border-[#FF5722] bg-[#FF5722] text-[#050505] font-black shadow-sm"
+                                      : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/50 hover:text-white"
+                                  }`}
+                                  title={t.label}
+                                >
+                                  {t.badge} ({t.key === "normal" ? "Norm" : t.key === "warmup" ? "Cal" : t.key === "dropset" ? "Drop" : "Fallo"})
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Selector RIR */}
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className="text-[10px] font-bold text-[#71717A] uppercase mr-1">
+                                RIR:
+                              </span>
+                              {RIR_OPTIONS.map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() =>
+                                    handleUpdateSet(ae.exerciseId, setIdx, "rir", opt.value)
+                                  }
+                                  className={`rounded px-1.5 py-0.5 text-[10px] font-black transition active:scale-95 ${
+                                    (set.rir ?? 2) === opt.value
+                                      ? "border border-[#FF5722] bg-[#FF5722] text-[#050505] font-black shadow-sm"
+                                      : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/50 hover:text-white"
+                                  }`}
+                                  title={opt.label}
+                                >
+                                  {opt.short}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* REAL-TIME PR BADGE WITH GLOW & MICRO-ANIMATION */}
+                          {isWeightPR && (
+                            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-400/80 bg-gradient-to-r from-amber-500/25 via-yellow-500/30 to-amber-500/25 p-2.5 text-amber-300 shadow-[0_0_18px_rgba(245,158,11,0.4)] animate-pulse">
+                              <div className="flex items-center gap-1.5 font-black text-xs">
+                                <span className="text-base animate-bounce select-none">🏆</span>
+                                <span className="tracking-wide uppercase text-amber-300 font-black">
+                                  NUEVO PR DE PESO
+                                </span>
+                              </div>
+                              <div className="text-xs font-black text-white flex items-center gap-1 flex-wrap">
+                                <span>Superaste tu anterior récord por</span>
+                                <span className="rounded bg-amber-400/30 px-1.5 py-0.5 text-amber-200 underline decoration-amber-400 font-black">
+                                  +{weightDiff} kg
+                                </span>
+                                {est1RM > 0 && (
+                                  <span className="text-[10px] text-amber-300/80 font-semibold ml-1">
+                                    · 1RM est: {est1RM} kg
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {!isWeightPR && is1RMPR && (
+                            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#FF5722]/70 bg-gradient-to-r from-[#FF5722]/20 via-[#FF6D00]/25 to-[#C84218]/20 p-2 text-white shadow-[0_0_14px_rgba(255,87,34,0.35)] animate-pulse">
+                              <div className="flex items-center gap-1.5 font-black text-xs">
+                                <span className="text-base animate-bounce select-none">⚡</span>
+                                <span className="tracking-wide uppercase text-[#FF6D00] font-black">
+                                  NUEVO PR DE 1RM ESTIMADO
+                                </span>
+                              </div>
+                              <div className="text-xs font-black text-white flex items-center gap-1 flex-wrap">
+                                <span>Superaste tu anterior 1RM por</span>
+                                <span className="rounded bg-[#FF5722]/30 px-1.5 py-0.5 text-[#FF6D00] underline decoration-[#FF5722] font-black">
+                                  +{oneRmDiff} kg
+                                </span>
+                                <span className="text-[10px] text-[#A1A1AA] font-semibold ml-1">
+                                  ({est1RM} kg est.)
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Ghost Data & Hypertrophy Progression Indicators Row */}
-                          <div className="mt-2 flex flex-wrap items-center justify-between gap-1.5 border-t border-[#2D1B4E]/60 pt-1.5 text-[11px]">
+                          <div className="mt-2 flex flex-wrap items-center justify-between gap-1.5 border-t border-[#2A1B14]/60 pt-1.5 text-[11px]">
                             <div className="flex items-center gap-2">
                               {prevSet ? (
                                 <span className="text-[#A1A1AA] font-semibold">
@@ -2520,7 +2760,7 @@ export default function Workouts() {
                                 <button
                                   type="button"
                                   onClick={() => handleRepeatPreviousSet(ae.exerciseId, setIdx)}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-[#A855F7]/40 bg-[#1C1433] px-2 py-0.5 text-[10px] font-black text-[#C084FC] hover:border-[#A855F7] hover:text-white active:scale-95 transition"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-[#FF5722]/40 bg-[#2A1B14] px-2 py-0.5 text-[10px] font-black text-[#FF6D00] hover:border-[#FF5722] hover:text-white active:scale-95 transition"
                                   title="Copiar peso y repeticiones de la última sesión con 1 toque"
                                 >
                                   <RotateCcw size={10} />
@@ -2540,17 +2780,17 @@ export default function Workouts() {
 
                           {/* Asesor Inteligente de Cargas & Fuerza Relativa */}
                           {(setWeight > 0 || setReps > 0) && (
-                            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[#2D1B4E]/40 pt-1.5 text-[10px]">
+                            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[#2A1B14]/40 pt-1.5 text-[10px]">
                               <div className="flex items-center gap-2 flex-wrap">
                                 {loadAdvice?.relativeRatio && (
-                                  <span className="inline-flex items-center gap-1 font-bold text-[#C084FC] bg-[#140E24] px-2 py-0.5 rounded-md border border-[#2D1B4E]">
-                                    <Scale size={11} className="text-[#A855F7]" />
+                                  <span className="inline-flex items-center gap-1 font-bold text-[#FF6D00] bg-[#181210] px-2 py-0.5 rounded-md border border-[#2A1B14]">
+                                    <Scale size={11} className="text-[#FF5722]" />
                                     <span>{setWeight}kg = {loadAdvice.relativeRatio}× tu peso</span>
                                   </span>
                                 )}
 
                                 {loadAdvice?.est1RM > 0 && setReps > 1 && (
-                                  <span className="text-[#A1A1AA] bg-[#0E0919] px-2 py-0.5 rounded-md border border-[#2D1B4E]/60 font-semibold">
+                                  <span className="text-[#A1A1AA] bg-[#121113] px-2 py-0.5 rounded-md border border-[#2A1B14]/60 font-semibold">
                                     1RM est: <strong className="text-white">{loadAdvice.est1RM} kg</strong>
                                   </span>
                                 )}
@@ -2575,7 +2815,7 @@ export default function Workouts() {
                   <button
                     type="button"
                     onClick={() => handleAddSet(ae.exerciseId)}
-                    className="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#A855F7]/40 bg-[#0E0919] py-2.5 text-xs font-black text-[#C084FC] hover:border-[#A855F7] hover:bg-[#1C1433] transition active:scale-[0.98]"
+                    className="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#FF5722]/40 bg-[#121113] py-2.5 text-xs font-black text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#2A1B14] transition active:scale-[0.98]"
                   >
                     <Plus size={16} />
                     <span>
@@ -2591,11 +2831,11 @@ export default function Workouts() {
 
       {/* 5. Cierre del Entrenamiento (Prominent Mobile Action) */}
       {activeExercises.length > 0 && (
-        <div className="rounded-2xl border-2 border-[#A855F7]/40 bg-[#140E24] p-4 sm:p-5 shadow-neon space-y-3.5">
+        <div className="rounded-2xl border-2 border-[#FF5722]/40 bg-[#181210] p-4 sm:p-5 shadow-neon space-y-3.5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#9333EA]/20 text-xs font-black text-[#C084FC]">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
                   4
                 </span>
                 <h3 className="text-base font-black text-white">
@@ -2609,7 +2849,7 @@ export default function Workouts() {
 
             {/* Quick Metrics Cards */}
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-2">
+              <div className="rounded-xl border border-[#2A1B14] bg-[#121113] p-2">
                 <span className="text-[10px] uppercase font-bold text-[#71717A]">
                   Ejercicios
                 </span>
@@ -2617,7 +2857,7 @@ export default function Workouts() {
                   {activeExercises.length}
                 </p>
               </div>
-              <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-2">
+              <div className="rounded-xl border border-[#2A1B14] bg-[#121113] p-2">
                 <span className="text-[10px] uppercase font-bold text-[#71717A]">
                   Series Listas
                 </span>
@@ -2625,11 +2865,11 @@ export default function Workouts() {
                   {completedSetsCount}/{totalSetsCount}
                 </p>
               </div>
-              <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-2">
+              <div className="rounded-xl border border-[#2A1B14] bg-[#121113] p-2">
                 <span className="text-[10px] uppercase font-bold text-[#71717A]">
                   Volumen
                 </span>
-                <p className="text-base font-black text-[#C084FC]">
+                <p className="text-base font-black text-[#FF6D00]">
                   {Math.round(totalVolume)} kg
                 </p>
               </div>
@@ -2637,10 +2877,10 @@ export default function Workouts() {
           </div>
 
           {/* Mental Effort Selector */}
-          <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-3.5 space-y-2">
+          <div className="rounded-xl border border-[#2A1B14] bg-[#121113] p-3.5 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Brain size={16} className="text-[#C084FC]" />
+                <Brain size={16} className="text-[#FF6D00]" />
                 <span className="text-xs font-black uppercase tracking-wider text-white">
                   Métrica de Voluntad (Esfuerzo Mental)
                 </span>
@@ -2669,8 +2909,8 @@ export default function Workouts() {
                   onClick={() => handleSelectMentalEffort(item.val)}
                   className={`min-h-[44px] rounded-xl border text-xs font-black transition active:scale-95 flex flex-col items-center justify-center p-1 ${
                     mentalEffort === item.val
-                      ? "border-[#A855F7] bg-[#9333EA]/25 text-[#E9D5FF] shadow-neon"
-                      : "border-[#2D1B4E] bg-[#140E24] text-[#A1A1AA] hover:border-[#A855F7]/40 hover:text-white"
+                      ? "border-[#FF5722] bg-[#C84218]/25 text-[#E9D5FF] shadow-neon"
+                      : "border-[#2A1B14] bg-[#181210] text-[#A1A1AA] hover:border-[#FF5722]/40 hover:text-white"
                   }`}
                 >
                   <span className="text-sm">{item.val}</span>
@@ -2695,7 +2935,7 @@ export default function Workouts() {
               placeholder="Notas de la sesión (sensaciones, molestias, progresión)..."
               value={workoutNotes}
               onChange={(e) => setWorkoutNotes(e.target.value)}
-              className="w-full rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-3 text-xs text-white outline-none placeholder:text-[#71717A] focus:border-[#A855F7]"
+              className="w-full rounded-xl border border-[#2A1B14] bg-[#121113] p-3 text-xs text-white outline-none placeholder:text-[#71717A] focus:border-[#FF5722]"
             />
           </div>
 
@@ -2724,8 +2964,8 @@ export default function Workouts() {
       {/* Celebration Modal when workout finishes */}
       {completedSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border-2 border-[#A855F7] bg-[#140E24] p-6 shadow-neonLg text-center space-y-4 animate-in fade-in zoom-in duration-200">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-[#9333EA] to-[#7E22CE] shadow-neon">
+          <div className="w-full max-w-md rounded-2xl border-2 border-[#FF5722] bg-[#181210] p-6 shadow-neonLg text-center space-y-4 animate-in fade-in zoom-in duration-200">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-[#C84218] to-[#7E22CE] shadow-neon">
               <Trophy size={32} className="text-white" />
             </div>
 
@@ -2761,17 +3001,17 @@ export default function Workouts() {
                 </p>
                 <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] font-bold">
                   {completedSummary.readinessEnergy && (
-                    <span className="rounded-md bg-[#09060E]/80 px-2 py-0.5 text-amber-300 border border-amber-500/30">
+                    <span className="rounded-md bg-[#050505]/80 px-2 py-0.5 text-amber-300 border border-amber-500/30">
                       ⚡ Energía: {completedSummary.readinessEnergy}/5
                     </span>
                   )}
                   {completedSummary.readinessMotivation && (
-                    <span className="rounded-md bg-[#09060E]/80 px-2 py-0.5 text-orange-300 border border-orange-500/30">
+                    <span className="rounded-md bg-[#050505]/80 px-2 py-0.5 text-orange-300 border border-orange-500/30">
                       🔥 Motivación: {completedSummary.readinessMotivation}/5
                     </span>
                   )}
                   {completedSummary.mentalEffort && (
-                    <span className="rounded-md bg-[#09060E]/80 px-2 py-0.5 text-purple-300 border border-purple-500/30">
+                    <span className="rounded-md bg-[#050505]/80 px-2 py-0.5 text-purple-300 border border-purple-500/30">
                       🧠 Esfuerzo Mental: {completedSummary.mentalEffort}/5
                     </span>
                   )}
@@ -2781,8 +3021,8 @@ export default function Workouts() {
 
             {/* Broken PRs celebration */}
             {completedSummary.brokenPRs.length > 0 && (
-              <div className="rounded-xl border border-[#C084FC]/40 bg-[#C084FC]/10 p-3 text-left">
-                <div className="flex items-center gap-1.5 text-xs font-black text-[#C084FC]">
+              <div className="rounded-xl border border-[#FF6D00]/40 bg-[#FF6D00]/10 p-3 text-left">
+                <div className="flex items-center gap-1.5 text-xs font-black text-[#FF6D00]">
                   <Sparkles size={14} />
                   <span>¡RÉCORDS PERSONALES BATIDOS HOY!</span>
                 </div>
@@ -2815,7 +3055,7 @@ export default function Workouts() {
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-2 rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-3 text-center">
+            <div className="grid grid-cols-3 gap-2 rounded-xl border border-[#2A1B14] bg-[#121113] p-3 text-center">
               <div>
                 <span className="text-[10px] uppercase font-bold text-[#71717A]">
                   Ejercicios
@@ -2836,7 +3076,7 @@ export default function Workouts() {
                 <span className="text-[10px] uppercase font-bold text-[#71717A]">
                   Volumen
                 </span>
-                <p className="text-lg font-black text-[#C084FC]">
+                <p className="text-lg font-black text-[#FF6D00]">
                   {Math.round(completedSummary.volume)} kg
                 </p>
               </div>
@@ -2861,6 +3101,73 @@ export default function Workouts() {
         setInfo={currentRestInfo}
         onSelectEffort={handleRestEffortSelected}
       />
+
+      {/* Floating Rest Timer (Non-intrusive bottom bar) */}
+      <FloatingRestTimer
+        isOpen={floatingRestTimer.isOpen}
+        onClose={() => setFloatingRestTimer((prev) => ({ ...prev, isOpen: false }))}
+        initialSeconds={floatingRestTimer.initialSeconds || 90}
+        exerciseName={floatingRestTimer.exerciseName}
+        setNumber={floatingRestTimer.setNumber}
+      />
+
+      {/* Barbell Plate Calculator Modal for inline set rows */}
+      <PlateCalculatorModal
+        isOpen={plateCalcModal.isOpen}
+        onClose={() => setPlateCalcModal((prev) => ({ ...prev, isOpen: false }))}
+        initialWeight={plateCalcModal.weight}
+        exerciseName={plateCalcModal.exerciseName}
+        onApplyWeight={(newWeight) => {
+          if (plateCalcModal.exerciseId && plateCalcModal.setIndex !== null) {
+            handleUpdateSet(
+              plateCalcModal.exerciseId,
+              plateCalcModal.setIndex,
+              "weight",
+              newWeight
+            );
+          }
+        }}
+      />
+
+      {/* Bottom Sheet Quick Logging Drawer */}
+      {drawerExerciseId && (() => {
+        const activeEx = activeExercises.find((ae) => ae.exerciseId === drawerExerciseId);
+        const exItem = exercises.find((e) => e.id === drawerExerciseId) || { id: drawerExerciseId, name: activeEx?.exerciseName || "Ejercicio" };
+        const rec = recordsMap[drawerExerciseId];
+        const prevSession = previousSessions[drawerExerciseId];
+
+        return (
+          <WorkoutDrawer
+            isOpen={Boolean(drawerExerciseId)}
+            onClose={() => setDrawerExerciseId(null)}
+            exercise={exItem}
+            activeExercise={activeEx || {
+              exerciseId: drawerExerciseId,
+              exerciseName: exItem.name,
+              sets: [],
+            }}
+            record={rec}
+            previousSession={prevSession}
+            onAddSet={(exerciseId, setData) => {
+              handleAddSet(exerciseId, setData);
+            }}
+            onUpdateSet={(exerciseId, setIdx, field, val) => {
+              handleUpdateSet(exerciseId, setIdx, field, val);
+            }}
+            onRemoveSet={(exerciseId, setIdx) => {
+              handleRemoveSet(exerciseId, setIdx);
+            }}
+            onTriggerRestTimer={({ exerciseName, setNumber }) => {
+              setFloatingRestTimer({
+                isOpen: true,
+                exerciseName: exerciseName || "Ejercicio",
+                setNumber: setNumber,
+                initialSeconds: 90,
+              });
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }
