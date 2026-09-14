@@ -16,6 +16,11 @@ import {
 } from "lucide-react";
 import PlateCalculatorModal from "./PlateCalculatorModal";
 import { calculateEstimated1RM, getExerciseEquipment } from "../utils/fitnessUtils";
+import { getStrengthRank } from "../utils/strengthRanks";
+import {
+  getSmartPeriodizationSuggestion,
+  getWeeklyPeriodizationMode,
+} from "../utils/periodization";
 
 const RIR_OPTIONS = [
   { value: 0, label: "RIR 0 (Fallo)", short: "Fallo" },
@@ -44,14 +49,29 @@ export default function WorkoutDrawer({
   onUpdateSet,
   onRemoveSet,
   onTriggerRestTimer,
+  userProfile,
 }) {
   const [weightInput, setWeightInput] = useState(60);
   const [repsInput, setRepsInput] = useState(10);
   const [selectedRir, setSelectedRir] = useState(2);
   const [selectedType, setSelectedType] = useState("normal");
   const [isPlateModalOpen, setIsPlateModalOpen] = useState(false);
+  const [rankUpNotification, setRankUpNotification] = useState(null);
+  const [weeklyMode, setWeeklyMode] = useState(() => getWeeklyPeriodizationMode());
+  const [selectedAccessories, setSelectedAccessories] = useState([]);
 
-  // When exercise changes or drawer opens, pre-fill with latest set or ghost data
+  useEffect(() => {
+    const handlePeriodizationChange = (e) => {
+      if (e?.detail) setWeeklyMode(e.detail);
+      else setWeeklyMode(getWeeklyPeriodizationMode());
+    };
+    window.addEventListener("fittracker:periodizationChanged", handlePeriodizationChange);
+    return () => {
+      window.removeEventListener("fittracker:periodizationChanged", handlePeriodizationChange);
+    };
+  }, []);
+
+  // When exercise changes or drawer opens, pre-fill with latest set or smart periodization suggestion
   useEffect(() => {
     if (!isOpen || !activeExercise) return;
 
@@ -62,17 +82,36 @@ export default function WorkoutDrawer({
       setRepsInput(parseInt(lastSet.reps, 10) || 10);
       setSelectedRir(lastSet.rir ?? 2);
       setSelectedType(lastSet.set_type ?? "normal");
-    } else if (previousSession?.sets?.length > 0) {
-      const prevLast = previousSession.sets[0];
-      setWeightInput(parseFloat(prevLast.weight) || 0);
-      setRepsInput(parseInt(prevLast.reps, 10) || 10);
-      setSelectedRir(2);
+      setSelectedAccessories(Array.isArray(lastSet.accessories) ? [...lastSet.accessories] : []);
+    } else {
+      const mode = getWeeklyPeriodizationMode();
+      const eq = getExerciseEquipment(activeExercise.exerciseName);
+      const prevW =
+        previousSession?.sets?.[0]?.weight !== undefined
+          ? parseFloat(previousSession.sets[0].weight)
+          : record?.pr_weight
+          ? parseFloat(record.pr_weight)
+          : 0;
+      const prevR =
+        previousSession?.sets?.[0]?.reps !== undefined
+          ? parseInt(previousSession.sets[0].reps, 10)
+          : record?.pr_reps
+          ? parseInt(record.pr_reps, 10)
+          : 10;
+
+      const suggestion = getSmartPeriodizationSuggestion({
+        exerciseName: activeExercise.exerciseName,
+        previousWeight: prevW,
+        previousReps: prevR,
+        equipment: eq,
+        mode,
+      });
+
+      setWeightInput(suggestion.suggestedWeight);
+      setRepsInput(suggestion.suggestedReps);
+      setSelectedRir(suggestion.suggestedRir ?? 2);
       setSelectedType("normal");
-    } else if (record?.pr_weight) {
-      setWeightInput(parseFloat(record.pr_weight) || 0);
-      setRepsInput(parseInt(record.pr_reps, 10) || 10);
-      setSelectedRir(2);
-      setSelectedType("normal");
+      setSelectedAccessories([]);
     }
   }, [isOpen, activeExercise?.exerciseId]);
 
@@ -112,6 +151,78 @@ export default function WorkoutDrawer({
     return sum + (parseFloat(s.weight) || 0) * (parseInt(s.reps, 10) || 0);
   }, 0);
 
+  // Safe bodyweight fallback (userProfile?.bodyweight || 75)
+  const userBw = userProfile?.bodyweight || 75;
+
+  // Best existing 1RM and performance for this exercise
+  const completedNonWarmupSets = (activeExercise.sets || []).filter(
+    (s) => s.completed && s.set_type !== "warmup" && s.set_type !== "W"
+  );
+  let bestCompletedWeight = 0;
+  let bestCompletedReps = 10;
+  let bestCompleted1RM = 0;
+
+  completedNonWarmupSets.forEach((s) => {
+    const sw = parseFloat(s.weight) || 0;
+    const sr = parseInt(s.reps, 10) || 0;
+    const s1rm = sw * (1 + sr / 30);
+    if (s1rm > bestCompleted1RM) {
+      bestCompleted1RM = s1rm;
+      bestCompletedWeight = sw;
+      bestCompletedReps = sr;
+    }
+  });
+
+  const baseWeight = record?.pr_weight ? parseFloat(record.pr_weight) : 0;
+  const baseReps = record?.pr_reps ? parseInt(record.pr_reps, 10) : 10;
+  const curEffectiveWeight =
+    bestCompleted1RM > max1RMPrevio ? bestCompletedWeight : baseWeight;
+  const curEffectiveReps =
+    bestCompleted1RM > max1RMPrevio ? bestCompletedReps : baseReps;
+
+  const currentExerciseRank = useMemo(() => {
+    return getStrengthRank(
+      activeExercise.exerciseName,
+      curEffectiveWeight,
+      curEffectiveReps,
+      userBw
+    );
+  }, [activeExercise.exerciseName, curEffectiveWeight, curEffectiveReps, userBw]);
+
+  // Rank corresponding to current weight and reps input in the drawer
+  const inputSetRank = useMemo(() => {
+    return getStrengthRank(
+      activeExercise.exerciseName,
+      weightInput,
+      repsInput,
+      userBw
+    );
+  }, [activeExercise.exerciseName, weightInput, repsInput, userBw]);
+
+  // Smart Periodization suggestion for this exercise in active weekly mode
+  const periodizationSuggestion = useMemo(() => {
+    if (!activeExercise) return null;
+    const prevW =
+      previousSession?.sets?.[0]?.weight !== undefined
+        ? parseFloat(previousSession.sets[0].weight)
+        : record?.pr_weight
+        ? parseFloat(record.pr_weight)
+        : 0;
+    const prevR =
+      previousSession?.sets?.[0]?.reps !== undefined
+        ? parseInt(previousSession.sets[0].reps, 10)
+        : record?.pr_reps
+        ? parseInt(record.pr_reps, 10)
+        : 10;
+    return getSmartPeriodizationSuggestion({
+      exerciseName: activeExercise.exerciseName,
+      previousWeight: prevW,
+      previousReps: prevR,
+      equipment,
+      mode: weeklyMode,
+    });
+  }, [activeExercise, previousSession, record, equipment, weeklyMode]);
+
   const handleAdjustWeight = (delta) => {
     setWeightInput((prev) => Math.max(0, Math.round((prev + delta) * 10) / 10));
   };
@@ -122,13 +233,47 @@ export default function WorkoutDrawer({
 
   const handleSaveSet = () => {
     const nextSetNumber = (activeExercise.sets || []).length + 1;
+    const saveWeight = parseFloat(weightInput) || 0;
+    const saveReps = parseInt(repsInput, 10) || 0;
+
+    // Check for Rank Up
+    if (!isWarmup && inputSetRank.tier > currentExerciseRank.tier) {
+      const rankUpData = {
+        rankName: inputSetRank.rankName,
+        rankColor: inputSetRank.rankColor,
+        icon: inputSetRank.icon,
+        tier: inputSetRank.tier,
+        ratio: inputSetRank.ratio,
+        exerciseName: activeExercise.exerciseName,
+      };
+      setRankUpNotification(rankUpData);
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("fittracker:rankUp", { detail: rankUpData })
+        );
+        window.dispatchEvent(new Event("fittracker:recordUpdated"));
+      }
+
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        try {
+          navigator.vibrate([100, 50, 200]);
+        } catch {}
+      }
+
+      setTimeout(() => {
+        setRankUpNotification(null);
+      }, 5000);
+    }
+
     onAddSet(activeExercise.exerciseId, {
       setNumber: nextSetNumber,
-      weight: parseFloat(weightInput) || 0,
-      reps: parseInt(repsInput, 10) || 0,
+      weight: saveWeight,
+      reps: saveReps,
       completed: true,
       rir: selectedRir,
       set_type: selectedType,
+      accessories: selectedAccessories,
     });
 
     // Automatically trigger floating rest timer
@@ -167,11 +312,45 @@ export default function WorkoutDrawer({
                     Volumen: {Math.round(totalVolume).toLocaleString()} kg
                   </span>
                 )}
+
+                {/* Exercise Strength Rank Badge */}
+                <span
+                  className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-sm transition"
+                  style={{
+                    borderColor: `${currentExerciseRank.rankColor}70`,
+                    backgroundColor: `${currentExerciseRank.rankColor}18`,
+                    color: currentExerciseRank.rankColor,
+                    boxShadow: `0 0 10px ${currentExerciseRank.rankColor}25`,
+                  }}
+                  title={`Rango actual en ${activeExercise.exerciseName}: ${currentExerciseRank.rankName} (${currentExerciseRank.ratio}× peso corporal)`}
+                >
+                  <span>{currentExerciseRank.icon}</span>
+                  <span>{currentExerciseRank.rankName}</span>
+                  {currentExerciseRank.ratio > 0 && (
+                    <span className="opacity-90 font-bold">({currentExerciseRank.ratio}×)</span>
+                  )}
+                </span>
               </div>
 
               <h2 className="text-lg sm:text-xl font-black text-white truncate break-words">
                 {activeExercise.exerciseName}
               </h2>
+
+              {(() => {
+                try {
+                  const s = localStorage.getItem("fittracker_machine_settings");
+                  const ms = s ? JSON.parse(s)[activeExercise?.exerciseId] : "";
+                  if (!ms) return null;
+                  return (
+                    <div className="text-xs font-semibold text-[#A1A1AA] flex items-center gap-1.5 mt-0.5">
+                      <span className="text-xs text-[#FF6D00]">⚙️</span>
+                      <span>Ajustes de máquina: <strong className="text-white">{ms}</strong></span>
+                    </div>
+                  );
+                } catch {
+                  return null;
+                }
+              })()}
             </div>
 
             {/* Close / Listo Button */}
@@ -183,6 +362,131 @@ export default function WorkoutDrawer({
               <span>Listo</span>
               <ChevronDown size={16} />
             </button>
+          </div>
+
+          {/* Micro-notificación brillante de felicitación por subida de rango */}
+          {rankUpNotification && (
+            <div
+              className="rounded-2xl border p-3.5 shadow-2xl animate-in zoom-in-95 duration-300 transition-all flex items-center justify-between gap-3 relative overflow-hidden select-none"
+              style={{
+                borderColor: rankUpNotification.rankColor,
+                background: `linear-gradient(135deg, ${rankUpNotification.rankColor}30, rgba(18, 17, 19, 0.98), ${rankUpNotification.rankColor}20)`,
+                boxShadow: `0 0 30px ${rankUpNotification.rankColor}60`,
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-xl animate-bounce flex-shrink-0"
+                  style={{
+                    backgroundColor: `${rankUpNotification.rankColor}30`,
+                    border: `1px solid ${rankUpNotification.rankColor}80`,
+                    boxShadow: `0 0 15px ${rankUpNotification.rankColor}60`,
+                  }}
+                >
+                  ⚡
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="text-xs font-black uppercase tracking-wider animate-pulse"
+                      style={{ color: rankUpNotification.rankColor }}
+                    >
+                      ⚡ ¡SUBIDA DE RANGO!
+                    </span>
+                    <span className="rounded bg-black/50 px-1.5 py-0.2 text-[10px] font-black text-white">
+                      {rankUpNotification.ratio}× BW
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm font-bold text-white">
+                    Has alcanzado el rango{" "}
+                    <span
+                      className="font-black uppercase underline decoration-2"
+                      style={{ color: rankUpNotification.rankColor }}
+                    >
+                      {rankUpNotification.rankName}
+                    </span>{" "}
+                    en este ejercicio
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setRankUpNotification(null)}
+                className="text-[#A1A1AA] hover:text-white transition p-1"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* Concise OLED Strength Rank Badge & Weekly Periodization Suggestion */}
+          <div className="space-y-2">
+            {/* Concise OLED Strength Rank Badge: "Rango actual: [Nombre]" y "Próximo rango: X kg" */}
+            <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-[#FF5722]/30 bg-[#050505] shadow-[0_0_12px_rgba(255,87,34,0.1)] text-xs">
+              <span className="font-semibold text-[#E4E4E7] flex items-center gap-1.5">
+                <span className="text-[#A1A1AA]">Rango actual:</span>
+                <strong
+                  className="font-black uppercase tracking-wider"
+                  style={{ color: currentExerciseRank.rankColor || "#FF5722" }}
+                >
+                  {currentExerciseRank.rankName}
+                </strong>
+                {currentExerciseRank.ratio > 0 && (
+                  <span className="text-[10px] text-[#71717A] font-normal">
+                    ({currentExerciseRank.ratio}× BW)
+                  </span>
+                )}
+              </span>
+
+              <span className="text-[11px] font-medium text-[#A1A1AA]">
+                {currentExerciseRank.tier < 6 && currentExerciseRank.nextRankTargetKg ? (
+                  <>
+                    Próximo rango:{" "}
+                    <strong className="font-black text-[#FF5722]">
+                      {currentExerciseRank.nextRankTargetKg} kg
+                    </strong>
+                  </>
+                ) : (
+                  <strong className="font-black text-amber-300">👑 Rango Máximo</strong>
+                )}
+              </span>
+            </div>
+
+            {/* Weekly Periodization Auto Suggestion Badge */}
+            {periodizationSuggestion && (
+              <div
+                className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition"
+                style={{
+                  borderColor: weeklyMode === "deload" ? "#38BDF860" : "#FF572260",
+                  backgroundColor:
+                    weeklyMode === "deload"
+                      ? "rgba(56, 189, 248, 0.08)"
+                      : "rgba(255, 87, 34, 0.08)",
+                  color: weeklyMode === "deload" ? "#38BDF8" : "#FF5722",
+                  boxShadow:
+                    weeklyMode === "deload"
+                      ? "0 0 12px rgba(56, 189, 248, 0.12)"
+                      : "0 0 12px rgba(255, 87, 34, 0.12)",
+                }}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <span>{periodizationSuggestion.badgeText}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWeightInput(periodizationSuggestion.suggestedWeight);
+                    setRepsInput(periodizationSuggestion.suggestedReps);
+                    setSelectedRir(periodizationSuggestion.suggestedRir);
+                  }}
+                  className="text-[10px] px-2 py-0.5 rounded border border-current bg-black/40 hover:bg-black/70 active:scale-95 transition uppercase tracking-wider flex-shrink-0"
+                  title="Cargar sugerencia en los campos"
+                >
+                  Usar {periodizationSuggestion.suggestedWeight}kg
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Compact Today's Sets Table */}
@@ -219,6 +523,11 @@ export default function WorkoutDrawer({
                       {s.rir !== null && s.rir !== undefined && (
                         <span className="text-[10px] text-[#FF6D00] font-black">
                           RIR:{s.rir}
+                        </span>
+                      )}
+                      {Array.isArray(s.accessories) && s.accessories.length > 0 && (
+                        <span className="rounded bg-[#FF5722]/20 border border-[#FF5722]/40 px-1 text-[9px] font-black text-[#FF6D00]" title={`Accesorios: ${s.accessories.join(', ')}`}>
+                          {s.accessories.join(", ")}
                         </span>
                       )}
                       {isW && (
@@ -484,6 +793,36 @@ export default function WorkoutDrawer({
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Quick Accessories Selector in Drawer: [Straps] [Cinturón] [Agarre Neutro] */}
+          <div className="rounded-xl border border-[#2A1B14] bg-[#050505] p-2.5 space-y-1.5">
+            <span className="text-[10px] font-bold uppercase text-[#71717A] block">
+              Accesorios para esta serie:
+            </span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {["Straps", "Cinturón", "Agarre Neutro"].map((acc) => {
+                const isSelected = selectedAccessories.includes(acc);
+                return (
+                  <button
+                    key={acc}
+                    type="button"
+                    onClick={() =>
+                      setSelectedAccessories((prev) =>
+                        prev.includes(acc) ? prev.filter((a) => a !== acc) : [...prev, acc]
+                      )
+                    }
+                    className={`rounded-lg py-2 text-xs font-black transition active:scale-95 text-center ${
+                      isSelected
+                        ? "border border-[#FF5722] bg-[#FF5722] text-[#050505] shadow-[0_0_10px_rgba(255,87,34,0.4)]"
+                        : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/50 hover:text-white"
+                    }`}
+                  >
+                    {isSelected ? "✓ " : ""}{acc}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

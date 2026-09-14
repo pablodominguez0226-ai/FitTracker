@@ -1,3 +1,4 @@
+from __future__ import annotations
 import datetime as dt
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -155,6 +156,8 @@ class WorkoutSessionOut(BaseModel):
     user_id: int | None = None
     notes: str | None = None
     sets: list[WorkoutSetOut] = []
+    previous_history: dict | None = None
+    records: list[RecordOut] | None = None
 
 
 VALID_TRAINING_GOALS = ["hipertrofia", "fuerza", "potencia_rapidez", "definicion_adelgazar"]

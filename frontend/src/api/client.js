@@ -82,8 +82,15 @@ export const deleteExercise = async (id) => {
   return res.data;
 };
 
+export const saveWorkoutSession = async (workoutData) => {
+  const res = await api.post("/workouts/session", workoutData);
+  return res.data;
+};
+
 export const saveWorkout = async (workoutData) => {
-  const res = await api.post("/workouts", workoutData);
+  const res = await api.post("/workouts/session", workoutData).catch(() => {
+    return api.post("/workouts", workoutData);
+  });
   return res.data;
 };
 

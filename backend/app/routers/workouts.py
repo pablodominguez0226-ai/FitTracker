@@ -26,7 +26,11 @@ def get_user_records(
 
 
 
-def _format_workout_session(s: models.WorkoutSession) -> schemas.WorkoutSessionOut:
+def _format_workout_session(
+    s: models.WorkoutSession,
+    previous_history: dict | None = None,
+    records: list | None = None,
+) -> schemas.WorkoutSessionOut:
     sets_out = [
         schemas.WorkoutSetOut(
             id=ws.id,
@@ -63,7 +67,87 @@ def _format_workout_session(s: models.WorkoutSession) -> schemas.WorkoutSessionO
         muscle_group_name=s.muscle_group.name if s.muscle_group else None,
         notes=s.notes,
         sets=sets_out,
+        previous_history=previous_history,
+        records=records,
     )
+
+
+def _get_exercise_previous_history(
+    exercise_ids: list[int],
+    user_id: int,
+    current_session_id: int | None,
+    db: Session,
+) -> dict:
+    history = {}
+    for eid in set(exercise_ids):
+        query = (
+            db.query(models.WorkoutSession)
+            .join(models.WorkoutSet, models.WorkoutSet.workout_session_id == models.WorkoutSession.id)
+            .filter(
+                models.WorkoutSession.user_id == user_id,
+                models.WorkoutSet.exercise_id == eid,
+                models.WorkoutSession.status == "completed",
+            )
+        )
+        if current_session_id is not None:
+            query = query.filter(models.WorkoutSession.id != current_session_id)
+
+        last_session = query.order_by(models.WorkoutSession.date.desc(), models.WorkoutSession.id.desc()).first()
+        if not last_session:
+            history[str(eid)] = None
+            continue
+
+        prev_sets = (
+            db.query(models.WorkoutSet)
+            .filter(
+                models.WorkoutSet.workout_session_id == last_session.id,
+                models.WorkoutSet.exercise_id == eid,
+            )
+            .order_by(models.WorkoutSet.set_number.asc())
+            .all()
+        )
+
+        valid_sets = [s for s in prev_sets if (s.set_type or "normal") not in ("warmup", "W")]
+        if not valid_sets:
+            valid_sets = prev_sets
+
+        weights = [float(s.weight) for s in valid_sets if s.weight is not None]
+        reps_list = [int(s.reps) for s in valid_sets if s.reps is not None]
+        max_w = max(weights) if weights else 0.0
+        reps_at_max = 0
+        for s in valid_sets:
+            if float(s.weight or 0) == max_w:
+                reps_at_max = max(reps_at_max, int(s.reps or 0))
+
+        def _calc_1rm(w, r):
+            if w <= 0 or r <= 0:
+                return 0.0
+            if r == 1:
+                return float(w)
+            return round(float(w) * (1.0 + float(r) / 30.0), 1)
+
+        max_1rm = max((_calc_1rm(float(s.weight or 0), int(s.reps or 0)) for s in valid_sets), default=0.0)
+        vol = sum(float(s.weight or 0) * int(s.reps or 0) for s in valid_sets)
+
+        history[str(eid)] = {
+            "exercise_id": eid,
+            "session_id": last_session.id,
+            "date": str(last_session.date),
+            "prev_max_weight": max_w,
+            "prev_max_reps": reps_at_max if reps_at_max > 0 else (reps_list[0] if reps_list else 0),
+            "prev_max_1rm": max_1rm,
+            "prev_total_volume": round(vol, 1),
+            "sets": [
+                {
+                    "set_number": s.set_number,
+                    "weight": s.weight,
+                    "reps": s.reps,
+                    "completed": s.completed,
+                }
+                for s in prev_sets
+            ],
+        }
+    return history
 
 
 @router.get("", response_model=list[schemas.WorkoutSessionOut])
@@ -370,7 +454,15 @@ def finish_workout(
 
     db.commit()
     db.refresh(session)
-    return _format_workout_session(session)
+    exercise_ids = [s.exercise_id for s in session.sets]
+    prev_history = _get_exercise_previous_history(
+        exercise_ids=exercise_ids,
+        user_id=current_user.id,
+        current_session_id=session.id,
+        db=db,
+    )
+    updated_records = records_get_records(current_user=current_user, db=db)
+    return _format_workout_session(session, previous_history=prev_history, records=updated_records)
 
 
 @router.patch("/{workout_id}/date", response_model=schemas.WorkoutSessionOut)
@@ -433,34 +525,74 @@ def update_workout_readiness(
     return _format_workout_session(session)
 
 
-@router.post("", response_model=schemas.WorkoutSessionOut)
-def create_workout(
+def _save_consolidated_workout(
     payload: schemas.WorkoutCreate,
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
+    current_user: models.User,
+    db: Session,
+) -> schemas.WorkoutSessionOut:
     if not payload.sets and payload.sport_type == "strength":
         raise HTTPException(status_code=400, detail="Registrá al menos una serie para guardar el entrenamiento.")
 
-    session = models.WorkoutSession(
-        user_id=current_user.id,
-        date=payload.date or dt.date.today(),
-        muscle_group_id=payload.muscle_group_id,
-        notes=payload.notes.strip() if payload.notes else None,
-        status="completed",
-        started_at=dt.datetime.now(dt.timezone.utc),
-        completed_at=dt.datetime.now(dt.timezone.utc),
-        readiness_energy=payload.readiness_energy,
-        readiness_motivation=payload.readiness_motivation,
-        mental_effort=payload.mental_effort,
-        sport_type=payload.sport_type or "strength",
-        distance_km=payload.distance_km,
-        duration_minutes=payload.duration_minutes,
-        pace_min_per_km=payload.pace_min_per_km,
-        calories_burned=payload.calories_burned,
+    exercise_ids = [item.exercise_id for item in payload.sets]
+
+    # Look for existing active in_progress session to finalize
+    existing_session = (
+        db.query(models.WorkoutSession)
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            models.WorkoutSession.status == "in_progress",
+        )
+        .order_by(models.WorkoutSession.id.desc())
+        .first()
     )
-    db.add(session)
-    db.flush()
+
+    prev_history = _get_exercise_previous_history(
+        exercise_ids=exercise_ids,
+        user_id=current_user.id,
+        current_session_id=existing_session.id if existing_session else None,
+        db=db,
+    )
+
+    if existing_session:
+        session = existing_session
+        session.status = "completed"
+        session.completed_at = dt.datetime.now(dt.timezone.utc)
+        if payload.date:
+            session.date = payload.date
+        if payload.notes:
+            session.notes = payload.notes.strip() or None
+        if payload.muscle_group_id:
+            session.muscle_group_id = payload.muscle_group_id
+        if payload.readiness_energy is not None:
+            session.readiness_energy = payload.readiness_energy
+        if payload.readiness_motivation is not None:
+            session.readiness_motivation = payload.readiness_motivation
+        if payload.mental_effort is not None:
+            session.mental_effort = payload.mental_effort
+
+        # Clear previous partial draft sets so we persist the consolidated list
+        db.query(models.WorkoutSet).filter(models.WorkoutSet.workout_session_id == session.id).delete()
+        db.flush()
+    else:
+        session = models.WorkoutSession(
+            user_id=current_user.id,
+            date=payload.date or dt.date.today(),
+            muscle_group_id=payload.muscle_group_id,
+            notes=payload.notes.strip() if payload.notes else None,
+            status="completed",
+            started_at=dt.datetime.now(dt.timezone.utc),
+            completed_at=dt.datetime.now(dt.timezone.utc),
+            readiness_energy=payload.readiness_energy,
+            readiness_motivation=payload.readiness_motivation,
+            mental_effort=payload.mental_effort,
+            sport_type=payload.sport_type or "strength",
+            distance_km=payload.distance_km,
+            duration_minutes=payload.duration_minutes,
+            pace_min_per_km=payload.pace_min_per_km,
+            calories_burned=payload.calories_burned,
+        )
+        db.add(session)
+        db.flush()
 
     for item in payload.sets:
         exercise = db.get(models.Exercise, item.exercise_id)
@@ -484,6 +616,8 @@ def create_workout(
     db.commit()
     db.refresh(session)
 
+    updated_records = records_get_records(current_user=current_user, db=db)
+
     saved = (
         db.query(models.WorkoutSession)
         .options(
@@ -493,7 +627,25 @@ def create_workout(
         .filter(models.WorkoutSession.id == session.id)
         .first()
     )
-    return _format_workout_session(saved)
+    return _format_workout_session(saved, previous_history=prev_history, records=updated_records)
+
+
+@router.post("", response_model=schemas.WorkoutSessionOut)
+def create_workout(
+    payload: schemas.WorkoutCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return _save_consolidated_workout(payload, current_user, db)
+
+
+@router.post("/session", response_model=schemas.WorkoutSessionOut)
+def save_workout_session(
+    payload: schemas.WorkoutCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return _save_consolidated_workout(payload, current_user, db)
 
 
 @router.get("/{workout_id}", response_model=schemas.WorkoutSessionOut)

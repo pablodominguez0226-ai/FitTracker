@@ -1,12 +1,13 @@
 {
-  "name": "FitTracker • Iron",
+  "name": "FitTracker • OLED GYM",
   "short_name": "FitTracker",
-  "description": "Registro de entrenamiento y cargas de gimnasio",
+  "description": "Seguimiento minimalista de hipertrofia y fuerza",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#09060E",
-  "theme_color": "#09060E",
+  "background_color": "#050505",
+  "theme_color": "#050505",
   "icons": [
     {
       "src": "/dumbbells-pattern.png",

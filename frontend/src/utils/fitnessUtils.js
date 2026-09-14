@@ -22,15 +22,39 @@ export function calculateEstimated1RM(weight, reps) {
  * @returns {"Barra"|"Mancuerna"|"Polea"|"Máquina"}
  */
 export function getExerciseEquipment(name = "") {
-  const n = (name || "").toLowerCase();
+  const n = (name || "").toLowerCase().trim();
+
+  // 1. Mancuerna
   if (
     n.includes("mancuerna") ||
     n.includes("goblet") ||
-    n.includes("zancadas con mancuernas") ||
-    n.includes("dumbbells")
+    n.includes("zancada") ||
+    n.includes("búlgara") ||
+    n.includes("bulgara")
   ) {
     return "Mancuerna";
   }
+
+  // 2. Máquina / Smith / Convergente / Libre guiado
+  if (
+    n.includes("máquina") ||
+    n.includes("maquina") ||
+    n.includes("convergente") ||
+    n.includes("smith") ||
+    n.includes("peck deck") ||
+    n.includes("pec deck") ||
+    n.includes("paralela") ||
+    n.includes("fondos") ||
+    n.includes("abductor") ||
+    n.includes("aductor") ||
+    n.includes("prensa de piernas") ||
+    n.includes("remo en t") ||
+    n.includes("remo t")
+  ) {
+    return "Máquina";
+  }
+
+  // 3. Polea
   if (
     n.includes("polea") ||
     n.includes("jalón") ||
@@ -40,29 +64,29 @@ export function getExerciseEquipment(name = "") {
     n.includes("face pull") ||
     n.includes("leñador") ||
     n.includes("woodchopper") ||
-    n.includes("tríceps cuerda") ||
-    n.includes("triceps cuerda")
+    n.includes("overhead")
   ) {
     return "Polea";
   }
+
+  // 4. Barra / Discos
   if (
     n.includes("barra") ||
     n.includes("disco") ||
     n.includes("svend") ||
     n.includes("press banca") ||
-    n.includes("press plano") ||
-    n.includes("press inclinado con barra") ||
-    n.includes("press militar") ||
     n.includes("peso muerto") ||
-    n.includes("sentadilla trasera") ||
-    n.includes("sentadilla frontal") ||
-    n.includes("hip thrust con barra") ||
-    n.includes("lastradas") ||
-    n.includes("olímpica") ||
-    n.includes("olimpica")
+    n.includes("sentadilla") ||
+    n.includes("squat") ||
+    n.includes("hip thrust") ||
+    n.includes("militar") ||
+    n.includes("pendlay") ||
+    n.includes("prensa inclinada") ||
+    n.includes("lastrada")
   ) {
     return "Barra";
   }
+
   return "Máquina";
 }
 

@@ -15,18 +15,19 @@ html, body {
   margin: 0;
   padding: 0;
   min-width: 320px;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
+  min-height: 100dvh;
   background-color: #050505;
   color: #FFFFFF;
   touch-action: manipulation;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
 body, #root {
   width: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
   background-color: #050505;
   color: #FFFFFF;
   display: flex;
@@ -73,6 +74,10 @@ body {
 
 .safe-bottom {
   padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+}
+
+.pb-safe {
+  padding-bottom: max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem));
 }
 
 .neon-border {

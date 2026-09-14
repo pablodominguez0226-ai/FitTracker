@@ -36,6 +36,7 @@ import {
   getPrStatus,
   matchMusclePill,
 } from "../utils/fitnessUtils";
+import { getStrengthRank, STRENGTH_RANKS } from "../utils/strengthRanks";
 
 const MUSCLE_PILLS = [
   "Todos",
@@ -47,6 +48,16 @@ const MUSCLE_PILLS = [
   "Core",
 ];
 
+const RANK_FILTER_OPTIONS = [
+  { id: "all", label: "Todos los rangos", minTier: 0 },
+  { id: "basico", label: "Básico+", minTier: 1, name: "Básico", color: "#94A3B8", icon: "🛡️" },
+  { id: "guerrero", label: "Guerrero+", minTier: 2, name: "Guerrero", color: "#F59E0B", icon: "⚔️" },
+  { id: "avanzado", label: "Avanzado+", minTier: 3, name: "Avanzado", color: "#CBD5E1", icon: "⚡" },
+  { id: "maestro", label: "Maestro+", minTier: 4, name: "Maestro", color: "#FBBF24", icon: "👑" },
+  { id: "elite", label: "Élite+", minTier: 5, name: "Élite", color: "#FF5722", icon: "🔥" },
+  { id: "elite_supremo", label: "Élite Supremo", minTier: 6, name: "Élite Supremo", color: "#FF1744", icon: "💎" },
+];
+
 export default function Records({ defaultTab = "records" }) {
   const [activeTab, setActiveTab] = useState(defaultTab); // 'records' | 'history'
   const [records, setRecords] = useState([]);
@@ -56,6 +67,7 @@ export default function Records({ defaultTab = "records" }) {
   const [userProfile, setUserProfile] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedPill, setSelectedPill] = useState("Todos");
+  const [selectedRankFilter, setSelectedRankFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent"); // 'recent' | 'weight' | '1rm' | 'gain' | 'name'
   const [loading, setLoading] = useState(true);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState(null);
@@ -175,9 +187,28 @@ export default function Records({ defaultTab = "records" }) {
     return map;
   }, [records]);
 
+  // Counts per rank filter option
+  const rankCounts = useMemo(() => {
+    const bw = userProfile?.bodyweight || 75;
+    const map = { all: records.length };
+    RANK_FILTER_OPTIONS.forEach((opt) => {
+      if (opt.id !== "all") {
+        map[opt.id] = records.filter((r) => {
+          const w = parseFloat(r.pr_weight) || 0;
+          const reps = parseInt(r.pr_reps, 10) || 10;
+          const rank = getStrengthRank(r.exercise_name, w, reps, bw);
+          return rank.tier >= opt.minTier;
+        }).length;
+      }
+    });
+    return map;
+  }, [records, userProfile?.bodyweight]);
+
   // Filtered & Sorted records
   const filteredRecords = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const bw = userProfile?.bodyweight || 75;
+    const rankFilter = RANK_FILTER_OPTIONS.find((opt) => opt.id === selectedRankFilter);
 
     const filtered = records.filter((r) => {
       const matchSearch =
@@ -187,7 +218,15 @@ export default function Records({ defaultTab = "records" }) {
 
       const matchGroup = matchMusclePill(r, selectedPill);
 
-      return matchSearch && matchGroup;
+      let matchRank = true;
+      if (rankFilter && rankFilter.minTier > 0) {
+        const w = parseFloat(r.pr_weight) || 0;
+        const reps = parseInt(r.pr_reps, 10) || 10;
+        const rRank = getStrengthRank(r.exercise_name, w, reps, bw);
+        matchRank = rRank.tier >= rankFilter.minTier;
+      }
+
+      return matchSearch && matchGroup && matchRank;
     });
 
     return filtered.sort((a, b) => {
@@ -344,16 +383,20 @@ export default function Records({ defaultTab = "records" }) {
                 <span className="text-[10px] text-rose-200/70">&gt;40 días sin PR</span>
               </div>
 
-              <div className="rounded-xl border border-[#2A1B14] bg-[#121113] p-2.5 text-center">
+              <div
+                onClick={() => window.dispatchEvent(new CustomEvent("fittracker:openProfile"))}
+                className="rounded-xl border border-[#2A1B14] bg-[#121113] p-2.5 text-center cursor-pointer hover:border-[#FF5722]/50 transition active:scale-95"
+                title="Editar peso corporal para fuerza relativa"
+              >
                 <div className="flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#FF6D00]">
                   <Scale size={12} />
-                  <span>Nivel Usuario</span>
+                  <span>Peso Corporal</span>
                 </div>
-                <p className="text-base font-black text-white mt-0.5 capitalize">
-                  {userLevel}
+                <p className="text-base font-black text-white mt-0.5">
+                  {userProfile?.bodyweight ? `${userProfile.bodyweight} kg` : "75 kg"}
                 </p>
                 <span className="text-[10px] text-[#A1A1AA]">
-                  {userProfile?.bodyweight ? `${userProfile.bodyweight} kg peso` : "Sin peso corporal"}
+                  base fuerza relativa
                 </span>
               </div>
             </div>
@@ -440,6 +483,65 @@ export default function Records({ defaultTab = "records" }) {
                 })}
               </div>
             </div>
+
+            {/* Rank Filter Pills: [Todos | Iniciado+ | Guerrero+ | Avanzado+ | Maestro+ | Élite+ | Élite Supremo] */}
+            <div className="border-t border-[#2A1B14] pt-2.5">
+              <div className="flex items-center justify-between gap-1.5 mb-1.5 text-[11px] font-bold text-[#A1A1AA]">
+                <div className="flex items-center gap-1.5">
+                  <Zap size={12} className="text-[#FF6D00]" />
+                  <span>Filtro por Rango de Fuerza Relativa:</span>
+                </div>
+                {selectedRankFilter !== "all" && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRankFilter("all")}
+                    className="text-[10px] text-[#FF5722] hover:underline font-bold"
+                  >
+                    Ver todos ({records.length})
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {RANK_FILTER_OPTIONS.map((opt) => {
+                  const isSelected = selectedRankFilter === opt.id;
+                  const count = rankCounts[opt.id] || 0;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setSelectedRankFilter(opt.id)}
+                      className={`min-h-[36px] rounded-xl px-2.5 py-1 text-xs font-bold transition active:scale-95 flex items-center gap-1.5 border ${
+                        isSelected
+                          ? "text-white font-black"
+                          : "border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/40 hover:text-white"
+                      }`}
+                      style={
+                        isSelected
+                          ? {
+                              borderColor: opt.color || "#FF5722",
+                              backgroundColor: `${opt.color || "#FF5722"}25`,
+                              color: opt.color || "#ffffff",
+                              boxShadow: `0 0 12px ${opt.color || "#FF5722"}35`,
+                            }
+                          : {}
+                      }
+                    >
+                      {opt.icon && <span>{opt.icon}</span>}
+                      <span>{opt.label}</span>
+                      <span
+                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-black ${
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-[#2A1B14] text-[#71717A]"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Cards Grid: Salón de la Fama */}
@@ -469,10 +571,16 @@ export default function Records({ defaultTab = "records" }) {
                 parseFloat(r.best_estimated_1rm) ||
                 calculateEstimated1RM(curWeight, curReps);
 
-              // Relative strength ratio
-              const userBw = parseFloat(userProfile?.bodyweight) || null;
+              // Relative strength ratio and rank calculation (fallback safe to 75kg)
+              const userBw = parseFloat(userProfile?.bodyweight) || 75;
               const relativeRatio =
-                userBw && curWeight > 0 ? (curWeight / userBw).toFixed(2) : null;
+                curWeight > 0 ? (curWeight / userBw).toFixed(2) : null;
+              const strengthRank = getStrengthRank(
+                r.exercise_name,
+                curWeight,
+                curReps,
+                userBw
+              );
 
               // Medal tier
               let medalIcon = "🥉";
@@ -518,6 +626,24 @@ export default function Records({ defaultTab = "records" }) {
                             </span>
                           )}
 
+                          {/* Strength Rank Badge with neon color */}
+                          <span
+                            className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-sm transition"
+                            style={{
+                              borderColor: `${strengthRank.rankColor}70`,
+                              backgroundColor: `${strengthRank.rankColor}18`,
+                              color: strengthRank.rankColor,
+                              boxShadow: `0 0 10px ${strengthRank.rankColor}25`,
+                            }}
+                            title={`Rango de Fuerza Relativa: ${strengthRank.rankName} (${strengthRank.ratio}× peso corporal)`}
+                          >
+                            <span>{strengthRank.icon}</span>
+                            <span>{strengthRank.rankName}</span>
+                            {strengthRank.ratio > 0 && (
+                              <span className="opacity-90 font-bold">({strengthRank.ratio}×)</span>
+                            )}
+                          </span>
+
                           {/* Status Badge: 🔥 Récord reciente / ⚠️ Meseta */}
                           {status && (
                             <span
@@ -542,15 +668,18 @@ export default function Records({ defaultTab = "records" }) {
 
                       {/* Medal icon box */}
                       <div
-                        className={`flex h-10 w-10 flex-col items-center justify-center rounded-xl border bg-gradient-to-br flex-shrink-0 ${medalColor}`}
-                        title={`Medalla de ${medalLabel}`}
+                        className="flex h-10 w-10 flex-col items-center justify-center rounded-xl border bg-gradient-to-br flex-shrink-0"
+                        style={{
+                          borderColor: `${strengthRank.rankColor}60`,
+                        }}
+                        title={`Medalla de ${medalLabel} • Rango ${strengthRank.rankName}`}
                       >
                         <span className="text-lg leading-none">{medalIcon}</span>
                       </div>
                     </div>
 
                     {/* PR DESTACADO EN GRANDE (105 kg × 6 reps) */}
-                    <div className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/[0.08] via-purple-500/[0.05] to-transparent p-3.5 text-center sm:text-left space-y-1">
+                    <div className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/[0.08] via-purple-500/[0.05] to-transparent p-3.5 text-center sm:text-left space-y-2">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <span className="text-[11px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
                           <Trophy size={13} className="text-amber-400" />
@@ -572,6 +701,37 @@ export default function Records({ defaultTab = "records" }) {
                             <span>{relativeRatio}× tu peso</span>
                           </span>
                         )}
+                      </div>
+
+                      {/* Concise OLED Strength Rank Badge: "Rango actual: [Nombre]" y "Próximo rango: X kg" */}
+                      <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border border-[#FF5722]/30 bg-[#050505] shadow-[0_0_12px_rgba(255,87,34,0.08)] text-xs mt-2">
+                        <span className="font-semibold text-[#E4E4E7] flex items-center gap-1.5">
+                          <span className="text-[#A1A1AA]">Rango actual:</span>
+                          <strong
+                            className="font-black uppercase tracking-wider"
+                            style={{ color: strengthRank.rankColor || "#FF5722" }}
+                          >
+                            {strengthRank.rankName}
+                          </strong>
+                          {strengthRank.ratio > 0 && (
+                            <span className="text-[10px] text-[#71717A] font-normal">
+                              ({strengthRank.ratio}× BW)
+                            </span>
+                          )}
+                        </span>
+
+                        <span className="text-[11px] font-medium text-[#A1A1AA]">
+                          {strengthRank.tier < 6 && strengthRank.nextRankTargetKg ? (
+                            <>
+                              Próximo rango:{" "}
+                              <strong className="font-black text-[#FF5722]">
+                                {strengthRank.nextRankTargetKg} kg
+                              </strong>
+                            </>
+                          ) : (
+                            <strong className="font-black text-amber-300">👑 Rango Máximo</strong>
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
