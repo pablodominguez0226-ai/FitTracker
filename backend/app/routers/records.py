@@ -18,13 +18,18 @@ def calculate_1rm(w: float, r: int) -> float:
     return round(float(w) * (1.0 + float(r) / 30.0), 1)
 
 
-@router.get("", response_model=list[schemas.RecordOut])
-def get_records(
-    exercise_id: int | None = Query(None, description="Filtrar por ID de ejercicio"),
-    muscle_group_id: int | None = Query(None, description="Filtrar por grupo muscular"),
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
+def compute_user_records(
+    db: Session,
+    current_user: models.User,
+    exercise_id: int | None = None,
+    muscle_group_id: int | None = None,
+) -> list[schemas.RecordOut]:
+    """Computes PRs and 1RM progression for user exercises.
+    Sanitizes exercise_id and muscle_group_id so FastAPI Query defaults or non-ints are never passed to SQL.
+    """
+    clean_exercise_id = exercise_id if isinstance(exercise_id, int) else None
+    clean_muscle_group_id = muscle_group_id if isinstance(muscle_group_id, int) else None
+
     # Fetch exercises performed by the authenticated user with strict user isolation
     query = (
         db.query(models.Exercise)
@@ -38,10 +43,10 @@ def get_records(
         )
     )
 
-    if exercise_id is not None:
-        query = query.filter(models.Exercise.id == exercise_id)
-    if muscle_group_id is not None:
-        query = query.filter(models.Exercise.muscle_group_id == muscle_group_id)
+    if clean_exercise_id is not None:
+        query = query.filter(models.Exercise.id == clean_exercise_id)
+    if clean_muscle_group_id is not None:
+        query = query.filter(models.Exercise.muscle_group_id == clean_muscle_group_id)
 
     exercises = query.distinct().order_by(models.Exercise.name.asc()).all()
     if not exercises:
@@ -195,3 +200,18 @@ def get_records(
         )
 
     return records
+
+
+@router.get("", response_model=list[schemas.RecordOut])
+def get_records(
+    exercise_id: int | None = Query(None, description="Filtrar por ID de ejercicio"),
+    muscle_group_id: int | None = Query(None, description="Filtrar por grupo muscular"),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return compute_user_records(
+        db=db,
+        current_user=current_user,
+        exercise_id=exercise_id,
+        muscle_group_id=muscle_group_id,
+    )

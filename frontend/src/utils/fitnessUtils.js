@@ -21,21 +21,43 @@ export function calculateEstimated1RM(weight, reps) {
  * @param {string} name
  * @returns {"Barra"|"Mancuerna"|"Polea"|"Máquina"}
  */
-export function getExerciseEquipment(name = "") {
+export function getExerciseEquipment(name = "", exerciseId = null) {
+  // 0. Check custom user-defined equipment mapping
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("fittracker_custom_exercise_equipment");
+      if (stored) {
+        const map = JSON.parse(stored);
+        if (exerciseId && map[exerciseId]) {
+          const val = map[exerciseId];
+          return val === "Máquina / Peso Corporal" ? "Máquina" : val;
+        }
+        const trimmed = (name || "").toLowerCase().trim();
+        if (trimmed && map[trimmed]) {
+          const val = map[trimmed];
+          return val === "Máquina / Peso Corporal" ? "Máquina" : val;
+        }
+      }
+    } catch {}
+  }
+
   const n = (name || "").toLowerCase().trim();
 
   // 1. Mancuerna
   if (
     n.includes("mancuerna") ||
+    n.includes("manc.") ||
     n.includes("goblet") ||
     n.includes("zancada") ||
     n.includes("búlgara") ||
-    n.includes("bulgara")
+    n.includes("bulgara") ||
+    n.includes("dumbbell") ||
+    n.includes(" db ")
   ) {
     return "Mancuerna";
   }
 
-  // 2. Máquina / Smith / Convergente / Libre guiado
+  // 2. Máquina / Smith / Convergente / Peso Corporal / Libre guiado
   if (
     n.includes("máquina") ||
     n.includes("maquina") ||
@@ -49,14 +71,17 @@ export function getExerciseEquipment(name = "") {
     n.includes("aductor") ||
     n.includes("prensa de piernas") ||
     n.includes("remo en t") ||
-    n.includes("remo t")
+    n.includes("remo t") ||
+    n.includes("corporal") ||
+    n.includes("peso corporal")
   ) {
     return "Máquina";
   }
 
-  // 3. Polea
+  // 3. Polea / Cable
   if (
     n.includes("polea") ||
+    n.includes("cable") ||
     n.includes("jalón") ||
     n.includes("jalon") ||
     n.includes("cruce") ||
@@ -72,6 +97,7 @@ export function getExerciseEquipment(name = "") {
   // 4. Barra / Discos
   if (
     n.includes("barra") ||
+    n.includes("barbell") ||
     n.includes("disco") ||
     n.includes("svend") ||
     n.includes("press banca") ||
@@ -115,7 +141,7 @@ export function getPrStatus(prDateVal) {
       label: "🔥 Récord reciente",
       days: diffDays,
       className:
-        "border-amber-400/70 bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-500/25 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.35)] animate-pulse font-black",
+        "border border-amber-500/30 bg-amber-500/10 text-amber-300 font-semibold",
     };
   }
 

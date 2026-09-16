@@ -204,14 +204,14 @@ export function AppShell() {
   // If initial auth check is running (e.g. token in localStorage without user data)
   if (isCheckingAuth) {
     return (
-      <div className="min-h-[100dvh] bg-[#050505] text-white flex flex-col items-center justify-center p-4 select-none">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#FF6D00] text-white shadow-[0_0_20px_rgba(255,87,34,0.5)] animate-pulse mb-4">
+      <div className="min-h-[100dvh] bg-[#000000] text-white flex flex-col items-center justify-center p-4 select-none">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white animate-pulse mb-4">
           <Dumbbell size={28} />
         </div>
-        <div className="flex items-center gap-2 text-[#FF6D00]">
+        <div className="flex items-center gap-2 text-[#FF5722]">
           <Loader2 size={20} className="animate-spin" />
-          <p className="text-xs sm:text-sm font-bold tracking-wide text-[#A1A1AA]">
-            Iniciando FitTracker OLED...
+          <p className="text-xs sm:text-sm font-semibold tracking-wide text-[#8E8E93]">
+            Iniciando FitTracker...
           </p>
         </div>
       </div>
@@ -240,24 +240,24 @@ export function AppShell() {
   ];
 
   return (
-    <div className="min-h-[100dvh] bg-[#050505] text-white flex flex-col w-full overflow-x-hidden">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-30 border-b border-[#2A1B14] bg-[#050505]/95 backdrop-blur-md safe-top">
+    <div className="min-h-[100dvh] bg-[#000000] text-white flex flex-col w-full overflow-x-hidden">
+      {/* Top Navbar with Clean Flat OLED Border */}
+      <header className="sticky top-0 z-30 border-b border-white/5 bg-[#000000]/90 backdrop-blur-xl safe-top">
         <div className="mx-auto flex max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl items-center justify-between px-3 py-2.5 sm:px-6 sm:py-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#FF5722] to-[#FF6D00] text-white shadow-[0_0_15px_rgba(255,87,34,0.4)]">
-              <Dumbbell size={22} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white">
+              <Dumbbell size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-black tracking-wider text-white">
-                  FIT<span className="text-[#FF5722]">TRACKER</span>
+                <span className="text-base font-semibold tracking-tight text-white">
+                  FIT<span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF5722] to-[#7C4DFF]">TRACKER</span>
                 </span>
-                <span className="rounded-full border border-[#FF5722]/40 bg-[#C84218]/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-[#FF6D00]">
-                  OLED GYM
+                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-[#8E8E93]">
+                  OLED
                 </span>
               </div>
-              <span className="text-[10px] text-[#A1A1AA] hidden sm:block">
+              <span className="text-[10px] text-[#8E8E93] hidden sm:block">
                 Hipertrofia &amp; Sobrecarga Progresiva
               </span>
             </div>
@@ -274,10 +274,10 @@ export function AppShell() {
                     to={item.to}
                     end={item.to === "/"}
                     className={({ isActive }) =>
-                      `flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+                      `flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-semibold transition ${
                         isActive
-                          ? "border border-[#FF5722]/60 bg-gradient-to-r from-[#FF5722]/20 to-[#C84218]/20 text-white shadow-[0_0_12px_rgba(255,87,34,0.3)]"
-                          : "text-[#A1A1AA] hover:bg-[#121113] hover:text-white"
+                          ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                          : "text-[#8E8E93] hover:bg-white/5 hover:text-white"
                       }`
                     }
                   >
@@ -291,10 +291,10 @@ export function AppShell() {
               <button
                 type="button"
                 onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl border border-[#2A1B14] bg-[#121113] px-3 py-2 text-xs font-bold text-white hover:border-[#FF5722] hover:bg-[#1C1412] transition active:scale-95 shadow-sm"
+                className="flex items-center gap-1.5 rounded-2xl border border-white/5 bg-[#1C1C1E] px-3 py-2 text-xs font-semibold text-white hover:bg-[#2C2C2E] transition active:scale-95"
                 title="Mi Perfil y Peso Corporal"
               >
-                <User size={14} className="text-[#FF6D00]" />
+                <User size={14} className="text-[#FF5722]" />
                 <span>Perfil ({currentUser?.bodyweight || 75} kg)</span>
               </button>
             </nav>
@@ -303,19 +303,18 @@ export function AppShell() {
             <button
               type="button"
               onClick={() => setIsProfileOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-black uppercase tracking-wider border shadow-sm transition active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 rounded-2xl px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider border transition active:scale-95 cursor-pointer"
               style={{
-                borderColor: `${globalRank.color}70`,
-                backgroundColor: `${globalRank.color}18`,
+                borderColor: `${globalRank.color}40`,
+                backgroundColor: `${globalRank.color}15`,
                 color: globalRank.color,
-                boxShadow: `0 0 12px ${globalRank.color}25`,
               }}
               title={`Rango Global de Fuerza: ${globalRank.name} (${globalRank.ratio}× peso corporal)`}
             >
               <span className="text-sm leading-none">{globalRank.icon}</span>
               <span className="truncate max-w-[70px] sm:max-w-none">{globalRank.name}</span>
               {globalRank.ratio > 0 && (
-                <span className="hidden md:inline rounded bg-black/40 px-1 py-0.2 text-[10px] font-extrabold lowercase opacity-90">
+                <span className="hidden md:inline rounded bg-black/40 px-1 py-0.2 text-[10px] font-semibold lowercase opacity-90">
                   {globalRank.ratio}×
                 </span>
               )}
@@ -325,7 +324,7 @@ export function AppShell() {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center justify-center rounded-xl border border-[#2A1B14] bg-[#121113] p-2 text-xs font-bold text-[#71717A] hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 transition active:scale-95"
+              className="inline-flex items-center justify-center rounded-2xl border border-white/5 bg-[#1C1C1E] p-2 text-xs font-semibold text-[#8E8E93] hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 transition active:scale-95"
               title="Cerrar sesión"
             >
               <LogOut size={16} />
@@ -334,37 +333,32 @@ export function AppShell() {
         </div>
       </header>
  
-      {/* Micro-notificación brillante flotante de subida de rango */}
+      {/* Micro-notificación de subida de rango */}
       {rankUpToast && (
         <div
-          className="fixed top-16 sm:top-20 inset-x-4 max-w-md mx-auto z-50 rounded-2xl border p-3.5 shadow-2xl animate-in slide-in-from-top-4 duration-300 flex items-center justify-between gap-3 select-none"
-          style={{
-            borderColor: rankUpToast.rankColor || "#FF5722",
-            background: "rgba(18, 17, 19, 0.96)",
-            boxShadow: `0 0 30px ${rankUpToast.rankColor || "#FF5722"}60`,
-          }}
+          className="fixed top-16 sm:top-20 inset-x-4 max-w-md mx-auto z-50 rounded-3xl border border-white/10 bg-[#1C1C1E]/95 p-3.5 backdrop-blur-xl animate-in slide-in-from-top-4 duration-300 flex items-center justify-between gap-3 select-none"
         >
           <div className="flex items-center gap-3">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-lg animate-bounce flex-shrink-0"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg flex-shrink-0"
               style={{
-                backgroundColor: `${rankUpToast.rankColor || "#FF5722"}25`,
-                border: `1px solid ${rankUpToast.rankColor || "#FF5722"}80`,
+                backgroundColor: `${rankUpToast.rankColor || "#FF5722"}20`,
+                border: `1px solid ${rankUpToast.rankColor || "#FF5722"}50`,
               }}
             >
               ⚡
             </div>
             <div>
               <div
-                className="text-xs font-black uppercase tracking-wider"
+                className="text-xs font-semibold uppercase tracking-wider"
                 style={{ color: rankUpToast.rankColor || "#FF5722" }}
               >
-                ⚡ ¡SUBIDA DE RANGO!
+                ⚡ Subida de Rango
               </div>
-              <p className="text-xs font-bold text-white">
+              <p className="text-xs font-semibold text-white">
                 Has alcanzado el rango{" "}
                 <span
-                  className="uppercase underline decoration-2 font-black"
+                  className="uppercase font-bold"
                   style={{ color: rankUpToast.rankColor || "#FF5722" }}
                 >
                   {rankUpToast.rankName}
@@ -376,7 +370,7 @@ export function AppShell() {
           <button
             type="button"
             onClick={() => setRankUpToast(null)}
-            className="text-[#71717A] hover:text-white p-1 transition"
+            className="text-[#8E8E93] hover:text-white p-1 transition"
           >
             <X size={16} />
           </button>
@@ -384,7 +378,7 @@ export function AppShell() {
       )}
 
       {/* Main Content Area protected by ErrorBoundary */}
-      <main className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl flex-1 px-3 sm:px-6 py-4 pb-28 sm:pb-24">
+      <main className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl flex-1 px-3 sm:px-6 py-4">
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Workouts />} />
@@ -403,8 +397,11 @@ export function AppShell() {
       </main>
 
       {/* Mobile Bottom Navigation Bar: [Entrenar | Métricas | Récords | Perfil (Peso)] */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#2A1B14] bg-[#050505]/95 backdrop-blur-xl safe-bottom sm:hidden">
-        <div className="grid grid-cols-4 gap-1 px-1.5 py-2">
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#2C2C2E] bg-[#000000]/95 backdrop-blur-xl bottom-nav-safe sm:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="grid grid-cols-4 gap-1 px-1.5 h-16 items-center">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -413,10 +410,10 @@ export function AppShell() {
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-[10px] font-bold transition active:scale-95 ${
+                  `flex h-12 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold transition active:scale-95 ${
                     isActive
-                      ? "border border-[#FF5722]/60 bg-[#FF5722]/15 text-[#FF6D00] shadow-[0_0_10px_rgba(255,87,34,0.3)]"
-                      : "text-[#71717A] hover:text-[#A1A1AA]"
+                      ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                      : "text-[#8E8E93] hover:text-white"
                   }`
                 }
               >
@@ -431,10 +428,10 @@ export function AppShell() {
           <button
             type="button"
             onClick={() => setIsProfileOpen(true)}
-            className="flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-[10px] font-bold text-[#71717A] hover:text-white transition active:scale-95"
+            className="flex h-12 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-semibold text-[#8E8E93] hover:text-white transition active:scale-95"
             title="Mi Perfil y Peso Corporal"
           >
-            <User size={18} className="text-[#FF6D00]" />
+            <User size={18} className="text-[#FF5722]" />
             <span className="text-center leading-tight tracking-tight truncate">
               Perfil ({currentUser?.bodyweight || 75}kg)
             </span>

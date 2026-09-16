@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from .. import models, schemas
 from ..database import get_db
 from ..security import get_current_user
-from .records import get_records as records_get_records
+from .records import compute_user_records, get_records as records_get_records
 
 router = APIRouter()
 
@@ -17,11 +17,11 @@ def get_user_records(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return records_get_records(
+    return compute_user_records(
+        db=db,
+        current_user=current_user,
         exercise_id=exercise_id,
         muscle_group_id=muscle_group_id,
-        current_user=current_user,
-        db=db,
     )
 
 
@@ -452,8 +452,16 @@ def finish_workout(
     if payload.calories_burned is not None:
         session.calories_burned = payload.calories_burned
 
-    db.commit()
-    db.refresh(session)
+    try:
+        db.commit()
+        db.refresh(session)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error al finalizar la sesión en base de datos: {str(e)}"
+        )
+
     exercise_ids = [s.exercise_id for s in session.sets]
     prev_history = _get_exercise_previous_history(
         exercise_ids=exercise_ids,
@@ -461,7 +469,10 @@ def finish_workout(
         current_session_id=session.id,
         db=db,
     )
-    updated_records = records_get_records(current_user=current_user, db=db)
+    try:
+        updated_records = compute_user_records(db=db, current_user=current_user)
+    except Exception:
+        updated_records = []
     return _format_workout_session(session, previous_history=prev_history, records=updated_records)
 
 
@@ -613,10 +624,20 @@ def _save_consolidated_workout(
         )
         session.sets.append(workout_set)
 
-    db.commit()
-    db.refresh(session)
+    try:
+        db.commit()
+        db.refresh(session)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error al guardar el entrenamiento en base de datos: {str(e)}"
+        )
 
-    updated_records = records_get_records(current_user=current_user, db=db)
+    try:
+        updated_records = compute_user_records(db=db, current_user=current_user)
+    except Exception:
+        updated_records = []
 
     saved = (
         db.query(models.WorkoutSession)

@@ -1,12 +1,14 @@
 services:
-  tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: fittracker_tunnel
-    restart: always
-    dns:
-        - 1.1.1.1
-        - 8.8.8.8
-    command: tunnel --url http://frontend:80
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: fittracker_ngrok
+    restart: unless-stopped
+    environment:
+      - NGROK_AUTHTOKEN=3JMuRzq1VTuVVngb5D9W9A0kJfB_4S7ze9BJm2iMFBC9tLt1S
+    command:
+      - "http"
+      - "frontend:80"
+      - "--domain=harmonica-fog-washout.ngrok-free.dev"
   duckdns:
     image: lscr.io/linuxserver/duckdns:latest
     container_name: duckdns
@@ -20,6 +22,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./data:/app/data
+      - ./backend:/app          # <-- Agregas esta línea
     environment:
       - TZ=America/Argentina/Buenos_Aires
       - FITTRACKER_SECRET_KEY=${FITTRACKER_SECRET_KEY:-fittracker_secret}
@@ -34,6 +37,8 @@ services:
     build:
       context: ./frontend
     restart: unless-stopped
+    volumes:
+      - ./frontend/src:/app/src  # <-- Agregas esta línea (si Vite corre en dev)
     depends_on:
       backend:
         condition: service_healthy

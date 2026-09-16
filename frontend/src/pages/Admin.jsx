@@ -158,14 +158,14 @@ export default function Admin({ currentUser }) {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#9333EA]/20 border border-[#A855F7]/30 text-[#C084FC]">
               <ShieldCheck size={18} />
             </span>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-wide">
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-wide">
               Panel de Administración
             </h1>
-            <span className="rounded-full border border-purple-500/40 bg-purple-500/15 px-2 py-0.5 text-[10px] font-black uppercase text-[#C084FC]">
+            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase text-[#FF5722]">
               Pablo / Admin
             </span>
           </div>
-          <p className="mt-1 text-xs text-[#A1A1AA]">
+          <p className="mt-1 text-xs text-[#8E8E93]">
             Control de cuentas, restablecimiento de contraseñas y buzón de soporte
           </p>
         </div>
@@ -173,7 +173,7 @@ export default function Admin({ currentUser }) {
         <button
           onClick={loadData}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#2D1B4E] bg-[#140E24] px-3.5 py-2 text-xs font-bold text-[#D4D4D8] hover:border-[#A855F7] hover:text-white transition active:scale-95"
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/5 bg-[#1C1C1E] px-3.5 py-2 text-xs font-semibold text-white hover:border-white/20 transition active:scale-95"
         >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           Actualizar
@@ -182,43 +182,43 @@ export default function Admin({ currentUser }) {
 
       {/* Stats Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5">
-          <div className="flex items-center justify-between text-xs text-[#A1A1AA] mb-1">
+        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5">
+          <div className="flex items-center justify-between text-xs text-[#8E8E93] mb-1">
             <span>Total Usuarios</span>
-            <Users size={16} className="text-[#A855F7]" />
+            <Users size={16} className="text-[#FF5722]" />
           </div>
-          <p className="text-2xl font-black text-white">{users.length}</p>
+          <p className="text-2xl font-bold text-white">{users.length}</p>
         </div>
 
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5">
-          <div className="flex items-center justify-between text-xs text-[#A1A1AA] mb-1">
+        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5">
+          <div className="flex items-center justify-between text-xs text-[#8E8E93] mb-1">
             <span>Usuarios Activos</span>
             <UserCheck size={16} className="text-emerald-400" />
           </div>
-          <p className="text-2xl font-black text-emerald-400">
+          <p className="text-2xl font-bold text-emerald-400">
             {users.filter((u) => u.is_active).length}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5">
-          <div className="flex items-center justify-between text-xs text-[#A1A1AA] mb-1">
+        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5">
+          <div className="flex items-center justify-between text-xs text-[#8E8E93] mb-1">
             <span>Entrenamientos Totales</span>
-            <Dumbbell size={16} className="text-[#C084FC]" />
+            <Dumbbell size={16} className="text-[#7C4DFF]" />
           </div>
-          <p className="text-2xl font-black text-white">
+          <p className="text-2xl font-bold text-white">
             {users.reduce((acc, u) => acc + (u.total_workouts || 0), 0)}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-3.5">
-          <div className="flex items-center justify-between text-xs text-[#A1A1AA] mb-1">
+        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5">
+          <div className="flex items-center justify-between text-xs text-[#8E8E93] mb-1">
             <span>Buzón de Soporte</span>
-            <HelpCircle size={16} className={pendingCount > 0 ? "text-amber-400" : "text-[#71717A]"} />
+            <HelpCircle size={16} className={pendingCount > 0 ? "text-amber-400" : "text-[#8E8E93]"} />
           </div>
           <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-black text-white">{supportRequests.length}</p>
+            <p className="text-2xl font-bold text-white">{supportRequests.length}</p>
             {pendingCount > 0 && (
-              <span className="text-xs font-bold text-amber-400 animate-pulse">
+              <span className="text-xs font-semibold text-amber-400 animate-pulse">
                 ({pendingCount} pendientes)
               </span>
             )}
@@ -227,13 +227,13 @@ export default function Admin({ currentUser }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#2D1B4E] pb-2">
+      <div className="flex items-center gap-2 border-b border-white/5 pb-2">
         <button
           onClick={() => setActiveTab("users")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+          className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
             activeTab === "users"
-              ? "border border-[#A855F7]/40 bg-[#1C1433] text-white shadow-neon"
-              : "text-[#A1A1AA] hover:text-white"
+              ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+              : "text-[#8E8E93] hover:text-white"
           }`}
         >
           <Users size={16} />
@@ -242,16 +242,16 @@ export default function Admin({ currentUser }) {
 
         <button
           onClick={() => setActiveTab("support")}
-          className={`relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+          className={`relative flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
             activeTab === "support"
-              ? "border border-[#A855F7]/40 bg-[#1C1433] text-white shadow-neon"
-              : "text-[#A1A1AA] hover:text-white"
+              ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+              : "text-[#8E8E93] hover:text-white"
           }`}
         >
           <HelpCircle size={16} />
           Buzón de Soporte ({supportRequests.length})
           {pendingCount > 0 && (
-            <span className="ml-1 rounded-full bg-amber-500 px-1.5 py-0.2 text-[10px] font-black text-black">
+            <span className="ml-1 rounded-full bg-amber-500 px-1.5 py-0.2 text-[10px] font-bold text-black">
               {pendingCount}
             </span>
           )}
@@ -530,21 +530,21 @@ export default function Admin({ currentUser }) {
       {/* Password Reset Modal */}
       {targetUserForPassword && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-md rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-5 sm:p-6 shadow-2xl text-white">
+          <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-[#1C1C1E] p-5 sm:p-6 text-white">
             <button
               onClick={() => setTargetUserForPassword(null)}
-              className="absolute top-4 right-4 text-[#A1A1AA] hover:text-white p-1 rounded-lg"
+              className="absolute top-4 right-4 text-[#8E8E93] hover:text-white p-1 rounded-lg"
             >
               <X size={18} />
             </button>
 
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#9333EA]/20 border border-[#A855F7]/30 text-[#C084FC]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-[#FF5722]">
                 <KeyRound size={20} />
               </div>
               <div>
-                <h3 className="text-base font-black text-white">Restablecer Contraseña</h3>
-                <p className="text-xs text-[#A1A1AA]">
+                <h3 className="text-base font-bold text-white">Restablecer Contraseña</h3>
+                <p className="text-xs text-[#8E8E93]">
                   Usuario: <strong className="text-white">{targetUserForPassword.username}</strong>
                 </p>
               </div>
@@ -552,7 +552,7 @@ export default function Admin({ currentUser }) {
 
             <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5">
+                <label className="block text-xs font-semibold text-[#8E8E93] mb-1.5">
                   Nueva Contraseña para el Usuario
                 </label>
                 <div className="flex gap-2">
@@ -561,7 +561,7 @@ export default function Admin({ currentUser }) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Mínimo 6 caracteres"
-                    className="w-full rounded-xl border border-[#2D1B4E] bg-[#09060E] px-3.5 py-2 text-sm text-white placeholder-[#71717A] focus:border-[#A855F7] focus:outline-none"
+                    className="w-full rounded-2xl border border-white/10 bg-[#121212] px-3.5 py-2 text-sm text-white placeholder-[#8E8E93] focus:border-[#FF5722] focus:outline-none font-medium"
                     required
                   />
                   <button
@@ -570,19 +570,19 @@ export default function Admin({ currentUser }) {
                       const rand = Math.random().toString(36).slice(-8) + "9!";
                       setNewPassword(rand);
                     }}
-                    className="px-3 py-2 text-xs font-bold bg-[#1C1433] border border-[#2D1B4E] hover:border-[#A855F7] rounded-xl text-[#C084FC] whitespace-nowrap"
+                    className="px-3 py-2 text-xs font-semibold bg-[#121212] border border-white/10 hover:border-white/20 rounded-2xl text-white whitespace-nowrap"
                   >
                     Generar
                   </button>
                 </div>
-                <p className="mt-1 text-[11px] text-[#71717A]">
+                <p className="mt-1 text-[11px] text-[#8E8E93]">
                   Podés ingresar una clave provisoria y compartirla con el usuario.
                 </p>
               </div>
 
               {passFeedback && (
                 <div
-                  className={`p-2.5 rounded-xl text-xs font-semibold ${
+                  className={`p-2.5 rounded-2xl text-xs font-semibold ${
                     passFeedback.startsWith("✓")
                       ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
                       : "bg-red-500/15 text-red-300 border border-red-500/30"
@@ -596,14 +596,14 @@ export default function Admin({ currentUser }) {
                 <button
                   type="button"
                   onClick={() => setTargetUserForPassword(null)}
-                  className="px-4 py-2 text-xs font-bold text-[#A1A1AA] hover:text-white rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-[#8E8E93] hover:text-white rounded-2xl"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={passLoading}
-                  className="px-4 py-2 text-xs font-bold bg-gradient-to-r from-[#9333EA] to-[#A855F7] text-white rounded-xl shadow-neon hover:opacity-95 disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-semibold bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white rounded-2xl hover:opacity-90 disabled:opacity-50"
                 >
                   {passLoading ? "Guardando..." : "Asignar Contraseña"}
                 </button>
@@ -616,22 +616,22 @@ export default function Admin({ currentUser }) {
       {/* Resolve Support Modal */}
       {targetSupportReq && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-md rounded-2xl border border-[#2D1B4E] bg-[#140E24] p-5 sm:p-6 shadow-2xl text-white">
+          <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-[#1C1C1E] p-5 sm:p-6 text-white">
             <button
               onClick={() => setTargetSupportReq(null)}
-              className="absolute top-4 right-4 text-[#A1A1AA] hover:text-white p-1 rounded-lg"
+              className="absolute top-4 right-4 text-[#8E8E93] hover:text-white p-1 rounded-lg"
             >
               <X size={18} />
             </button>
 
-            <h3 className="text-base font-black text-white mb-2">Marcar Solicitud como Resuelta</h3>
-            <p className="text-xs text-[#A1A1AA] mb-4">
+            <h3 className="text-base font-bold text-white mb-2">Marcar Solicitud como Resuelta</h3>
+            <p className="text-xs text-[#8E8E93] mb-4">
               Solicitud de <strong>{targetSupportReq.username || "Anónimo"}</strong>: &quot;{targetSupportReq.subject}&quot;
             </p>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-[#D4D4D8] mb-1">
+                <label className="block text-xs font-semibold text-[#8E8E93] mb-1">
                   Nota u observación interna (opcional)
                 </label>
                 <textarea
@@ -639,7 +639,7 @@ export default function Admin({ currentUser }) {
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Ej. Se restableció la clave provisoria y se notificó al usuario..."
-                  className="w-full rounded-xl border border-[#2D1B4E] bg-[#09060E] p-3 text-xs text-white placeholder-[#71717A] focus:border-[#A855F7] focus:outline-none resize-none"
+                  className="w-full rounded-2xl border border-white/10 bg-[#121212] p-3 text-xs text-white placeholder-[#8E8E93] focus:border-[#FF5722] focus:outline-none resize-none font-medium"
                 />
               </div>
 
@@ -647,7 +647,7 @@ export default function Admin({ currentUser }) {
                 <button
                   type="button"
                   onClick={() => setTargetSupportReq(null)}
-                  className="px-4 py-2 text-xs font-bold text-[#A1A1AA] hover:text-white rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-[#8E8E93] hover:text-white rounded-2xl"
                 >
                   Cancelar
                 </button>
@@ -655,7 +655,7 @@ export default function Admin({ currentUser }) {
                   type="button"
                   disabled={supportLoading}
                   onClick={() => handleResolveSupport(targetSupportReq.id, "resolved")}
-                  className="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-neon disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl disabled:opacity-50"
                 >
                   {supportLoading ? "Guardando..." : "Confirmar Resolución"}
                 </button>

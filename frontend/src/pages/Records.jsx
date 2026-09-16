@@ -288,30 +288,30 @@ export default function Records({ defaultTab = "records" }) {
       />
 
       {/* Segmented Switcher (Récords / Salón de la Fama vs Historial) */}
-      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#2A1B14] bg-[#181210] p-1.5 shadow-card">
+      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-[#1C1C1E] p-1.5">
         <button
           type="button"
           onClick={() => setActiveTab("records")}
-          className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-extrabold transition active:scale-95 ${
+          className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-semibold transition active:scale-95 ${
             activeTab === "records"
-              ? "bg-gradient-to-r from-[#C84218] to-[#7E22CE] text-white shadow-neon"
-              : "text-[#A1A1AA] hover:text-white hover:bg-[#2A1B14]"
+              ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+              : "text-[#8E8E93] hover:text-white hover:bg-white/5"
           }`}
         >
-          <Trophy size={16} className={activeTab === "records" ? "text-amber-300" : "text-[#FF6D00]"} />
+          <Trophy size={16} className={activeTab === "records" ? "text-[#FF5722]" : "text-[#8E8E93]"} />
           <span>Salón de la Fama ({records.length})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("history")}
-          className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-extrabold transition active:scale-95 ${
+          className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-semibold transition active:scale-95 ${
             activeTab === "history"
-              ? "bg-gradient-to-r from-[#C84218] to-[#7E22CE] text-white shadow-neon"
-              : "text-[#A1A1AA] hover:text-white hover:bg-[#2A1B14]"
+              ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+              : "text-[#8E8E93] hover:text-white hover:bg-white/5"
           }`}
         >
-          <Calendar size={16} className={activeTab === "history" ? "text-white" : "text-[#FF5722]"} />
+          <Calendar size={16} className={activeTab === "history" ? "text-white" : "text-[#8E8E93]"} />
           <span>Historial ({workouts.length})</span>
         </button>
       </div>
@@ -320,31 +320,31 @@ export default function Records({ defaultTab = "records" }) {
       {activeTab === "records" && (
         <div className="space-y-4 animate-in fade-in duration-200">
           {/* Hall of Fame Hero Stats Banner */}
-          <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#2A1B14] via-[#181210] to-[#0A0612] p-4 sm:p-5 shadow-card">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2A1B14] pb-3.5 mb-3.5">
+          <div className="rounded-3xl border border-white/10 bg-[#1C1C1E] p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3.5 mb-3.5">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 via-yellow-500/25 to-amber-600/20 border border-amber-400/40 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                  <Trophy size={22} className="text-amber-300 animate-pulse" />
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white">
+                  <Trophy size={22} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
                     <span>Medallero Personal</span>
-                    <span className="rounded-md border border-amber-400/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-300">
+                    <span className="rounded-md border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
                       PRs Activos
                     </span>
                   </h2>
-                  <p className="text-xs text-[#A1A1AA]">
+                  <p className="text-xs text-[#8E8E93]">
                     Tus máximas marcas registradas con sobrecarga progresiva y 1RM
                   </p>
                 </div>
               </div>
 
               {stats.max1RM > 0 && (
-                <div className="self-start sm:self-center flex items-center gap-2 rounded-xl border border-purple-500/40 bg-purple-500/10 px-3 py-1.5 text-xs">
-                  <Sparkles size={14} className="text-[#FF6D00]" />
-                  <span className="text-[#A1A1AA]">Mayor 1RM:</span>
-                  <strong className="text-white font-black">{stats.max1RM} kg</strong>
-                  <span className="text-[#FF6D00] truncate max-w-[110px]">
+                <div className="self-start sm:self-center flex items-center gap-2 rounded-xl border border-white/10 bg-[#121212] px-3 py-1.5 text-xs">
+                  <Sparkles size={14} className="text-[#FF5722]" />
+                  <span className="text-[#8E8E93]">Mayor 1RM:</span>
+                  <strong className="text-white font-bold">{stats.max1RM} kg</strong>
+                  <span className="text-[#FF5722] truncate max-w-[110px]">
                     ({stats.bestExerciseName})
                   </span>
                 </div>
@@ -403,12 +403,12 @@ export default function Records({ defaultTab = "records" }) {
           </div>
 
           {/* Controls: Real-Time Search Bar & Sorting */}
-          <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 sm:p-4 shadow-card space-y-3">
+          <div className="rounded-3xl border border-white/10 bg-[#1C1C1E] p-3.5 sm:p-4 space-y-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
               {/* Search Bar */}
               <div className="relative flex-1">
                 <Search
-                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#71717A]"
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8E8E93]"
                   size={18}
                 />
                 <input
@@ -417,13 +417,13 @@ export default function Records({ defaultTab = "records" }) {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar ejercicio en el Medallero (ej: Press Plano, Sentadilla, Curl)..."
-                  className="iron-input pl-10 pr-9 text-sm"
+                  className="w-full min-h-[44px] rounded-2xl border border-white/10 bg-[#121212] pl-10 pr-9 text-sm text-white placeholder:text-[#8E8E93] outline-none focus:border-[#FF5722]"
                 />
                 {search && (
                   <button
                     type="button"
                     onClick={() => setSearch("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717A] hover:text-white transition"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E8E93] hover:text-white transition"
                   >
                     <X size={16} />
                   </button>
@@ -432,11 +432,11 @@ export default function Records({ defaultTab = "records" }) {
 
               {/* Sort Selector */}
               <div className="flex items-center gap-1.5 self-end sm:self-auto flex-shrink-0">
-                <span className="text-[11px] font-bold text-[#71717A]">Ordenar:</span>
+                <span className="text-[11px] font-semibold text-[#8E8E93]">Ordenar:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="rounded-xl border border-[#2A1B14] bg-[#121113] px-2.5 py-2 text-xs font-bold text-white outline-none focus:border-[#FF5722]"
+                  className="rounded-xl border border-white/10 bg-[#121212] px-2.5 py-2 text-xs font-semibold text-white outline-none focus:border-[#FF5722]"
                 >
                   <option value="recent">Más recientes (Fecha)</option>
                   <option value="weight">Mayor peso levantado (kg)</option>
@@ -449,8 +449,8 @@ export default function Records({ defaultTab = "records" }) {
 
             {/* Muscle Pills Selector: [Todos | Pecho | Pierna | Espalda | Hombro | Brazos | Core] */}
             <div>
-              <div className="flex items-center gap-1.5 mb-1 text-[11px] font-bold text-[#A1A1AA]">
-                <Filter size={12} className="text-[#FF6D00]" />
+              <div className="flex items-center gap-1.5 mb-1 text-[11px] font-semibold text-[#8E8E93]">
+                <Filter size={12} className="text-[#FF5722]" />
                 <span>Grupos Musculares:</span>
               </div>
               <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -462,18 +462,18 @@ export default function Records({ defaultTab = "records" }) {
                       key={pill}
                       type="button"
                       onClick={() => setSelectedPill(pill)}
-                      className={`min-h-[38px] rounded-xl px-3 py-1.5 text-xs font-bold transition active:scale-95 flex items-center gap-1.5 ${
+                      className={`min-h-[38px] rounded-xl px-3 py-1.5 text-xs font-semibold transition active:scale-95 flex items-center gap-1.5 ${
                         isSelected
-                          ? "bg-gradient-to-r from-[#C84218] to-[#7E22CE] text-white shadow-neon"
-                          : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/40 hover:text-white"
+                          ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                          : "border border-white/10 bg-[#121212] text-[#8E8E93] hover:border-white/20 hover:text-white font-medium"
                       }`}
                     >
                       <span>{pill}</span>
                       <span
-                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-black ${
+                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-semibold ${
                           isSelected
-                            ? "bg-white/20 text-white"
-                            : "bg-[#2A1B14] text-[#71717A]"
+                            ? "bg-[#FF5722]/20 text-[#FF5722]"
+                            : "bg-white/5 text-[#8E8E93]"
                         }`}
                       >
                         {count}
@@ -585,33 +585,33 @@ export default function Records({ defaultTab = "records" }) {
               // Medal tier
               let medalIcon = "🥉";
               let medalLabel = "Bronce";
-              let medalColor = "from-amber-700/20 to-amber-900/10 border-amber-700/40 text-amber-500";
+              let medalColor = "from-amber-700/20 to-amber-900/10 border-amber-700/30 text-amber-500";
               if (curWeight >= 100 || (relativeRatio && parseFloat(relativeRatio) >= 1.5)) {
                 medalIcon = "🥇";
                 medalLabel = "Oro";
                 medalColor =
-                  "from-amber-400/25 via-yellow-500/20 to-amber-500/25 border-amber-400/70 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]";
+                  "from-amber-400/20 via-yellow-500/15 to-amber-500/20 border-amber-400/40 text-amber-300";
               } else if (
                 curWeight >= 60 ||
                 (relativeRatio && parseFloat(relativeRatio) >= 1.0)
               ) {
                 medalIcon = "🥈";
                 medalLabel = "Plata";
-                medalColor = "from-slate-400/20 to-slate-600/10 border-slate-400/40 text-slate-300";
+                medalColor = "from-slate-400/20 to-slate-600/10 border-slate-400/30 text-slate-300";
               }
 
               return (
                 <div
                   key={r.exercise_id}
-                  className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 shadow-card transition-all duration-200 hover:border-[#FF5722]/50 hover:bg-[#2A1B14] sm:p-5 flex flex-col justify-between space-y-3.5"
+                  className="rounded-3xl border border-white/10 bg-[#1C1C1E] p-4 transition-all duration-200 hover:border-[#FF5722]/40 hover:bg-[#222225] sm:p-5 flex flex-col justify-between space-y-3.5"
                 >
                   {/* Card Header: Equipment, Muscle, Status Badge & Medal */}
                   <div>
-                    <div className="flex items-start justify-between gap-2 border-b border-[#2A1B14] pb-3 mb-3">
+                    <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-3 mb-3">
                       <div className="space-y-1.5 flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {/* Equipment Pill */}
-                          <span className="inline-flex items-center gap-1 rounded-md border border-[#2A1B14] bg-[#121113] px-2 py-0.5 text-[10px] font-black text-[#A1A1AA]">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#121212] px-2 py-0.5 text-[10px] font-semibold text-[#8E8E93]">
                             {equipment === "Barra" && "🏋️"}
                             {equipment === "Mancuerna" && "⚡"}
                             {equipment === "Polea" && "⛓️"}
@@ -621,82 +621,62 @@ export default function Records({ defaultTab = "records" }) {
 
                           {/* Muscle Group Pill */}
                           {(r.muscle_group || r.muscle_group_name) && (
-                            <span className="rounded-md border border-[#FF5722]/30 bg-[#C84218]/15 px-2 py-0.5 text-[10px] font-bold text-[#FF6D00]">
+                            <span className="rounded-md border border-[#FF5722]/20 bg-[#FF5722]/10 px-2 py-0.5 text-[10px] font-semibold text-[#FF5722]">
                               {r.muscle_group || r.muscle_group_name}
                             </span>
                           )}
 
-                          {/* Strength Rank Badge with neon color */}
+                          {/* Strength Rank Badge with flat color */}
                           <span
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-sm transition"
+                            className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition"
                             style={{
-                              borderColor: `${strengthRank.rankColor}70`,
-                              backgroundColor: `${strengthRank.rankColor}18`,
+                              borderColor: `${strengthRank.rankColor}40`,
+                              backgroundColor: `${strengthRank.rankColor}12`,
                               color: strengthRank.rankColor,
-                              boxShadow: `0 0 10px ${strengthRank.rankColor}25`,
                             }}
                             title={`Rango de Fuerza Relativa: ${strengthRank.rankName} (${strengthRank.ratio}× peso corporal)`}
                           >
                             <span>{strengthRank.icon}</span>
                             <span>{strengthRank.rankName}</span>
                             {strengthRank.ratio > 0 && (
-                              <span className="opacity-90 font-bold">({strengthRank.ratio}×)</span>
+                              <span className="opacity-90 font-semibold">({strengthRank.ratio}×)</span>
                             )}
                           </span>
 
                           {/* Status Badge: 🔥 Récord reciente / ⚠️ Meseta */}
                           {status && (
                             <span
-                              className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-black ${status.className}`}
+                              className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold ${status.className}`}
                             >
+                              <span>{status.icon}</span>
                               <span>{status.label}</span>
-                              {status.type === "recent" && status.days === 0 && (
-                                <span className="underline decoration-amber-400">¡Hoy!</span>
-                              )}
-                              {status.type === "plateau" && (
-                                <span className="opacity-90">({status.days}d)</span>
-                              )}
                             </span>
                           )}
                         </div>
 
-                        {/* Exercise Name */}
-                        <h3 className="text-base sm:text-lg font-black tracking-tight text-white truncate break-words">
+                        <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug break-words">
                           {r.exercise_name}
                         </h3>
                       </div>
 
-                      {/* Medal icon box */}
+                      {/* Medal Chip */}
                       <div
-                        className="flex h-10 w-10 flex-col items-center justify-center rounded-xl border bg-gradient-to-br flex-shrink-0"
-                        style={{
-                          borderColor: `${strengthRank.rankColor}60`,
-                        }}
-                        title={`Medalla de ${medalLabel} • Rango ${strengthRank.rankName}`}
+                        className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border bg-gradient-to-br ${medalColor}`}
+                        title={`Categoría: ${medalLabel}`}
                       >
-                        <span className="text-lg leading-none">{medalIcon}</span>
+                        <span className="text-xl select-none">{medalIcon}</span>
                       </div>
                     </div>
 
-                    {/* PR DESTACADO EN GRANDE (105 kg × 6 reps) */}
-                    <div className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/[0.08] via-purple-500/[0.05] to-transparent p-3.5 text-center sm:text-left space-y-2">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-[11px] font-black uppercase tracking-wider text-amber-300 flex items-center gap-1">
-                          <Trophy size={13} className="text-amber-400" />
-                          <span>Récord Actual Destacado</span>
-                        </span>
-                        <span className="text-[11px] font-bold text-[#71717A]">
-                          {formatDate(r.pr_date)}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-wrap items-baseline gap-2 justify-center sm:justify-start">
-                        <span className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                    {/* Weight, Reps & Relative Ratio Main Display */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                           {hasPr ? `${curWeight} kg × ${curReps} reps` : `${curReps} reps`}
                         </span>
 
                         {relativeRatio && (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-[#FF5722]/40 bg-[#C84218]/20 px-2 py-0.5 text-xs font-black text-[#FF6D00]">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-[#FF5722]/30 bg-[#FF5722]/10 px-2 py-0.5 text-xs font-semibold text-[#FF5722]">
                             <Scale size={11} />
                             <span>{relativeRatio}× tu peso</span>
                           </span>
@@ -704,32 +684,32 @@ export default function Records({ defaultTab = "records" }) {
                       </div>
 
                       {/* Concise OLED Strength Rank Badge: "Rango actual: [Nombre]" y "Próximo rango: X kg" */}
-                      <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border border-[#FF5722]/30 bg-[#050505] shadow-[0_0_12px_rgba(255,87,34,0.08)] text-xs mt-2">
-                        <span className="font-semibold text-[#E4E4E7] flex items-center gap-1.5">
-                          <span className="text-[#A1A1AA]">Rango actual:</span>
+                      <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border border-white/10 bg-[#121212] text-xs mt-2">
+                        <span className="font-semibold text-white flex items-center gap-1.5">
+                          <span className="text-[#8E8E93]">Rango actual:</span>
                           <strong
-                            className="font-black uppercase tracking-wider"
+                            className="font-bold uppercase tracking-wider"
                             style={{ color: strengthRank.rankColor || "#FF5722" }}
                           >
                             {strengthRank.rankName}
                           </strong>
                           {strengthRank.ratio > 0 && (
-                            <span className="text-[10px] text-[#71717A] font-normal">
+                            <span className="text-[10px] text-[#8E8E93] font-normal">
                               ({strengthRank.ratio}× BW)
                             </span>
                           )}
                         </span>
 
-                        <span className="text-[11px] font-medium text-[#A1A1AA]">
+                        <span className="text-[11px] font-medium text-[#8E8E93]">
                           {strengthRank.tier < 6 && strengthRank.nextRankTargetKg ? (
                             <>
                               Próximo rango:{" "}
-                              <strong className="font-black text-[#FF5722]">
+                              <strong className="font-semibold text-[#FF5722]">
                                 {strengthRank.nextRankTargetKg} kg
                               </strong>
                             </>
                           ) : (
-                            <strong className="font-black text-amber-300">👑 Rango Máximo</strong>
+                            <strong className="font-semibold text-amber-300">👑 Rango Máximo</strong>
                           )}
                         </span>
                       </div>
@@ -737,30 +717,30 @@ export default function Records({ defaultTab = "records" }) {
                   </div>
 
                   {/* METRICAS AVANZADAS: 1RM, RECORD ANTERIOR Y GANANCIA NETA */}
-                  <div className="space-y-2 border-t border-[#2A1B14]/80 pt-3 text-xs">
+                  <div className="space-y-2 border-t border-white/5 pt-3 text-xs">
                     {/* 1RM CALCULADO */}
-                    <div className="flex items-center justify-between gap-2 rounded-lg border border-[#2A1B14] bg-[#121113] px-3 py-2">
-                      <div className="flex items-center gap-1.5 text-[#A1A1AA] font-bold">
-                        <Zap size={14} className="text-[#FF6D00]" />
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#121212] px-3 py-2">
+                      <div className="flex items-center gap-1.5 text-[#8E8E93] font-medium">
+                        <Zap size={14} className="text-[#FF5722]" />
                         <span>1RM Estimado:</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-black text-white">
+                        <span className="text-sm font-bold text-white">
                           {est1RM > 0 ? `${est1RM} kg` : "--"}
                         </span>
-                        <span className="text-[10px] text-[#71717A]">(Epley)</span>
+                        <span className="text-[10px] text-[#8E8E93]">(Epley)</span>
                       </div>
                     </div>
 
                     {/* RECORD ANTERIOR PARA COMPARAR */}
-                    <div className="flex items-center justify-between gap-2 rounded-lg border border-[#2A1B14] bg-[#121113] px-3 py-2">
-                      <div className="flex items-center gap-1.5 text-[#A1A1AA] font-medium">
-                        <TrendingUp size={14} className="text-[#71717A]" />
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#121212] px-3 py-2">
+                      <div className="flex items-center gap-1.5 text-[#8E8E93] font-medium">
+                        <TrendingUp size={14} className="text-[#8E8E93]" />
                         <span>Récord Anterior:</span>
                       </div>
                       <div className="text-right">
                         {hasPrevious ? (
-                          <span className="font-bold text-white">
+                          <span className="font-semibold text-white">
                             Superó los {prevWeight} kg el{" "}
                             {formatDateSafe(r.previous_pr_date, {
                               day: "numeric",
@@ -768,7 +748,7 @@ export default function Records({ defaultTab = "records" }) {
                             })}
                           </span>
                         ) : (
-                          <span className="text-[#71717A] italic text-[11px]">
+                          <span className="text-[#8E8E93] italic text-[11px]">
                             Marca base inicial ({formatDateSafe(r.pr_date, { day: "numeric", month: "short" })})
                           </span>
                         )}
@@ -776,22 +756,22 @@ export default function Records({ defaultTab = "records" }) {
                     </div>
 
                     {/* GANANCIA NETA (+X kg / +X%) */}
-                    <div className="flex items-center justify-between gap-2 rounded-lg border border-[#2A1B14] bg-[#121113] px-3 py-2">
-                      <span className="text-[#A1A1AA] font-medium">Ganancia Neta:</span>
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#121212] px-3 py-2">
+                      <span className="text-[#8E8E93] font-medium">Ganancia Neta:</span>
                       <div>
                         {hasPrevious && netGainKg !== null ? (
                           netGainKg > 0 ? (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-[#34D399]/40 bg-[#34D399]/15 px-2 py-0.5 text-xs font-black text-[#34D399] shadow-sm">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400">
                               <ArrowUpRight size={13} />
                               <span>+{netGainKg} kg (+{netGainPct}%)</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-[#FF6D00]/30 bg-[#FF6D00]/10 px-2 py-0.5 text-xs font-bold text-[#FF6D00]">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-[#FF5722]/20 bg-[#FF5722]/10 px-2 py-0.5 text-xs font-semibold text-[#FF5722]">
                               ✓ Carga consolidada ({curReps} reps)
                             </span>
                           )
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-purple-500/30 bg-[#2A1B14] px-2 py-0.5 text-[11px] font-bold text-[#FF6D00]">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#1C1C1E] px-2 py-0.5 text-[11px] font-medium text-[#FF5722]">
                             ⭐ Marca inicial de partida
                           </span>
                         )}
@@ -801,13 +781,13 @@ export default function Records({ defaultTab = "records" }) {
                     {/* Progress Bar Visual (Previous PR vs Current PR) */}
                     {hasPrevious && curWeight > 0 && prevWeight > 0 && (
                       <div className="pt-1">
-                        <div className="flex justify-between text-[10px] text-[#71717A] mb-1">
+                        <div className="flex justify-between text-[10px] text-[#8E8E93] mb-1">
                           <span>Anterior: {prevWeight} kg</span>
-                          <span className="text-amber-300 font-black">Nuevo: {curWeight} kg</span>
+                          <span className="text-amber-300 font-semibold">Nuevo: {curWeight} kg</span>
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-[#121113] overflow-hidden border border-[#2A1B14]">
+                        <div className="h-1.5 w-full rounded-full bg-[#121212] overflow-hidden border border-white/5">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#C84218] via-amber-400 to-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                            className="h-full rounded-full bg-gradient-to-r from-[#FF5722] to-[#7C4DFF]"
                             style={{
                               width: `${Math.min(
                                 100,
@@ -888,52 +868,52 @@ export default function Records({ defaultTab = "records" }) {
                 return (
                   <div
                     key={w.id}
-                    className="rounded-2xl border border-[#2A1B14] bg-[#181210] overflow-hidden shadow-card transition hover:border-[#FF5722]/30"
+                    className="rounded-3xl border border-white/10 bg-[#1C1C1E] overflow-hidden transition hover:border-[#FF5722]/30"
                   >
                     <div
                       onClick={() =>
                         setExpandedWorkoutId(isExpanded ? null : w.id)
                       }
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 cursor-pointer hover:bg-[#2A1B14]/70 transition select-none"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 cursor-pointer hover:bg-[#252528] transition select-none"
                     >
                       <div className="flex items-center gap-3.5">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#C84218] to-[#7E22CE] text-white shadow-neon flex-shrink-0">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white flex-shrink-0">
                           <Calendar size={20} />
                         </div>
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-base sm:text-lg font-black capitalize text-white">
+                            <h3 className="text-base sm:text-lg font-bold capitalize text-white">
                               {formatDate(w.date)}
                             </h3>
                             {w.muscle_group_name && (
-                              <span className="rounded-md border border-[#2A1B14] bg-[#121113] px-2 py-0.5 text-[10px] font-bold text-[#FF6D00]">
+                              <span className="rounded-md border border-white/10 bg-[#121212] px-2 py-0.5 text-[10px] font-semibold text-[#FF5722]">
                                 {w.muscle_group_name}
                               </span>
                             )}
                             {isWillpowerDay && (
-                              <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-black uppercase text-amber-300 shadow-sm">
+                              <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-300">
                                 <Sparkles size={11} className="text-amber-400" />
                                 <span>Voluntad de Hierro</span>
                               </span>
                             )}
                           </div>
-                          <p className="mt-0.5 text-xs text-[#A1A1AA]">
+                          <p className="mt-0.5 text-xs text-[#8E8E93]">
                             {Object.keys(grouped).length} ejercicios · {(w.sets || []).length} series · ~{Math.round(totalVol)} kg de volumen
                           </p>
                           {(w.readiness_energy || w.readiness_motivation || w.mental_effort) && (
                             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                               {w.readiness_energy && (
-                                <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-[#121113] px-1.5 py-0.5 text-[10px] font-bold text-amber-300">
+                                <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/20 bg-[#121212] px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
                                   ⚡ {w.readiness_energy}/5
                                 </span>
                               )}
                               {w.readiness_motivation && (
-                                <span className="inline-flex items-center gap-1 rounded-md border border-orange-500/30 bg-[#121113] px-1.5 py-0.5 text-[10px] font-bold text-orange-300">
+                                <span className="inline-flex items-center gap-1 rounded-md border border-[#FF5722]/20 bg-[#121212] px-1.5 py-0.5 text-[10px] font-medium text-[#FF5722]">
                                   🔥 {w.readiness_motivation}/5
                                 </span>
                               )}
                               {w.mental_effort && (
-                                <span className="inline-flex items-center gap-1 rounded-md border border-purple-500/30 bg-[#121113] px-1.5 py-0.5 text-[10px] font-bold text-purple-300">
+                                <span className="inline-flex items-center gap-1 rounded-md border border-purple-500/20 bg-[#121212] px-1.5 py-0.5 text-[10px] font-medium text-[#C084FC]">
                                   🧠 {w.mental_effort}/5
                                 </span>
                               )}

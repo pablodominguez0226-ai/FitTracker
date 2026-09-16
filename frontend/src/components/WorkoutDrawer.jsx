@@ -288,39 +288,38 @@ export default function WorkoutDrawer({
   return (
     <>
       <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-        <div className="w-full max-w-lg md:max-w-2xl mx-auto rounded-t-3xl border-t-2 border-x border-[#FF5722]/50 bg-[#121113] p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto overflow-x-hidden animate-in slide-in-from-bottom-10 duration-200">
+        <div className="w-full max-w-lg md:max-w-2xl mx-auto rounded-t-3xl border-t border-x border-[#2C2C2E] bg-[#1C1C1E] p-4 sm:p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] space-y-4 max-h-[90vh] overflow-y-auto overflow-x-hidden animate-in slide-in-from-bottom-10 duration-200">
           {/* Header Bar */}
-          <div className="flex items-start justify-between gap-2 border-b border-[#2A1B14] pb-3">
+          <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-3">
             <div className="space-y-1 min-w-0 flex-1">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="rounded-md border border-[#2A1B14] bg-[#050505] px-2 py-0.5 text-[10px] font-black text-[#A1A1AA]">
+                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold text-[#8E8E93]">
                   {equipment}
                 </span>
 
                 {record?.pr_weight ? (
-                  <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-black text-amber-300">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[#FF5722]/30 bg-[#FF5722]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#FF5722]">
                     <Trophy size={11} /> PR: {record.pr_weight}kg × {record.pr_reps}
                   </span>
                 ) : (
-                  <span className="rounded-md border border-[#2A1B14] bg-[#050505] px-2 py-0.5 text-[10px] font-bold text-[#71717A]">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-medium text-[#8E8E93]">
                     Sin PR previo
                   </span>
                 )}
 
                 {totalVolume > 0 && (
-                  <span className="rounded-md border border-[#FF5722]/30 bg-[#2A1B14] px-2 py-0.5 text-[10px] font-black text-[#FF6D00]">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold text-[#8E8E93]">
                     Volumen: {Math.round(totalVolume).toLocaleString()} kg
                   </span>
                 )}
 
                 {/* Exercise Strength Rank Badge */}
                 <span
-                  className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-sm transition"
+                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition"
                   style={{
-                    borderColor: `${currentExerciseRank.rankColor}70`,
-                    backgroundColor: `${currentExerciseRank.rankColor}18`,
+                    borderColor: `${currentExerciseRank.rankColor}40`,
+                    backgroundColor: `${currentExerciseRank.rankColor}15`,
                     color: currentExerciseRank.rankColor,
-                    boxShadow: `0 0 10px ${currentExerciseRank.rankColor}25`,
                   }}
                   title={`Rango actual en ${activeExercise.exerciseName}: ${currentExerciseRank.rankName} (${currentExerciseRank.ratio}× peso corporal)`}
                 >
@@ -332,7 +331,7 @@ export default function WorkoutDrawer({
                 </span>
               </div>
 
-              <h2 className="text-lg sm:text-xl font-black text-white truncate break-words">
+              <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-white truncate break-words">
                 {activeExercise.exerciseName}
               </h2>
 
@@ -342,8 +341,8 @@ export default function WorkoutDrawer({
                   const ms = s ? JSON.parse(s)[activeExercise?.exerciseId] : "";
                   if (!ms) return null;
                   return (
-                    <div className="text-xs font-semibold text-[#A1A1AA] flex items-center gap-1.5 mt-0.5">
-                      <span className="text-xs text-[#FF6D00]">⚙️</span>
+                    <div className="text-xs font-medium text-[#8E8E93] flex items-center gap-1.5 mt-0.5">
+                      <span className="text-xs text-[#FF5722]">⚙️</span>
                       <span>Ajustes de máquina: <strong className="text-white">{ms}</strong></span>
                     </div>
                   );
@@ -353,59 +352,51 @@ export default function WorkoutDrawer({
               })()}
             </div>
 
-            {/* Close / Listo Button */}
+            {/* Close / Volver al Catálogo Button */}
             <button
               type="button"
               onClick={onClose}
-              className="flex items-center gap-1 rounded-xl border border-[#2A1B14] bg-[#050505] px-3 py-1.5 text-xs font-black text-white hover:border-[#FF5722] hover:bg-[#1A1618] transition active:scale-95 flex-shrink-0"
+              className="flex items-center gap-1.5 rounded-2xl border border-white/5 bg-[#121212] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#252528] transition active:scale-95 flex-shrink-0"
+              title="Volver al Catálogo de Ejercicios"
             >
-              <span>Listo</span>
-              <ChevronDown size={16} />
+              <span>← Catálogo</span>
             </button>
           </div>
 
-          {/* Micro-notificación brillante de felicitación por subida de rango */}
+          {/* Micro-notificación de felicitación por subida de rango */}
           {rankUpNotification && (
             <div
-              className="rounded-2xl border p-3.5 shadow-2xl animate-in zoom-in-95 duration-300 transition-all flex items-center justify-between gap-3 relative overflow-hidden select-none"
-              style={{
-                borderColor: rankUpNotification.rankColor,
-                background: `linear-gradient(135deg, ${rankUpNotification.rankColor}30, rgba(18, 17, 19, 0.98), ${rankUpNotification.rankColor}20)`,
-                boxShadow: `0 0 30px ${rankUpNotification.rankColor}60`,
-              }}
+              className="rounded-3xl border border-white/10 bg-[#121212] p-3.5 flex items-center justify-between gap-3 relative overflow-hidden select-none"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-xl animate-bounce flex-shrink-0"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-xl flex-shrink-0"
                   style={{
-                    backgroundColor: `${rankUpNotification.rankColor}30`,
-                    border: `1px solid ${rankUpNotification.rankColor}80`,
-                    boxShadow: `0 0 15px ${rankUpNotification.rankColor}60`,
+                    backgroundColor: `${rankUpNotification.rankColor}20`,
+                    border: `1px solid ${rankUpNotification.rankColor}50`,
                   }}
                 >
                   ⚡
                 </div>
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="text-xs font-black uppercase tracking-wider animate-pulse"
-                      style={{ color: rankUpNotification.rankColor }}
-                    >
-                      ⚡ ¡SUBIDA DE RANGO!
-                    </span>
-                    <span className="rounded bg-black/50 px-1.5 py-0.2 text-[10px] font-black text-white">
-                      {rankUpNotification.ratio}× BW
-                    </span>
+                <div>
+                  <div
+                    className="text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: rankUpNotification.rankColor }}
+                  >
+                    ⚡ Subida de Rango
                   </div>
-                  <p className="text-xs sm:text-sm font-bold text-white">
-                    Has alcanzado el rango{" "}
+                  <p className="text-xs font-semibold text-white">
+                    ¡Alcanzaste el rango{" "}
                     <span
-                      className="font-black uppercase underline decoration-2"
+                      className="uppercase font-bold"
                       style={{ color: rankUpNotification.rankColor }}
                     >
                       {rankUpNotification.rankName}
                     </span>{" "}
-                    en este ejercicio
+                    en {activeExercise.exerciseName}!
+                  </p>
+                  <p className="text-[11px] text-[#8E8E93] mt-0.5">
+                    Rango relativo: <strong>{rankUpNotification.ratio}×</strong> peso corporal
                   </p>
                 </div>
               </div>
@@ -413,7 +404,7 @@ export default function WorkoutDrawer({
               <button
                 type="button"
                 onClick={() => setRankUpNotification(null)}
-                className="text-[#A1A1AA] hover:text-white transition p-1"
+                className="text-[#8E8E93] hover:text-white transition p-1"
               >
                 <X size={16} />
               </button>
@@ -422,12 +413,12 @@ export default function WorkoutDrawer({
 
           {/* Concise OLED Strength Rank Badge & Weekly Periodization Suggestion */}
           <div className="space-y-2">
-            {/* Concise OLED Strength Rank Badge: "Rango actual: [Nombre]" y "Próximo rango: X kg" */}
-            <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-[#FF5722]/30 bg-[#050505] shadow-[0_0_12px_rgba(255,87,34,0.1)] text-xs">
-              <span className="font-semibold text-[#E4E4E7] flex items-center gap-1.5">
-                <span className="text-[#A1A1AA]">Rango actual:</span>
+            {/* Concise OLED Strength Rank Badge */}
+            <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border border-white/5 bg-[#121212] text-xs">
+              <span className="font-semibold text-white flex items-center gap-1.5">
+                <span className="text-[#8E8E93]">Rango actual:</span>
                 <strong
-                  className="font-black uppercase tracking-wider"
+                  className="font-bold uppercase tracking-wider"
                   style={{ color: currentExerciseRank.rankColor || "#FF5722" }}
                 >
                   {currentExerciseRank.rankName}
@@ -491,21 +482,21 @@ export default function WorkoutDrawer({
 
           {/* Compact Today's Sets Table */}
           <div>
-            <div className="flex items-center justify-between text-xs mb-1.5 font-bold text-[#A1A1AA]">
+            <div className="flex items-center justify-between text-xs mb-1.5 font-bold text-neutral-300">
               <span>Series registradas hoy:</span>
-              <span className="text-[#FF6D00] font-black">
+              <span className="text-[#FF8A65] font-black">
                 {(activeExercise.sets || []).length} completadas
               </span>
             </div>
 
             {(activeExercise.sets || []).length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#2A1B14] bg-[#050505] p-3 text-center text-xs text-[#71717A] italic">
+              <div className="rounded-xl border border-white/10 bg-[#141118] p-3 text-center text-xs text-neutral-200 italic">
                 {previousSession?.sets?.length > 0
                   ? `Anterior: ${previousSession.sets[0].weight} kg × ${previousSession.sets[0].reps} reps • Cargá tu primera serie`
-                  : "Aún no registraste series en este ejercicio hoy"}
+                  : "HOY: Sin series registradas en este ejercicio hoy"}
               </div>
             ) : (
-              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto no-scrollbar p-1 rounded-xl bg-[#050505] border border-[#2A1B14]">
+              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto no-scrollbar p-1 rounded-xl bg-[#050505] border border-white/10">
                 {activeExercise.sets.map((s, sIdx) => {
                   const isW = s.set_type === "warmup" || s.set_type === "W";
                   const isD = s.set_type === "dropset" || s.set_type === "D";
@@ -514,41 +505,41 @@ export default function WorkoutDrawer({
                   return (
                     <div
                       key={s.id || sIdx}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#2A1B14] bg-[#121113] px-2.5 py-1 text-xs font-bold text-white shadow-sm"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-white/5 bg-[#121212] px-2.5 py-1 text-xs font-semibold text-[#8E8E93]"
                     >
-                      <span className="text-[#71717A] font-black">S{s.set_number || sIdx + 1}:</span>
-                      <span>
+                      <span className="text-[#8E8E93]">S{s.set_number || sIdx + 1}:</span>
+                      <span className="text-white font-semibold">
                         {s.weight}kg × {s.reps}
                       </span>
                       {s.rir !== null && s.rir !== undefined && (
-                        <span className="text-[10px] text-[#FF6D00] font-black">
+                        <span className="text-[10px] text-[#FF5722] font-semibold">
                           RIR:{s.rir}
                         </span>
                       )}
                       {Array.isArray(s.accessories) && s.accessories.length > 0 && (
-                        <span className="rounded bg-[#FF5722]/20 border border-[#FF5722]/40 px-1 text-[9px] font-black text-[#FF6D00]" title={`Accesorios: ${s.accessories.join(', ')}`}>
+                        <span className="rounded-md bg-white/5 border border-white/10 px-1 text-[9px] font-semibold text-[#8E8E93]" title={`Accesorios: ${s.accessories.join(', ')}`}>
                           {s.accessories.join(", ")}
                         </span>
                       )}
                       {isW && (
-                        <span className="rounded bg-amber-500/20 px-1 text-[9px] font-black text-amber-300">
+                        <span className="rounded-md bg-amber-500/15 text-amber-300 px-1 text-[9px] font-semibold">
                           W
                         </span>
                       )}
                       {isD && (
-                        <span className="rounded bg-blue-500/20 px-1 text-[9px] font-black text-blue-300">
+                        <span className="rounded-md bg-blue-500/15 text-blue-300 px-1 text-[9px] font-semibold">
                           D
                         </span>
                       )}
                       {isF && (
-                        <span className="rounded bg-red-500/20 px-1 text-[9px] font-black text-red-300">
+                        <span className="rounded-md bg-red-500/15 text-red-300 px-1 text-[9px] font-semibold">
                           F
                         </span>
                       )}
                       <button
                         type="button"
                         onClick={() => onRemoveSet(activeExercise.exerciseId, sIdx)}
-                        className="text-[#71717A] hover:text-red-400 transition ml-0.5"
+                        className="text-[#8E8E93] hover:text-red-400 transition ml-0.5"
                         title="Eliminar serie"
                       >
                         <X size={13} />
@@ -562,24 +553,24 @@ export default function WorkoutDrawer({
 
           {/* Real-time PR Alerts in Drawer */}
           {isWeightPR && (
-            <div className="rounded-xl border border-amber-400/80 bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-500/25 p-2.5 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.35)] animate-pulse flex items-center justify-between text-xs font-black">
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-amber-300 flex items-center justify-between text-xs font-semibold">
               <div className="flex items-center gap-1.5">
-                <span className="animate-bounce">🏆</span>
+                <span>🏆</span>
                 <span>¡NUEVO PR DE PESO!</span>
               </div>
-              <span className="text-white underline decoration-amber-400">
+              <span className="text-white">
                 +{weightDiff} kg sobre anterior ({maxWeightPrevio}kg)
               </span>
             </div>
           )}
 
           {!isWeightPR && is1RMPR && (
-            <div className="rounded-xl border border-purple-400/70 bg-gradient-to-r from-purple-500/20 to-amber-500/10 p-2 text-purple-200 shadow-[0_0_12px_rgba(168,85,247,0.3)] animate-pulse flex items-center justify-between text-xs font-black">
+            <div className="rounded-2xl border border-purple-500/30 bg-purple-500/10 p-2 text-purple-200 flex items-center justify-between text-xs font-semibold">
               <div className="flex items-center gap-1.5">
-                <span className="animate-bounce">⚡</span>
+                <span>⚡</span>
                 <span>¡NUEVO PR DE 1RM ESTIMADO!</span>
               </div>
-              <span className="text-white underline decoration-purple-400">
+              <span className="text-white">
                 +{oneRmDiff} kg (1RM: {curEst1RM}kg)
               </span>
             </div>
@@ -588,20 +579,20 @@ export default function WorkoutDrawer({
           {/* Quick Input Controls for Weight and Reps */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Peso (kg) with Steppers & Quick Jump */}
-            <div className="rounded-2xl border border-[#2A1B14] bg-[#050505] p-3 space-y-2 text-center">
+            <div className="rounded-2xl sm:rounded-3xl border border-white/5 bg-[#121212] p-3 space-y-2 text-center">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase text-[#A1A1AA]">
+                <span className="text-[11px] font-semibold uppercase text-[#8E8E93]">
                   Carga (kg)
                 </span>
                 {isBarbell && (
                   <button
                     type="button"
                     onClick={() => setIsPlateModalOpen(true)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-[#FF5722]/50 bg-[#2A1B14] px-2 py-0.5 text-[10px] font-black text-[#FF6D00] hover:bg-[#FF5722] hover:text-white transition active:scale-95"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold text-[#8E8E93] hover:border-white/20 hover:text-white transition active:scale-95"
                     title="Abrir calculadora de discos"
                   >
                     <Scale size={12} />
-                    <span>⚖️ Discos</span>
+                    <span>Discos</span>
                   </button>
                 )}
               </div>
@@ -633,9 +624,9 @@ export default function WorkoutDrawer({
                     onChange={(e) =>
                       setWeightInput(Math.max(0, parseFloat(e.target.value) || 0))
                     }
-                    className="w-20 sm:w-24 text-center px-2 py-2 text-xl font-black rounded-xl border border-[#2A1B14] bg-[#121113] text-white outline-none focus:border-[#FF5722] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-20 sm:w-24 text-center px-2 py-2 text-2xl font-semibold text-white rounded-2xl border border-white/10 bg-[#1C1C1E] outline-none focus:border-[#FF5722] focus:ring-1 focus:ring-[#FF5722]/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#71717A]">
+                  <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-medium text-[#8E8E93]">
                     kg
                   </span>
                 </div>
@@ -665,7 +656,7 @@ export default function WorkoutDrawer({
                     key={inc}
                     type="button"
                     onClick={() => handleAdjustWeight(inc)}
-                    className="rounded-lg border border-[#2A1B14] bg-[#121113] px-2 py-0.5 text-[10px] font-black text-[#A1A1AA] hover:border-[#FF5722] hover:text-white active:scale-95 transition"
+                    className="rounded-xl border border-white/10 bg-[#1C1C1E] px-2 py-0.5 text-[10px] font-semibold text-[#8E8E93] hover:text-white active:scale-95 transition"
                   >
                     +{inc}
                   </button>
@@ -674,13 +665,13 @@ export default function WorkoutDrawer({
             </div>
 
             {/* Repeticiones with Steppers & Quick Pills */}
-            <div className="rounded-2xl border border-[#2A1B14] bg-[#050505] p-3 space-y-2 text-center">
+            <div className="rounded-2xl sm:rounded-3xl border border-white/5 bg-[#121212] p-3 space-y-2 text-center">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase text-[#A1A1AA]">
+                <span className="text-[11px] font-semibold uppercase text-[#8E8E93]">
                   Repeticiones
                 </span>
                 {curEst1RM > 0 && repsInput > 1 && (
-                  <span className="text-[10px] font-bold text-[#FF6D00]">
+                  <span className="text-[10px] font-semibold text-[#FF5722]">
                     1RM: {curEst1RM}kg
                   </span>
                 )}
@@ -705,9 +696,9 @@ export default function WorkoutDrawer({
                     onChange={(e) =>
                       setRepsInput(Math.max(1, parseInt(e.target.value, 10) || 1))
                     }
-                    className="w-20 sm:w-24 text-center px-2 py-2 text-xl font-black rounded-xl border border-[#2A1B14] bg-[#121113] text-white outline-none focus:border-[#FF5722] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-20 sm:w-24 text-center px-2 py-2 text-2xl font-semibold text-white rounded-2xl border border-white/10 bg-[#1C1C1E] outline-none focus:border-[#FF5722] focus:ring-1 focus:ring-[#FF5722]/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[#71717A]">
+                  <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-medium text-[#8E8E93]">
                     reps
                   </span>
                 </div>
@@ -729,10 +720,10 @@ export default function WorkoutDrawer({
                     key={r}
                     type="button"
                     onClick={() => setRepsInput(r)}
-                    className={`rounded-lg px-2.5 py-0.5 text-[10px] font-black transition active:scale-95 ${
+                    className={`rounded-xl px-2.5 py-0.5 text-[10px] font-semibold transition active:scale-95 ${
                       repsInput === r
-                        ? "border border-[#FF5722] bg-[#FF5722]/25 text-[#FF6D00]"
-                        : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/50 hover:text-white"
+                        ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                        : "border border-white/10 bg-[#1C1C1E] text-[#8E8E93] hover:text-white"
                     }`}
                   >
                     {r}
@@ -745,8 +736,8 @@ export default function WorkoutDrawer({
           {/* RIR and Tipo de Serie Selectors */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             {/* RIR (Repeticiones en Reserva) */}
-            <div className="rounded-xl border border-[#2A1B14] bg-[#050505] p-2.5 space-y-1.5">
-              <span className="text-[10px] font-bold uppercase text-[#71717A] block">
+            <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5 space-y-1.5">
+              <span className="text-[10px] font-semibold uppercase text-[#8E8E93] block">
                 RIR (Repeticiones en Reserva):
               </span>
               <div className="grid grid-cols-4 gap-1">
@@ -755,10 +746,10 @@ export default function WorkoutDrawer({
                     key={opt.value}
                     type="button"
                     onClick={() => setSelectedRir(opt.value)}
-                    className={`rounded-lg py-1.5 text-[10px] font-black transition active:scale-95 ${
+                    className={`rounded-xl py-1.5 text-[10px] font-semibold transition active:scale-95 ${
                       selectedRir === opt.value
-                        ? "border border-[#FF5722] bg-[#FF5722] text-[#050505] shadow-[0_0_10px_rgba(255,87,34,0.4)]"
-                        : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/50 hover:text-white"
+                        ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                        : "border border-white/10 bg-[#1C1C1E] text-[#8E8E93] hover:text-white"
                     }`}
                   >
                     {opt.short}
@@ -768,8 +759,8 @@ export default function WorkoutDrawer({
             </div>
 
             {/* Tipo de Serie */}
-            <div className="rounded-xl border border-[#2A1B14] bg-[#050505] p-2.5 space-y-1.5">
-              <span className="text-[10px] font-bold uppercase text-[#71717A] block">
+            <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5 space-y-1.5">
+              <span className="text-[10px] font-semibold uppercase text-[#8E8E93] block">
                 Tipo de Serie:
               </span>
               <div className="grid grid-cols-4 gap-1">
@@ -778,14 +769,14 @@ export default function WorkoutDrawer({
                     key={t.key}
                     type="button"
                     onClick={() => setSelectedType(t.key)}
-                    className={`rounded-lg py-1.5 text-[10px] font-black transition active:scale-95 ${
+                    className={`rounded-xl py-1.5 text-[10px] font-semibold transition active:scale-95 ${
                       selectedType === t.key
                         ? t.key === "warmup"
-                          ? "border border-amber-500 bg-amber-500 text-black shadow-sm"
+                          ? "border border-amber-500 bg-amber-500/20 text-amber-300 font-semibold"
                           : t.key === "failure"
-                          ? "border border-red-500 bg-red-500 text-white shadow-sm"
-                          : "border border-[#FF5722] bg-[#FF5722] text-[#050505] shadow-[0_0_10px_rgba(255,87,34,0.4)]"
-                        : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/50 hover:text-white"
+                          ? "border border-red-500 bg-red-500/20 text-red-300 font-semibold"
+                          : "border border-[#FF5722] bg-[#FF5722]/10 text-white font-semibold"
+                        : "border border-white/10 bg-[#1C1C1E] text-[#8E8E93] hover:text-white"
                     }`}
                     title={t.label}
                   >
@@ -797,8 +788,8 @@ export default function WorkoutDrawer({
           </div>
 
           {/* Quick Accessories Selector in Drawer: [Straps] [Cinturón] [Agarre Neutro] */}
-          <div className="rounded-xl border border-[#2A1B14] bg-[#050505] p-2.5 space-y-1.5">
-            <span className="text-[10px] font-bold uppercase text-[#71717A] block">
+          <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5 space-y-1.5">
+            <span className="text-[10px] font-semibold uppercase text-[#8E8E93] block">
               Accesorios para esta serie:
             </span>
             <div className="grid grid-cols-3 gap-1.5">
@@ -813,10 +804,10 @@ export default function WorkoutDrawer({
                         prev.includes(acc) ? prev.filter((a) => a !== acc) : [...prev, acc]
                       )
                     }
-                    className={`rounded-lg py-2 text-xs font-black transition active:scale-95 text-center ${
+                    className={`rounded-xl py-2 text-xs font-semibold transition active:scale-95 text-center ${
                       isSelected
-                        ? "border border-[#FF5722] bg-[#FF5722] text-[#050505] shadow-[0_0_10px_rgba(255,87,34,0.4)]"
-                        : "border border-[#2A1B14] bg-[#121113] text-[#A1A1AA] hover:border-[#FF5722]/50 hover:text-white"
+                        ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                        : "border border-white/10 bg-[#1C1C1E] text-[#8E8E93] hover:text-white"
                     }`}
                   >
                     {isSelected ? "✓ " : ""}{acc}
@@ -831,9 +822,9 @@ export default function WorkoutDrawer({
             <button
               type="button"
               onClick={handleSaveSet}
-              className="w-full min-h-[52px] rounded-2xl bg-gradient-to-r from-[#FF5722] via-[#FF6D00] to-[#C84218] p-3.5 text-base font-black text-white shadow-[0_0_25px_rgba(255,87,34,0.45)] hover:shadow-[0_0_35px_rgba(255,109,0,0.6)] active:scale-[0.98] transition flex items-center justify-center gap-2"
+              className="w-full min-h-[56px] rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-90 p-3.5 text-base sm:text-lg font-semibold tracking-wide text-white active:scale-[0.98] transition flex items-center justify-center gap-2 select-none"
             >
-              <Check size={22} strokeWidth={3} />
+              <Check size={22} strokeWidth={2.5} />
               <span>
                 ✓ Guardar Serie #{ (activeExercise.sets || []).length + 1 } (
                 {weightInput}kg × {repsInput} reps)

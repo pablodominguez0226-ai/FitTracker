@@ -469,9 +469,9 @@ export default function ProfileModal({
       adviceBadge: "⚡ En rango de Hipertrofia óptimo",
       description: "Crecimiento muscular estético, volumen acumulado y RPE 7-9.",
       icon: Zap,
-      borderActive: "border-[#A855F7] bg-[#9333EA]/20 text-white shadow-neon",
-      borderInactive: "border-[#2D1B4E] bg-[#0E0919] hover:border-[#A855F7]/40",
-      accentText: "text-[#C084FC]",
+      borderActive: "border-[#FF5722] bg-[#FF5722]/10 text-white",
+      borderInactive: "border-white/10 bg-[#121212] hover:border-white/20",
+      accentText: "text-[#FF5722]",
     },
     {
       id: "fuerza",
@@ -482,9 +482,9 @@ export default function ProfileModal({
       adviceBadge: "💥 Estímulo de Fuerza pura",
       description: "Alta tensión mecánica, adaptación del SNC y densidad neural.",
       icon: Flame,
-      borderActive: "border-amber-500 bg-amber-500/20 text-white shadow-[0_0_12px_rgba(245,158,11,0.3)]",
-      borderInactive: "border-[#2D1B4E] bg-[#0E0919] hover:border-amber-500/40",
-      accentText: "text-amber-300",
+      borderActive: "border-amber-500 bg-amber-500/10 text-white",
+      borderInactive: "border-white/10 bg-[#121212] hover:border-white/20",
+      accentText: "text-amber-400",
     },
     {
       id: "potencia_rapidez",
@@ -495,9 +495,9 @@ export default function ProfileModal({
       adviceBadge: "⚡ Estímulo de Potencia y Velocidad",
       description: "Cargas medias movidas a la máxima aceleración concéntrica posible.",
       icon: TrendingUp,
-      borderActive: "border-cyan-500 bg-cyan-500/20 text-white shadow-[0_0_12px_rgba(6,182,212,0.3)]",
-      borderInactive: "border-[#2D1B4E] bg-[#0E0919] hover:border-cyan-500/40",
-      accentText: "text-cyan-300",
+      borderActive: "border-cyan-500 bg-cyan-500/10 text-white",
+      borderInactive: "border-white/10 bg-[#121212] hover:border-white/20",
+      accentText: "text-cyan-400",
     },
     {
       id: "definicion_adelgazar",
@@ -508,9 +508,9 @@ export default function ProfileModal({
       adviceBadge: "🛡️ Carga protectora de masa",
       description: "Mantenimiento estricto de cargas pesadas para retener masa en déficit calórico.",
       icon: ShieldCheck,
-      borderActive: "border-emerald-500 bg-emerald-500/20 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]",
-      borderInactive: "border-[#2D1B4E] bg-[#0E0919] hover:border-emerald-500/40",
-      accentText: "text-emerald-300",
+      borderActive: "border-emerald-500 bg-emerald-500/10 text-white",
+      borderInactive: "border-white/10 bg-[#121212] hover:border-white/20",
+      accentText: "text-emerald-400",
     },
   ];
 
@@ -521,9 +521,9 @@ export default function ProfileModal({
       badge: "Fundamentos",
       summary: "Técnica, series, repeticiones, volumen y PRs básicos.",
       colorClass: "from-emerald-600 to-teal-500",
-      borderActive: "border-emerald-500",
-      bgActive: "bg-emerald-500/15",
-      badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
+      borderActive: "border-[#FF5722]",
+      bgActive: "bg-[#FF5722]/10",
+      badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
     },
     {
       id: "intermedio",
@@ -531,9 +531,9 @@ export default function ProfileModal({
       badge: "Progresión",
       summary: "Sobrecarga progresiva, volumen, cargas y consistencia.",
       colorClass: "from-purple-600 to-fuchsia-500",
-      borderActive: "border-[#A855F7]",
-      bgActive: "bg-[#1C1433]",
-      badgeColor: "bg-[#9333EA]/20 text-[#C084FC] border-[#A855F7]/40",
+      borderActive: "border-[#FF5722]",
+      bgActive: "bg-[#FF5722]/10",
+      badgeColor: "bg-[#7C4DFF]/10 text-[#C084FC] border-[#7C4DFF]/20",
     },
     {
       id: "avanzado",
@@ -541,36 +541,36 @@ export default function ProfileModal({
       badge: "Alto Rendimiento",
       summary: "Análisis de rendimiento, MRV, estancamientos, técnica y periodización.",
       colorClass: "from-amber-600 to-orange-500",
-      borderActive: "border-amber-500",
-      bgActive: "bg-amber-500/15",
-      badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/40",
+      borderActive: "border-[#FF5722]",
+      bgActive: "bg-[#FF5722]/10",
+      badgeColor: "bg-amber-500/10 text-amber-300 border-amber-500/20",
     },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-150 overflow-y-auto">
-      <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-2xl border-2 border-[#A855F7]/40 bg-[#140E24] shadow-neonLg overflow-hidden my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-150 overflow-y-auto">
+      <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-3xl border border-white/10 bg-[#1C1C1E] overflow-hidden my-auto">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-[#2D1B4E] bg-[#0E0919] p-4 sm:p-5">
+        <div className="flex items-center justify-between border-b border-white/10 bg-[#1C1C1E] p-4 sm:p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#9333EA] to-[#A855F7] text-white shadow-neon flex-shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white flex-shrink-0">
               <User size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-black text-white">
+                <h2 className="text-base sm:text-lg font-bold text-white">
                   Mi Perfil Físico &amp; Nivel
                 </h2>
-                <span className="rounded-md border border-[#A855F7]/40 bg-[#9333EA]/20 px-2 py-0.5 text-[9px] font-black uppercase text-[#C084FC]">
+                <span className="rounded-md border border-[#FF5722]/30 bg-[#FF5722]/10 px-2 py-0.5 text-[9px] font-semibold uppercase text-[#FF5722]">
                   {goalsList.find((g) => g.id === trainingGoal)?.title || "Hipertrofia"}
                 </span>
                 {bodyweight && (
-                  <span className="rounded-md border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-300">
+                  <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase text-emerald-400">
                     {bodyweight} kg
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#A1A1AA]">
+              <p className="text-xs text-[#8E8E93]">
                 Personalizá tu peso, altura y objetivo para el Asesor Inteligente de Cargas
               </p>
             </div>
@@ -578,7 +578,7 @@ export default function ProfileModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-2 text-[#71717A] hover:bg-[#1C1433] hover:text-white transition"
+            className="rounded-xl p-2 text-[#8E8E93] hover:bg-white/5 hover:text-white transition"
             title="Cerrar"
           >
             <X size={20} />
@@ -586,29 +586,29 @@ export default function ProfileModal({
         </div>
 
         {/* Modal Tab Switcher */}
-        <div className="flex border-b border-[#2D1B4E] bg-[#0E0919] px-4 sm:px-6">
+        <div className="flex border-b border-white/10 bg-[#1C1C1E] px-4 sm:px-6">
           <button
             type="button"
             onClick={() => setActiveModalTab("physical")}
-            className={`flex items-center gap-2 border-b-2 py-3 px-3 text-xs sm:text-sm font-black transition ${
+            className={`flex items-center gap-2 border-b-2 py-3 px-3 text-xs sm:text-sm font-semibold transition ${
               activeModalTab === "physical"
-                ? "border-[#A855F7] text-white shadow-[0_2px_10px_rgba(168,85,247,0.3)]"
-                : "border-transparent text-[#71717A] hover:text-[#A1A1AA]"
+                ? "border-[#FF5722] text-white"
+                : "border-transparent text-[#8E8E93] hover:text-white"
             }`}
           >
-            <Scale size={15} className={activeModalTab === "physical" ? "text-[#A855F7]" : ""} />
+            <Scale size={15} className={activeModalTab === "physical" ? "text-[#FF5722]" : ""} />
             <span>Mi Perfil Físico</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveModalTab("guide")}
-            className={`flex items-center gap-2 border-b-2 py-3 px-3 text-xs sm:text-sm font-black transition ${
+            className={`flex items-center gap-2 border-b-2 py-3 px-3 text-xs sm:text-sm font-semibold transition ${
               activeModalTab === "guide"
-                ? "border-[#A855F7] text-white shadow-[0_2px_10px_rgba(168,85,247,0.3)]"
-                : "border-transparent text-[#71717A] hover:text-[#A1A1AA]"
+                ? "border-[#FF5722] text-white"
+                : "border-transparent text-[#8E8E93] hover:text-white"
             }`}
           >
-            <BookOpen size={15} className={activeModalTab === "guide" ? "text-[#A855F7]" : ""} />
+            <BookOpen size={15} className={activeModalTab === "guide" ? "text-[#FF5722]" : ""} />
             <span>Nivel &amp; Guía Educativa</span>
           </button>
         </div>
@@ -628,13 +628,13 @@ export default function ProfileModal({
               {/* Weight & Height Inputs Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Weight Input */}
-                <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-3.5 space-y-2">
+                <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-black uppercase tracking-wider text-[#A1A1AA] flex items-center gap-1.5">
-                      <Scale size={14} className="text-[#A855F7]" />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                      <Scale size={14} className="text-[#FF5722]" />
                       <span>Peso Corporal</span>
                     </label>
-                    <span className="text-[10px] font-bold text-[#71717A]">Base Fuerza Relativa</span>
+                    <span className="text-[10px] font-medium text-[#8E8E93]">Base Fuerza Relativa</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -659,9 +659,9 @@ export default function ProfileModal({
                         placeholder="ej: 75.0"
                         value={bodyweight}
                         onChange={(e) => setBodyweight(e.target.value)}
-                        className="iron-input w-full text-center text-base font-black py-2 pr-9"
+                        className="iron-input w-full text-center text-base font-bold py-2 pr-9"
                       />
-                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#71717A]">
+                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8E8E93]">
                         kg
                       </span>
                     </div>
@@ -678,19 +678,19 @@ export default function ProfileModal({
                       +0.5
                     </button>
                   </div>
-                  <p className="text-[11px] text-[#71717A]">
-                    Se usa para calcular: <strong>PR / Peso (ej: 80kg = 1.05× tu peso)</strong>.
+                  <p className="text-[11px] text-[#8E8E93]">
+                    Se usa para calcular: <strong className="text-white">PR / Peso (ej: 80kg = 1.05× tu peso)</strong>.
                   </p>
                 </div>
 
                 {/* Height Input */}
-                <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-3.5 space-y-2">
+                <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-black uppercase tracking-wider text-[#A1A1AA] flex items-center gap-1.5">
-                      <Ruler size={14} className="text-[#A855F7]" />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                      <Ruler size={14} className="text-[#FF5722]" />
                       <span>Altura</span>
                     </label>
-                    <span className="text-[10px] font-bold text-[#71717A]">Índice Biométrico</span>
+                    <span className="text-[10px] font-medium text-[#8E8E93]">Índice Biométrico</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -715,9 +715,9 @@ export default function ProfileModal({
                         placeholder="ej: 178"
                         value={height}
                         onChange={(e) => setHeight(e.target.value)}
-                        className="iron-input w-full text-center text-base font-black py-2 pr-9"
+                        className="iron-input w-full text-center text-base font-bold py-2 pr-9"
                       />
-                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#71717A]">
+                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8E8E93]">
                         cm
                       </span>
                     </div>
@@ -736,12 +736,12 @@ export default function ProfileModal({
                   </div>
 
                   {bmiData ? (
-                    <p className="text-[11px] text-[#A1A1AA] flex items-center justify-between">
+                    <p className="text-[11px] text-[#8E8E93] flex items-center justify-between">
                       <span>IMC calculado: <strong className="text-white">{bmiData.bmi}</strong></span>
-                      <span className={`font-black ${bmiData.color}`}>{bmiData.label}</span>
+                      <span className={`font-semibold ${bmiData.color}`}>{bmiData.label}</span>
                     </p>
                   ) : (
-                    <p className="text-[11px] text-[#71717A]">
+                    <p className="text-[11px] text-[#8E8E93]">
                       Ingresá peso y altura para calcular tu composición básica (IMC).
                     </p>
                   )}
@@ -751,11 +751,11 @@ export default function ProfileModal({
               {/* Training Goal Selector */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-black uppercase tracking-wider text-[#A1A1AA] flex items-center gap-1.5">
-                    <Target size={14} className="text-[#A855F7]" />
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                    <Target size={14} className="text-[#FF5722]" />
                     <span>Objetivo de Entrenamiento</span>
                   </label>
-                  <span className="text-[10px] font-bold text-[#A855F7]">
+                  <span className="text-[10px] font-semibold text-[#FF5722]">
                     Adapta las alertas del Asesor Inteligente
                   </span>
                 </div>
@@ -769,41 +769,41 @@ export default function ProfileModal({
                         key={g.id}
                         type="button"
                         onClick={() => setTrainingGoal(g.id)}
-                        className={`relative rounded-xl border p-3.5 text-left transition flex flex-col justify-between gap-2.5 active:scale-[0.98] ${
+                        className={`relative rounded-2xl border p-3.5 text-left transition flex flex-col justify-between gap-2.5 active:scale-[0.98] ${
                           isSelected ? g.borderActive : g.borderInactive
                         }`}
                       >
                         <div>
                           <div className="flex items-center justify-between gap-1 mb-1">
                             <div className="flex items-center gap-2">
-                              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#9333EA]/20 text-[#C084FC]">
+                              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FF5722]/10 text-[#FF5722]">
                                 <Icon size={15} />
                               </span>
-                              <span className="text-sm font-black text-white">{g.title}</span>
+                              <span className="text-sm font-bold text-white">{g.title}</span>
                             </div>
                             {isSelected && (
-                              <span className="flex items-center gap-1 rounded-full bg-[#34D399]/20 text-[#34D399] border border-[#34D399]/40 px-2 py-0.5 text-[9px] font-black uppercase">
+                              <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-semibold uppercase">
                                 <Check size={11} /> Activo
                               </span>
                             )}
                           </div>
 
-                          <div className="mt-1 flex items-center gap-2 text-[10px] font-black">
-                            <span className="rounded bg-[#1C1433] px-2 py-0.5 text-[#C084FC] border border-[#2D1B4E]">
+                          <div className="mt-1 flex items-center gap-2 text-[10px] font-semibold">
+                            <span className="rounded bg-[#1C1C1E] px-2 py-0.5 text-[#FF5722] border border-white/10">
                               {g.repsRange}
                             </span>
-                            <span className="text-[#A1A1AA]">{g.intensity}</span>
+                            <span className="text-[#8E8E93]">{g.intensity}</span>
                           </div>
 
-                          <p className="mt-2 text-[11px] text-[#A1A1AA] leading-snug">
+                          <p className="mt-2 text-[11px] text-[#8E8E93] leading-snug">
                             {g.description}
                           </p>
                         </div>
 
                         {/* Advisor preview pill */}
-                        <div className="pt-2 border-t border-[#2D1B4E]/60 flex items-center justify-between text-[10px]">
-                          <span className="text-[#71717A] font-bold">Mensaje en series:</span>
-                          <span className={`font-black ${g.accentText}`}>{g.adviceBadge}</span>
+                        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px]">
+                          <span className="text-[#8E8E93] font-medium">Mensaje en series:</span>
+                          <span className={`font-semibold ${g.accentText}`}>{g.adviceBadge}</span>
                         </div>
                       </button>
                     );
@@ -812,15 +812,15 @@ export default function ProfileModal({
               </div>
 
               {/* Experience Level Quick Selector inside Physical Tab */}
-              <div className="rounded-xl border border-[#2D1B4E] bg-[#0E0919] p-3.5 space-y-2.5">
+              <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-black uppercase tracking-wider text-[#A1A1AA]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">
                     Nivel de Experiencia
                   </label>
                   <button
                     type="button"
                     onClick={() => setActiveModalTab("guide")}
-                    className="text-[11px] font-bold text-[#C084FC] hover:underline"
+                    className="text-[11px] font-semibold text-[#FF5722] hover:underline"
                   >
                     Ver explicaciones detalladas →
                   </button>
@@ -834,10 +834,10 @@ export default function ProfileModal({
                         key={lvlKey}
                         type="button"
                         onClick={() => setActiveTabLevel(lvlKey)}
-                        className={`rounded-xl py-2 px-2 text-xs font-black capitalize transition border text-center ${
+                        className={`rounded-xl py-2 px-2 text-xs font-semibold capitalize transition border text-center ${
                           isSelected
-                            ? "border-[#A855F7] bg-[#9333EA]/20 text-white shadow-neon"
-                            : "border-[#2D1B4E] bg-[#140E24] text-[#A1A1AA] hover:text-white hover:border-[#A855F7]/30"
+                            ? "border-[#FF5722] bg-[#FF5722]/10 text-white"
+                            : "border-white/10 bg-[#1C1C1E] text-[#8E8E93] hover:text-white hover:border-white/20"
                         }`}
                       >
                         {lvlKey}
@@ -851,7 +851,7 @@ export default function ProfileModal({
               <button
                 type="submit"
                 disabled={isSavingPhysical}
-                className="iron-btn-primary w-full py-3 text-sm font-black flex items-center justify-center gap-2 shadow-neon active:scale-[0.99]"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-90 active:scale-[0.99] text-white font-semibold text-sm flex items-center justify-center gap-2 transition select-none"
               >
                 {isSavingPhysical ? (
                   <>
@@ -870,13 +870,13 @@ export default function ProfileModal({
             /* TAB 2: GUÍA EDUCATIVA & NIVEL */
             <div className="space-y-5">
               {/* Non-Blocking Notice Banner */}
-              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-start gap-2.5 text-xs text-emerald-200">
+              <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 flex items-start gap-2.5 text-xs text-[#8E8E93]">
                 <ShieldCheck size={18} className="text-emerald-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-white block font-bold">100% de funcionalidades desbloqueadas</strong>
-                  <p className="text-[11px] text-emerald-200/90 mt-0.5 leading-relaxed">
+                  <strong className="text-white block font-semibold">100% de funcionalidades desbloqueadas</strong>
+                  <p className="text-[11px] text-[#8E8E93] mt-0.5 leading-relaxed">
                     El nivel de experiencia adapta las explicaciones educativas, consejos del Coach y sugerencias de sobrecarga.
-                    <strong> No bloquea ninguna función de la aplicación:</strong> todos los ejercicios, métricas, récords y modos de entrenamiento están totalmente disponibles para todos los niveles.
+                    <strong className="text-white"> No bloquea ninguna función de la aplicación:</strong> todos los ejercicios, métricas, récords y modos de entrenamiento están totalmente disponibles para todos los niveles.
                   </p>
                 </div>
               </div>
@@ -884,11 +884,11 @@ export default function ProfileModal({
               {/* Level Selector Buttons (3 cards) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-black uppercase tracking-wider text-[#A1A1AA]">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">
                     Seleccioná o modificá tu nivel
                   </label>
                   {isUpdating && (
-                    <span className="flex items-center gap-1.5 text-[11px] text-[#A855F7] font-bold">
+                    <span className="flex items-center gap-1.5 text-[11px] text-[#FF5722] font-semibold">
                       <Loader2 size={13} className="animate-spin" />
                       Guardando perfil...
                     </span>
@@ -904,31 +904,31 @@ export default function ProfileModal({
                         type="button"
                         onClick={() => handleSelectLevel(lvl.id)}
                         disabled={isUpdating}
-                        className={`relative rounded-xl border p-3.5 text-left transition flex flex-col justify-between gap-2.5 active:scale-[0.98] ${
+                        className={`relative rounded-2xl border p-3.5 text-left transition flex flex-col justify-between gap-2.5 active:scale-[0.98] ${
                           isActive
-                            ? `${lvl.borderActive} ${lvl.bgActive} shadow-neon`
-                            : "border-[#2D1B4E] bg-[#0E0919] hover:border-[#A855F7]/30 hover:bg-[#140E24]"
+                            ? `${lvl.borderActive} ${lvl.bgActive}`
+                            : "border-white/10 bg-[#121212] hover:border-white/20"
                         }`}
                       >
                         <div>
                           <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-sm font-black text-white">{lvl.title}</span>
+                            <span className="text-sm font-bold text-white">{lvl.title}</span>
                             {isActive && (
-                              <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 text-[9px] font-black uppercase">
+                              <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-semibold uppercase">
                                 <Check size={11} /> Activo
                               </span>
                             )}
                           </div>
-                          <span className={`inline-block rounded-md border px-1.5 py-0.5 text-[9px] font-bold uppercase ${lvl.badgeColor}`}>
+                          <span className={`inline-block rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${lvl.badgeColor}`}>
                             {lvl.badge}
                           </span>
-                          <p className="mt-2 text-[11px] text-[#A1A1AA] leading-snug">
+                          <p className="mt-2 text-[11px] text-[#8E8E93] leading-snug">
                             {lvl.summary}
                           </p>
                         </div>
 
-                        <div className="pt-2 border-t border-[#2D1B4E]/60 flex items-center justify-between text-[10px] font-bold">
-                          <span className={isActive ? "text-emerald-400" : "text-[#71717A]"}>
+                        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-semibold">
+                          <span className={isActive ? "text-emerald-400" : "text-[#8E8E93]"}>
                             {isActive ? "Nivel activo" : "Clic para activar"}
                           </span>
                         </div>
@@ -939,147 +939,147 @@ export default function ProfileModal({
               </div>
 
               {/* Guide Explanations Section */}
-              <div className="rounded-2xl border border-[#2D1B4E] bg-[#0E0919] p-4 sm:p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#2D1B4E] pb-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <BookOpen size={16} className="text-[#A855F7]" />
-                  <h3 className="text-sm sm:text-base font-black text-white">
-                    Guía &amp; Conceptos Clave: {currentLevelObj.title}
-                  </h3>
-                  <span className="rounded-md border border-[#A855F7]/40 bg-[#9333EA]/20 px-2 py-0.5 text-[10px] font-black uppercase text-[#C084FC]">
-                    {currentLevelObj.badge}
-                  </span>
+              <div className="rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <BookOpen size={16} className="text-[#FF5722]" />
+                      <h3 className="text-sm sm:text-base font-bold text-white">
+                        Guía &amp; Conceptos Clave: {currentLevelObj.title}
+                      </h3>
+                      <span className="rounded-md border border-[#FF5722]/30 bg-[#FF5722]/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#FF5722]">
+                        {currentLevelObj.badge}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#8E8E93] mt-0.5">
+                      {currentLevelObj.description}
+                    </p>
+                  </div>
+
+                  {/* Quick tab switcher for previewing other levels */}
+                  <div className="flex items-center gap-1 self-start sm:self-center bg-[#1C1C1E] p-1 rounded-xl border border-white/10">
+                    {["principiante", "intermedio", "avanzado"].map((lvlKey) => (
+                      <button
+                        key={lvlKey}
+                        type="button"
+                        onClick={() => setActiveTabLevel(lvlKey)}
+                        className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold capitalize transition ${
+                          activeTabLevel === lvlKey
+                            ? "bg-[#FF5722] text-white"
+                            : "text-[#8E8E93] hover:text-white"
+                        }`}
+                      >
+                        {lvlKey}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-xs text-[#A1A1AA] mt-0.5">
-                  {currentLevelObj.description}
-                </p>
-              </div>
 
-              {/* Quick tab switcher for previewing other levels */}
-              <div className="flex items-center gap-1 self-start sm:self-center bg-[#140E24] p-1 rounded-xl border border-[#2D1B4E]">
-                {["principiante", "intermedio", "avanzado"].map((lvlKey) => (
-                  <button
-                    key={lvlKey}
-                    type="button"
-                    onClick={() => setActiveTabLevel(lvlKey)}
-                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold capitalize transition ${
-                      activeTabLevel === lvlKey
-                        ? "bg-[#9333EA] text-white shadow-sm"
-                        : "text-[#71717A] hover:text-white"
-                    }`}
-                  >
-                    {lvlKey}
-                  </button>
-                ))}
-              </div>
-            </div>
+                {/* Explanations List for the Active Tab */}
+                <div className="space-y-2.5">
+                  {currentLevelObj.explanations?.map((item) => {
+                    const IconComponent = getTopicIcon(item.icon);
+                    const isExpanded = expandedTopicId === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        className="rounded-2xl border border-white/10 bg-[#1C1C1E] p-3.5 transition hover:border-white/20 space-y-2"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setExpandedTopicId(isExpanded ? null : item.id)}
+                          className="w-full flex items-start justify-between gap-3 text-left"
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FF5722]/10 text-[#FF5722] flex-shrink-0 mt-0.5">
+                              <IconComponent size={15} />
+                            </span>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-xs sm:text-sm font-bold text-white">
+                                  {item.title}
+                                </h4>
+                                <span className="text-[9px] font-semibold uppercase tracking-wider text-[#8E8E93]">
+                                  {item.topic}
+                                </span>
+                              </div>
+                              <p className="text-xs text-[#8E8E93] mt-1 leading-relaxed">
+                                {item.summary}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="rounded-lg p-1 text-[#8E8E93] hover:bg-white/5 hover:text-white flex-shrink-0">
+                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </span>
+                        </button>
 
-            {/* Explanations List for the Active Tab */}
-            <div className="space-y-2.5">
-              {currentLevelObj.explanations?.map((item) => {
-                const IconComponent = getTopicIcon(item.icon);
-                const isExpanded = expandedTopicId === item.id;
-                return (
-                  <div
-                    key={item.id}
-                    className="rounded-xl border border-[#2D1B4E] bg-[#140E24] p-3.5 transition hover:border-[#A855F7]/40 space-y-2"
-                  >
+                        {/* Detailed expandable explanation */}
+                        {isExpanded && item.details && (
+                          <div className="pt-2 border-t border-white/5 pl-9 space-y-2 animate-in fade-in duration-150">
+                            <ul className="space-y-2 text-xs text-[#8E8E93]">
+                              {item.details.map((detail, dIdx) => (
+                                <li key={dIdx} className="flex items-start gap-2">
+                                  <span className="text-[#FF5722] font-semibold mt-0.5">•</span>
+                                  <span className="leading-relaxed">{detail}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Level Practical Recommendations */}
+                {currentLevelObj.recommendations?.length > 0 && (
+                  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3.5 space-y-2">
+                    <h4 className="text-xs font-semibold uppercase text-amber-300 flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-amber-400" />
+                      Recomendaciones Clave para {currentLevelObj.title}
+                    </h4>
+                    <ul className="space-y-1.5 text-xs text-amber-200/90">
+                      {currentLevelObj.recommendations.map((rec, rIdx) => (
+                        <li key={rIdx} className="flex items-start gap-2">
+                          <span className="text-amber-400 font-semibold">→</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Quick action to make the viewed tab active if different */}
+                {activeTabLevel !== currentLevel && (
+                  <div className="pt-2 flex justify-between items-center bg-[#1C1C1E] p-3.5 rounded-2xl border border-white/10">
+                    <span className="text-xs text-[#8E8E93]">
+                      ¿Querés cambiar tu perfil a <strong className="text-white">{currentLevelObj.title}</strong>?
+                    </span>
                     <button
                       type="button"
-                      onClick={() => setExpandedTopicId(isExpanded ? null : item.id)}
-                      className="w-full flex items-start justify-between gap-3 text-left"
+                      onClick={() => handleSelectLevel(activeTabLevel)}
+                      disabled={isUpdating}
+                      className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white hover:opacity-90 active:scale-95 transition flex items-center gap-1.5"
                     >
-                      <div className="flex items-start gap-2.5">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#9333EA]/20 text-[#C084FC] flex-shrink-0 mt-0.5">
-                          <IconComponent size={15} />
-                        </span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-xs sm:text-sm font-black text-white">
-                              {item.title}
-                            </h4>
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-[#71717A]">
-                              {item.topic}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[#D4D4D8] mt-1 leading-relaxed">
-                            {item.summary}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="rounded-lg p-1 text-[#71717A] hover:bg-[#1C1433] hover:text-white flex-shrink-0">
-                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </span>
+                      <Check size={14} />
+                      <span>Establecer como mi nivel</span>
                     </button>
-
-                    {/* Detailed expandable explanation */}
-                    {isExpanded && item.details && (
-                      <div className="pt-2 border-t border-[#2D1B4E]/80 pl-9 space-y-2 animate-in fade-in duration-150">
-                        <ul className="space-y-2 text-xs text-[#A1A1AA]">
-                          {item.details.map((detail, dIdx) => (
-                            <li key={dIdx} className="flex items-start gap-2">
-                              <span className="text-[#A855F7] font-bold mt-0.5">•</span>
-                              <span className="leading-relaxed">{detail}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </div>
-                );
-              })}
+                )}
+              </div>
             </div>
-
-            {/* Level Practical Recommendations */}
-            {currentLevelObj.recommendations?.length > 0 && (
-              <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-3.5 space-y-2">
-                <h4 className="text-xs font-black uppercase text-amber-300 flex items-center gap-1.5">
-                  <Sparkles size={14} className="text-amber-400" />
-                  Recomendaciones Clave para {currentLevelObj.title}
-                </h4>
-                <ul className="space-y-1.5 text-xs text-[#D4D4D8]">
-                  {currentLevelObj.recommendations.map((rec, rIdx) => (
-                    <li key={rIdx} className="flex items-start gap-2">
-                      <span className="text-amber-400 font-bold">→</span>
-                      <span>{rec}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Quick action to make the viewed tab active if different */}
-            {activeTabLevel !== currentLevel && (
-              <div className="pt-2 flex justify-between items-center bg-[#140E24] p-3 rounded-xl border border-[#2D1B4E]">
-                <span className="text-xs text-[#A1A1AA]">
-                  ¿Querés cambiar tu perfil a <strong>{currentLevelObj.title}</strong>?
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSelectLevel(activeTabLevel)}
-                  disabled={isUpdating}
-                  className="iron-btn-primary px-3 py-1.5 text-xs font-black flex items-center gap-1.5"
-                >
-                  <Check size={14} />
-                  <span>Establecer como mi nivel</span>
-                </button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
-      )}
-    </div>
 
         {/* Modal Footer */}
-        <div className="border-t border-[#2D1B4E] bg-[#0E0919] p-4 sm:p-5 flex items-center justify-between">
-          <div className="text-[11px] text-[#71717A]">
+        <div className="border-t border-white/10 bg-[#1C1C1E] p-4 sm:p-5 flex items-center justify-between">
+          <div className="text-[11px] text-[#8E8E93]">
             Podés cambiar tu nivel en cualquier momento según tu evolución física.
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-[#2D1B4E] bg-[#140E24] px-4 py-2 text-xs font-bold text-white hover:bg-[#1C1433] transition"
+            className="rounded-2xl border border-white/10 bg-[#121212] hover:bg-white/5 px-4 py-2 text-xs font-semibold text-[#8E8E93] hover:text-white transition"
           >
             Cerrar
           </button>

@@ -25,21 +25,21 @@ export default function WorkoutHeader({
   };
 
   return (
-    <div className="rounded-2xl border border-[#2A1B14] bg-[#121113] p-3.5 sm:p-4 space-y-3 shadow-card select-none">
+    <div className="rounded-3xl border border-white/10 bg-[#1C1C1E] p-3.5 sm:p-4 space-y-3 select-none">
       {/* Top row: Date, Session status & Discard */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#FF5722] to-[#FF6D00] text-[#050505] font-black shadow-neon">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white font-bold">
             <Flame size={18} />
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-black capitalize text-white leading-snug">
+            <h1 className="text-sm sm:text-base font-bold capitalize text-white leading-snug">
               {dateText}
             </h1>
-            <div className="flex items-center gap-1.5 text-[10px] text-[#A1A1AA]">
+            <div className="flex items-center gap-1.5 text-[10px] text-[#8E8E93]">
               <span>Sesión de Carga</span>
               {!isDeviceOnline && (
-                <span className="text-amber-400 font-bold flex items-center gap-0.5">
+                <span className="text-amber-400 font-semibold flex items-center gap-0.5">
                   <CloudOff size={10} /> Offline
                 </span>
               )}
@@ -51,7 +51,7 @@ export default function WorkoutHeader({
           <button
             type="button"
             onClick={onDiscard}
-            className="text-xs font-bold text-[#71717A] hover:text-red-400 p-1 transition"
+            className="text-xs font-semibold text-[#8E8E93] hover:text-rose-400 p-1 transition"
             title="Descartar sesión"
           >
             Descartar
@@ -66,10 +66,10 @@ export default function WorkoutHeader({
           <button
             type="button"
             onClick={() => handleSelectMode(PERIODIZATION_MODES.OVERLOAD)}
-            className={`min-h-[44px] rounded-xl px-2.5 py-2 text-xs font-black transition active:scale-95 flex items-center justify-center gap-1.5 ${
+            className={`min-h-[44px] rounded-2xl px-2.5 py-2 text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5 ${
               isOverload
-                ? "border-2 border-[#FF5722] bg-[#FF5722] text-[#050505] shadow-[0_0_16px_rgba(255,87,34,0.45)]"
-                : "border border-[#2A1B14] bg-[#050505] text-[#A1A1AA] hover:border-[#FF5722]/40 hover:text-white"
+                ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                : "border border-white/10 bg-[#121212] text-[#8E8E93] hover:border-white/20 hover:text-white"
             }`}
           >
             <span className="text-sm">⚡</span>
@@ -80,10 +80,10 @@ export default function WorkoutHeader({
           <button
             type="button"
             onClick={() => handleSelectMode(PERIODIZATION_MODES.DELOAD)}
-            className={`min-h-[44px] rounded-xl px-2.5 py-2 text-xs font-black transition active:scale-95 flex items-center justify-center gap-1.5 ${
+            className={`min-h-[44px] rounded-2xl px-2.5 py-2 text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5 ${
               isDeload
-                ? "border-2 border-[#38BDF8] bg-[#38BDF8] text-[#050505] shadow-[0_0_16px_rgba(56,189,248,0.45)]"
-                : "border border-[#2A1B14] bg-[#050505] text-[#A1A1AA] hover:border-[#38BDF8]/40 hover:text-white"
+                ? "border border-sky-400 bg-sky-400/10 text-sky-400"
+                : "border border-white/10 bg-[#121212] text-[#8E8E93] hover:border-white/20 hover:text-white"
             }`}
           >
             <span className="text-sm">🛡️</span>
@@ -94,11 +94,11 @@ export default function WorkoutHeader({
         {/* Micro-hint depending on mode */}
         <div className="text-center">
           {isOverload ? (
-            <p className="text-[11px] font-bold text-[#FF6D00] flex items-center justify-center gap-1">
+            <p className="text-[11px] font-medium text-[#FF5722] flex items-center justify-center gap-1">
               <span>Sobrecarga: +2.5 kg barra / +1.25 kg mancuernas • RIR 1-2</span>
             </p>
           ) : (
-            <p className="text-[11px] font-bold text-[#38BDF8] flex items-center justify-center gap-1">
+            <p className="text-[11px] font-medium text-sky-400 flex items-center justify-center gap-1">
               <span>Deload: 70% del peso habitual (múltiplos 2.5 kg) • RIR 3-4</span>
             </p>
           )}

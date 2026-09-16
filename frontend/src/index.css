@@ -4,8 +4,8 @@
 
 :root {
   color: #FFFFFF;
-  background-color: #050505;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  background-color: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -16,7 +16,7 @@ html, body {
   padding: 0;
   min-width: 320px;
   min-height: 100dvh;
-  background-color: #050505;
+  background-color: #000000;
   color: #FFFFFF;
   touch-action: manipulation;
   overflow-x: hidden;
@@ -28,19 +28,11 @@ body, #root {
   min-height: 100dvh;
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  background-color: #050505;
+  background-color: #000000;
   color: #FFFFFF;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-body {
-  background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 87, 34, 0.12), transparent 70%),
-    radial-gradient(circle 350px at 90% 15%, rgba(200, 66, 24, 0.08), transparent 70%),
-    radial-gradient(circle 300px at 10% 85%, rgba(255, 109, 0, 0.05), transparent 70%);
-  background-attachment: fixed;
 }
 
 /* Custom scrollbars */
@@ -50,123 +42,156 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #050505;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A1B14;
+  background: #2C2C2E;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #FF5722;
+  background: #3A3A3C;
 }
 
 ::selection {
-  background: rgba(255, 87, 34, 0.45);
+  background: rgba(255, 87, 34, 0.3);
   color: #FFFFFF;
 }
 
-/* Safe areas for notched phones */
+:root {
+  --bottom-nav-height: 4rem; /* 64px standard mobile bottom nav */
+}
+
+/* Safe areas for notched phones and iOS devices */
 .safe-top {
   padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
+.safe-top-focus {
+  padding-top: max(env(safe-area-inset-top, 24px), 1.5rem);
 }
 
 .safe-bottom {
   padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
 }
 
+.bottom-nav-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Floating Active Workout Banner: Sits flush above the mobile bottom nav on small screens, and at the bottom on tablet/desktop */
+.active-workout-banner {
+  bottom: calc(var(--bottom-nav-height, 4rem) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 640px) {
+  .active-workout-banner {
+    bottom: 0px;
+  }
+}
+
 .pb-safe {
   padding-bottom: max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem));
 }
 
-.neon-border {
-  border-color: rgba(255, 87, 34, 0.4);
-  box-shadow: 0 0 15px rgba(255, 87, 34, 0.25);
+.bg-signature-gradient {
+  background-image: linear-gradient(to right, #FF5722, #7C4DFF);
 }
 
-.neon-text {
-  text-shadow: 0 0 8px rgba(255, 109, 0, 0.6);
+/* Horizontal & Vertical smooth scrollbars hidden */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @layer components {
-  /* Gym OLED Card Container */
+  /* Flat OLED iOS Card Container */
   .iron-card,
   .oled-card {
-    @apply rounded-2xl border border-[#2A1B14] bg-[#121113] p-4 shadow-card transition-all sm:p-5;
+    @apply rounded-2xl sm:rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 transition-all;
   }
 
   .iron-card-interactive,
   .oled-card-interactive {
-    @apply rounded-2xl border border-[#2A1B14] bg-[#121113] p-4 shadow-card transition-all duration-150 hover:border-[#FF5722]/50 hover:bg-[#1A1618] hover:shadow-neon cursor-pointer sm:p-5 active:scale-[0.98];
+    @apply rounded-2xl sm:rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 transition-all duration-150 hover:border-white/20 hover:bg-[#252528] cursor-pointer active:scale-[0.98];
   }
 
   .iron-card-active,
   .oled-card-active {
-    @apply rounded-2xl border-2 border-[#FF5722] bg-[#1A1618] p-4 shadow-cardActive transition-all duration-150 sm:p-5;
+    @apply rounded-2xl sm:rounded-3xl border border-[#FF5722] bg-[#1C1C1E] p-4 sm:p-5 transition-all duration-150;
   }
 
   /* Large Tactile Mobile Inputs */
   .iron-input,
   .oled-input {
-    @apply w-full min-h-[48px] rounded-xl border border-[#2A1B14] bg-[#050505] px-3.5 py-3 text-base font-semibold text-white outline-none transition placeholder:text-[#71717A] focus:border-[#FF5722] focus:ring-2 focus:ring-[#FF5722]/25;
+    @apply w-full min-h-[48px] rounded-2xl border border-white/10 bg-[#121212] px-4 py-3 text-base font-semibold text-white outline-none transition placeholder:text-[#8E8E93] focus:border-[#FF5722] focus:ring-1 focus:ring-[#FF5722]/30;
   }
 
   .iron-number-input,
   .oled-number-input {
-    @apply w-20 min-h-[48px] text-center rounded-xl border border-[#2A1B14] bg-[#050505] py-2 px-1 text-lg font-black tracking-tight text-white outline-none transition focus:border-[#FF5722] focus:ring-2 focus:ring-[#FF5722]/30 sm:w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none;
+    @apply w-20 min-h-[48px] text-center rounded-2xl border border-white/10 bg-[#121212] py-2 px-1 text-2xl font-semibold tracking-tight text-white outline-none transition focus:border-[#FF5722] focus:ring-1 focus:ring-[#FF5722]/30 sm:w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none;
   }
 
-  /* Primary Electric Tactile Buttons */
+  /* Primary Signature Buttons: Flat Ladrillo a Morado */
   .iron-btn-primary,
   .oled-btn-primary {
-    @apply inline-flex min-h-[48px] sm:min-h-[52px] items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#FF5722] via-[#FF6D00] to-[#C84218] px-5 py-3.5 font-extrabold text-white shadow-neon transition duration-150 hover:from-[#FF6D00] hover:to-[#FF5722] hover:shadow-neonLg active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+    @apply inline-flex min-h-[48px] sm:min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] px-5 py-3.5 font-semibold tracking-wide text-white transition duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  /* Botón Signature Registrar Serie */
+  .iron-btn-register,
+  .oled-btn-register {
+    @apply inline-flex min-h-[52px] sm:min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] px-5 py-3.5 font-semibold tracking-wide text-base sm:text-lg text-white transition duration-150 hover:opacity-90 active:scale-[0.98] select-none;
   }
 
   .iron-btn-secondary,
   .oled-btn-secondary {
-    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-[#2A1B14] bg-[#121113] px-4 py-3 font-bold text-white transition hover:border-[#FF5722]/50 hover:bg-[#1A1618] active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none;
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#1C1C1E] px-4 py-3 font-semibold text-white transition hover:bg-[#2C2C2E] active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
   }
 
   .iron-btn-ghost,
   .oled-btn-ghost {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 font-semibold text-[#A1A1AA] transition hover:bg-[#1A1618] hover:text-white active:scale-[0.97];
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-3.5 py-2.5 font-semibold text-[#8E8E93] transition hover:bg-white/5 hover:text-white active:scale-[0.98];
   }
 
   .iron-btn-danger,
   .oled-btn-danger {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 font-bold text-red-300 transition hover:bg-red-500/20 active:scale-[0.97];
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-3.5 py-2.5 font-semibold text-red-400 transition hover:bg-red-500/20 active:scale-[0.98];
   }
 
   /* Giant In-Workout Check/Listo Button */
   .iron-check-btn,
   .oled-check-btn {
-    @apply h-12 w-12 rounded-xl flex items-center justify-center font-black transition-all duration-150 active:scale-90 flex-shrink-0 cursor-pointer select-none;
+    @apply h-12 w-12 rounded-2xl flex items-center justify-center font-semibold transition-all duration-150 active:scale-90 flex-shrink-0 cursor-pointer select-none;
   }
 
   .iron-check-btn-pending,
   .oled-check-btn-pending {
-    @apply border-2 border-[#2A1B14] bg-[#050505] text-[#71717A] hover:border-[#FF5722] hover:text-[#FF5722];
+    @apply border border-white/10 bg-[#121212] text-[#8E8E93] hover:border-[#FF5722] hover:text-[#FF5722];
   }
 
   .iron-check-btn-done,
   .oled-check-btn-done {
-    @apply border-2 border-[#FF5722] bg-[#FF5722] text-[#050505] shadow-[0_0_18px_rgba(255,87,34,0.5)] scale-105;
+    @apply border border-[#FF5722] bg-[#FF5722] text-white;
   }
 
   /* Stepper Quick-Tap Buttons */
   .oled-stepper-btn {
-    @apply h-12 w-11 flex items-center justify-center rounded-xl border border-[#2A1B14] bg-[#050505] text-[#A1A1AA] hover:border-[#FF5722] hover:text-white active:scale-90 transition select-none flex-shrink-0 text-base font-bold;
+    @apply h-12 w-11 flex items-center justify-center rounded-2xl border border-white/10 bg-[#1C1C1E] text-white hover:border-[#FF5722] hover:text-white active:scale-90 transition select-none flex-shrink-0 text-base font-semibold;
   }
 
-  /* PR & Muscle Badges */
+  /* Badges de Objetivo / PR / Rango */
   .iron-pr-badge,
   .oled-pr-badge {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-[#FF6D00]/50 bg-[#FF6D00]/15 px-3 py-1 text-xs font-black text-[#FF6D00] shadow-[0_0_12px_rgba(255,109,0,0.35)];
+    @apply inline-flex items-center gap-1.5 rounded-full border border-[#FF5722]/30 bg-[#FF5722]/10 px-3 py-1 text-xs font-semibold text-[#FF5722];
   }
 
   .iron-badge,
   .oled-badge {
-    @apply inline-flex items-center gap-1 rounded-full border border-[#2A1B14] bg-[#121113] px-2.5 py-1 text-xs font-semibold text-[#A1A1AA];
+    @apply inline-flex items-center gap-1 rounded-full border border-white/5 bg-[#1C1C1E] px-2.5 py-1 text-xs font-semibold text-[#8E8E93];
   }
 }

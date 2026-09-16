@@ -41,26 +41,22 @@ export default function Login({ onAuthenticated }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#09060E] text-white flex flex-col justify-center px-4 py-8 relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="pointer-events-none absolute top-[-10%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-[#9333EA]/10 blur-[130px]" />
-      <div className="pointer-events-none absolute bottom-[-10%] right-[10%] w-[350px] h-[350px] rounded-full bg-[#A855F7]/10 blur-[100px]" />
-
+    <div className="min-h-screen bg-[#000000] text-white flex flex-col justify-center px-4 py-8 relative overflow-hidden">
       <div className="relative mx-auto w-full max-w-md">
         {/* Brand Header */}
         <div className="text-center mb-6">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#9333EA] to-[#A855F7] text-white shadow-neon">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white">
             <Dumbbell size={28} />
           </div>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-2xl font-black tracking-wider text-white">
-              FIT<span className="text-[#A855F7]">TRACKER</span>
+            <span className="text-2xl font-bold tracking-wider text-white">
+              FIT<span className="text-[#FF5722]">TRACKER</span>
             </span>
-            <span className="rounded-full border border-[#A855F7]/40 bg-[#9333EA]/15 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-[#C084FC]">
+            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-[#FF5722]">
               OLED GYM
             </span>
           </div>
-          <p className="mt-2 text-xs text-[#A1A1AA]">
+          <p className="mt-2 text-xs text-[#8E8E93]">
             {mode === "login"
               ? "Ingresá a tu espacio individual de entrenamiento"
               : "Creá tu cuenta para registrar tus cargas y récords"}
@@ -68,19 +64,19 @@ export default function Login({ onAuthenticated }) {
         </div>
 
         {/* Auth Card */}
-        <div className="rounded-3xl border border-[#2D1B4E] bg-[#140E24]/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-6 sm:p-8 backdrop-blur-xl">
           {/* Mode Switcher */}
-          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#2D1B4E] bg-[#09060E] p-1 mb-6">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/5 bg-[#121212] p-1 mb-6">
             <button
               type="button"
               onClick={() => {
                 setMode("login");
                 setErrorMsg("");
               }}
-              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
+              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition ${
                 mode === "login"
-                  ? "border border-[#A855F7]/40 bg-[#1C1433] text-[#C084FC] shadow-neon"
-                  : "text-[#71717A] hover:text-white"
+                  ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                  : "text-[#8E8E93] hover:text-white"
               }`}
             >
               <LogIn size={15} />
@@ -92,10 +88,10 @@ export default function Login({ onAuthenticated }) {
                 setMode("register");
                 setErrorMsg("");
               }}
-              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition ${
+              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition ${
                 mode === "register"
-                  ? "border border-[#A855F7]/40 bg-[#1C1433] text-[#C084FC] shadow-neon"
-                  : "text-[#71717A] hover:text-white"
+                  ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
+                  : "text-[#8E8E93] hover:text-white"
               }`}
             >
               <UserPlus size={15} />
@@ -105,8 +101,8 @@ export default function Login({ onAuthenticated }) {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5 flex items-center gap-1.5">
-                <User size={13} className="text-[#A855F7]" />
+              <label className="text-xs font-semibold text-[#8E8E93] mb-1.5 flex items-center gap-1.5">
+                <User size={13} className="text-[#FF5722]" />
                 Usuario
               </label>
               <input
@@ -115,15 +111,15 @@ export default function Login({ onAuthenticated }) {
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
                 placeholder="Ej. pablo"
                 autoComplete="username"
-                className="w-full rounded-xl border border-[#2D1B4E] bg-[#09060E] px-4 py-2.5 text-sm text-white placeholder-[#52525B] focus:border-[#A855F7] focus:outline-none transition"
+                className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-2.5 text-sm text-white placeholder-[#52525B] focus:border-[#FF5722] focus:outline-none transition font-medium"
                 required
               />
             </div>
 
             {mode === "register" && (
               <div>
-                <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5 flex items-center gap-1.5">
-                  <Mail size={13} className="text-[#A855F7]" />
+                <label className="text-xs font-semibold text-[#8E8E93] mb-1.5 flex items-center gap-1.5">
+                  <Mail size={13} className="text-[#FF5722]" />
                   Email (opcional para soporte)
                 </label>
                 <input
@@ -132,14 +128,14 @@ export default function Login({ onAuthenticated }) {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="tuemail@ejemplo.com"
                   autoComplete="email"
-                  className="w-full rounded-xl border border-[#2D1B4E] bg-[#09060E] px-4 py-2.5 text-sm text-white placeholder-[#52525B] focus:border-[#A855F7] focus:outline-none transition"
+                  className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-2.5 text-sm text-white placeholder-[#52525B] focus:border-[#FF5722] focus:outline-none transition font-medium"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-[#D4D4D8] mb-1.5 flex items-center gap-1.5">
-                <Lock size={13} className="text-[#A855F7]" />
+              <label className="text-xs font-semibold text-[#8E8E93] mb-1.5 flex items-center gap-1.5">
+                <Lock size={13} className="text-[#FF5722]" />
                 Contraseña
               </label>
               <input
@@ -148,13 +144,13 @@ export default function Login({ onAuthenticated }) {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 placeholder="Mínimo 6 caracteres"
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
-                className="w-full rounded-xl border border-[#2D1B4E] bg-[#09060E] px-4 py-2.5 text-sm text-white placeholder-[#52525B] focus:border-[#A855F7] focus:outline-none transition"
+                className="w-full rounded-2xl border border-white/10 bg-[#121212] px-4 py-2.5 text-sm text-white placeholder-[#52525B] focus:border-[#FF5722] focus:outline-none transition font-medium"
                 required
               />
             </div>
 
             {errorMsg && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
                 {errorMsg}
               </div>
             )}
@@ -162,7 +158,7 @@ export default function Login({ onAuthenticated }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#9333EA] to-[#A855F7] py-3 text-sm font-bold text-white shadow-neon transition hover:opacity-95 active:scale-95 disabled:opacity-50"
+              className="w-full mt-2 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] py-3 text-sm font-semibold text-white transition hover:opacity-90 active:scale-95 disabled:opacity-50"
             >
               {loading ? (
                 <span>Procesando...</span>
@@ -181,11 +177,11 @@ export default function Login({ onAuthenticated }) {
           </form>
 
           {/* Support Link */}
-          <div className="mt-6 pt-5 border-t border-[#2D1B4E]/60 text-center">
+          <div className="mt-6 pt-5 border-t border-white/5 text-center">
             <button
               type="button"
               onClick={() => setIsSupportOpen(true)}
-              className="inline-flex items-center gap-1.5 text-xs text-[#A855F7] hover:text-[#C084FC] transition hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs text-[#8E8E93] hover:text-white transition hover:underline"
             >
               <HelpCircle size={13} />
               <span>¿Olvidaste tu contraseña o necesitás ayuda con tu cuenta?</span>
@@ -194,17 +190,17 @@ export default function Login({ onAuthenticated }) {
         </div>
 
         {/* Feature Highlights */}
-        <div className="mt-6 grid grid-cols-3 gap-2 text-center text-[10px] text-[#71717A]">
-          <div className="p-2 rounded-xl border border-[#2D1B4E]/40 bg-[#140E24]/40">
-            <span className="block font-bold text-[#A1A1AA]">Privacidad</span>
+        <div className="mt-6 grid grid-cols-3 gap-2 text-center text-[10px] text-[#8E8E93]">
+          <div className="p-2.5 rounded-2xl border border-white/5 bg-[#1C1C1E]">
+            <span className="block font-semibold text-white">Privacidad</span>
             Espacio individual
           </div>
-          <div className="p-2 rounded-xl border border-[#2D1B4E]/40 bg-[#140E24]/40">
-            <span className="block font-bold text-[#A1A1AA]">Soporte</span>
+          <div className="p-2.5 rounded-2xl border border-white/5 bg-[#1C1C1E]">
+            <span className="block font-semibold text-white">Soporte</span>
             Admin disponible
           </div>
-          <div className="p-2 rounded-xl border border-[#2D1B4E]/40 bg-[#140E24]/40">
-            <span className="block font-bold text-[#A1A1AA]">Récords</span>
+          <div className="p-2.5 rounded-2xl border border-white/5 bg-[#1C1C1E]">
+            <span className="block font-semibold text-white">Récords</span>
             Tus PRs protegidos
           </div>
         </div>

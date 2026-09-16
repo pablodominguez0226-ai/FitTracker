@@ -1,5 +1,7 @@
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from .database import Base, engine, ensure_database_migration, SessionLocal
 from .routers import auth, admin, muscle_groups, exercises, workouts, records, profile, analytics, tips, ai_coach, battles
@@ -12,6 +14,22 @@ with SessionLocal() as db:
     seed_initial_data(db)
 
 app = FastAPI(title="FitTracker API", version="2.0.0")
+
+
+@app.exception_handler(IntegrityError)
+async def integrity_exception_handler(request: Request, exc: IntegrityError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": f"Error de restricción o integridad en base de datos: {str(exc.orig) if hasattr(exc, 'orig') else str(exc)}"},
+    )
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": f"Error en la base de datos: {str(exc.orig) if hasattr(exc, 'orig') else str(exc)}"},
+    )
 
 app.add_middleware(
     CORSMiddleware,

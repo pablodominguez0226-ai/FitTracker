@@ -52,12 +52,12 @@ import { formatDateSafe, getLocalDateString, parseDateSafe } from "../utils/date
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-[#2A1B14] bg-[#181210]/95 p-3 shadow-neon text-xs text-white backdrop-blur-md">
-        <p className="font-black text-[#FF6D00] mb-1">{label}</p>
+      <div className="rounded-2xl border border-white/10 bg-[#1C1C1E]/95 p-3 text-xs text-white backdrop-blur-md">
+        <p className="font-bold text-[#FF5722] mb-1">{label}</p>
         {payload.map((entry, index) => (
-          <p key={`item-${index}`} className="flex justify-between gap-4 font-semibold">
-            <span className="text-[#A1A1AA]">{entry.name}:</span>
-            <span className="font-bold text-white">
+          <p key={`item-${index}`} className="flex justify-between gap-4 font-medium">
+            <span className="text-[#8E8E93]">{entry.name}:</span>
+            <span className="font-semibold text-white">
               {entry.name.toLowerCase().includes("volumen")
                 ? `${Math.round(entry.value).toLocaleString()} kg`
                 : `${entry.value} sesiones`}
@@ -200,19 +200,19 @@ export default function Dashboard() {
         subtitle="Los números miden tu entrenamiento; FitTracker entiende tu esfuerzo"
         rightElement={
           <div className="flex items-center gap-2">
-            <div className="rounded-xl border border-[#2A1B14] bg-[#181210] px-3.5 py-2 text-right">
-              <span className="text-[10px] uppercase font-bold text-[#71717A] block">
-                Sesiones Listas
+            <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] px-3.5 py-2 text-right">
+              <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">
+                Nivel Actual
               </span>
-              <span className="text-base font-black text-[#34D399]">
-                {data.total_workouts}
+              <span className="text-base font-bold text-white capitalize">
+                {userLevel}
               </span>
             </div>
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-right">
-              <span className="text-[10px] uppercase font-bold text-amber-400 block">
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3.5 py-2 text-right">
+              <span className="text-[10px] uppercase font-semibold text-amber-400 block">
                 Voluntad de Hierro
               </span>
-              <span className="text-base font-black text-amber-300">
+              <span className="text-base font-bold text-amber-300">
                 {data.willpower_sessions_count}
               </span>
             </div>
@@ -221,37 +221,37 @@ export default function Dashboard() {
       />
 
       {/* 1. Tarjeta Hero: Métrica de Voluntad & Retención de Carga */}
-      <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-[#2A1B14] via-[#181210] to-[#1C1226] p-4.5 sm:p-6 shadow-neonLg">
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-[#1C1C1E] p-5 sm:p-6 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-300">
-              <Brain size={15} className="text-amber-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-400">
+              <Brain size={15} className="text-amber-400" />
               <span>ÍNDICE DE DISCIPLINA &amp; VOLUNTAD</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
               El <span className="text-amber-300">{data.willpower_percentage}%</span> de tus entrenamientos se construyeron en días difíciles
             </h2>
-            <p className="text-xs text-[#A1A1AA] leading-relaxed">
-              Superaste la barrera mental en <strong className="text-white">{data.willpower_sessions_count} de {data.total_workouts} sesiones</strong> (entrenando con energía baja o alta exigencia psicológica). La consistencia en estos días es la que consolida el progreso físico real.
+            <p className="text-xs text-[#8E8E93] leading-relaxed">
+              Superaste la barrera mental en <strong className="text-white font-semibold">{data.willpower_sessions_count} de {data.total_workouts} sesiones</strong> (entrenando con energía baja o alta exigencia psicológica). La consistencia en estos días es la que consolida el progreso físico real.
             </p>
           </div>
 
           {/* KPI Circular / Tarjeta de Retención de Rendimiento */}
-          <div className="rounded-2xl border border-amber-500/30 bg-[#050505]/80 p-4 min-w-[240px] text-center space-y-2.5">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 block">
+          <div className="rounded-2xl border border-white/5 bg-[#121212] p-4 min-w-[240px] text-center space-y-2.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400 block">
               Retención de Carga en Días Bajos
             </span>
             <div className="flex items-baseline justify-center gap-1.5">
-              <span className="text-3xl sm:text-4xl font-black text-white">
+              <span className="text-3xl sm:text-4xl font-bold text-white">
                 {data.volume_comparison.retention_percentage}%
               </span>
             </div>
-            <p className="text-[11px] text-[#A1A1AA]">
+            <p className="text-[11px] text-[#8E8E93]">
               {data.volume_comparison.low_energy_avg_volume > 0 ? (
                 <>
-                  Promedio normal: <strong className="text-white">{Math.round(data.volume_comparison.normal_avg_volume)} kg</strong>
+                  Promedio normal: <strong className="text-white font-semibold">{Math.round(data.volume_comparison.normal_avg_volume)} kg</strong>
                   <br />
-                  Promedio con energía baja: <strong className="text-amber-300">{Math.round(data.volume_comparison.low_energy_avg_volume)} kg</strong>
+                  Promedio con energía baja: <strong className="text-amber-300 font-semibold">{Math.round(data.volume_comparison.low_energy_avg_volume)} kg</strong>
                 </>
               ) : (
                 "Aún sin sesiones registradas con energía ≤ 2"
@@ -263,36 +263,36 @@ export default function Dashboard() {
 
       {/* 2. Resumen Rápido de Números Globales */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card text-center">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A] block">
+        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
             Tonelaje Movido
           </span>
-          <p className="mt-1 text-xl sm:text-2xl font-black text-[#FF6D00]">
-            {Math.round(data.total_volume_kg).toLocaleString()} <span className="text-xs font-semibold text-[#A1A1AA]">kg</span>
+          <p className="mt-1 text-xl sm:text-2xl font-bold text-[#FF5722]">
+            {Math.round(data.total_volume_kg).toLocaleString()} <span className="text-xs font-medium text-[#8E8E93]">kg</span>
           </p>
         </div>
-        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card text-center">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A] block">
+        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
             Series Totales
           </span>
-          <p className="mt-1 text-xl sm:text-2xl font-black text-[#34D399]">
+          <p className="mt-1 text-xl sm:text-2xl font-bold text-[#34D399]">
             {data.total_sets.toLocaleString()}
           </p>
         </div>
-        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card text-center">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A] block">
+        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
             Repeticiones
           </span>
-          <p className="mt-1 text-xl sm:text-2xl font-black text-white">
+          <p className="mt-1 text-xl sm:text-2xl font-bold text-white">
             {data.total_reps.toLocaleString()}
           </p>
         </div>
-        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-3.5 shadow-card text-center">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717A] block">
+        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
             Sesiones de Voluntad
           </span>
-          <p className="mt-1 text-xl sm:text-2xl font-black text-amber-300">
-            {data.willpower_sessions_count} <span className="text-xs font-semibold text-[#A1A1AA]">★</span>
+          <p className="mt-1 text-xl sm:text-2xl font-bold text-amber-300">
+            {data.willpower_sessions_count} <span className="text-xs font-medium text-[#8E8E93]">★</span>
           </p>
         </div>
       </div>
@@ -305,22 +305,22 @@ export default function Dashboard() {
           DEFAULT_LEVEL_EXPLANATIONS.intermedio;
 
         return (
-          <div className="rounded-2xl border border-[#FF5722]/40 bg-gradient-to-br from-[#2A1B14] via-[#181210] to-[#121113] p-4 sm:p-5 shadow-neon space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2A1B14] pb-3">
+          <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#C84218] to-[#FF5722] text-white shadow-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white flex-shrink-0">
                   <BookOpen size={18} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm sm:text-base font-black text-white">
+                    <h3 className="text-sm sm:text-base font-bold text-white">
                       Guía del Atleta: {currentExpObj.title}
                     </h3>
-                    <span className="rounded-md border border-[#34D399]/40 bg-[#34D399]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#34D399]">
+                    <span className="rounded-lg border border-[#34D399]/30 bg-[#34D399]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#34D399]">
                       {currentExpObj.badge}
                     </span>
                   </div>
-                  <p className="text-xs text-[#A1A1AA]">
+                  <p className="text-xs text-[#8E8E93]">
                     {currentExpObj.subtitle}
                   </p>
                 </div>
@@ -338,7 +338,7 @@ export default function Dashboard() {
 
             {/* Conceptos clave explicados */}
             <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#A1A1AA] block">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
                 Explicaciones Adaptadas a tu Perfil ({currentExpObj.title}):
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -347,7 +347,7 @@ export default function Dashboard() {
                   return (
                     <div
                       key={item.id}
-                      className="rounded-xl border border-[#2A1B14] bg-[#121113] p-3 transition hover:border-[#FF5722]/40 space-y-1.5"
+                      className="rounded-2xl border border-white/5 bg-[#121212] p-3 transition hover:border-white/10 space-y-1.5"
                     >
                       <button
                         type="button"
@@ -355,23 +355,23 @@ export default function Dashboard() {
                         className="w-full text-left flex items-start justify-between gap-2"
                       >
                         <div>
-                          <span className="text-[10px] font-black uppercase text-[#FF6D00] tracking-wider block">
+                          <span className="text-[10px] font-semibold uppercase text-[#FF5722] tracking-wider block">
                             {item.topic.replace("_", " ")}
                           </span>
-                          <h4 className="text-xs font-black text-white mt-0.5">{item.title}</h4>
+                          <h4 className="text-xs font-semibold text-white mt-0.5">{item.title}</h4>
                         </div>
-                        <span className="text-[#71717A] hover:text-white p-0.5">
+                        <span className="text-[#8E8E93] hover:text-white p-0.5">
                           {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                         </span>
                       </button>
-                      <p className="text-xs text-[#A1A1AA] leading-relaxed">
+                      <p className="text-xs text-[#8E8E93] leading-relaxed">
                         {item.summary}
                       </p>
                       {isExpanded && item.details && (
-                        <div className="pt-2 border-t border-[#2A1B14]/60 space-y-1.5 animate-in fade-in duration-150">
+                        <div className="pt-2 border-t border-white/5 space-y-1.5 animate-in fade-in duration-150">
                           {item.details.map((d, dIdx) => (
                             <p key={dIdx} className="text-[11px] text-[#D4D4D8] leading-normal flex items-start gap-1.5">
-                              <span className="text-[#FF5722] font-bold">•</span>
+                              <span className="text-[#FF5722] font-semibold">•</span>
                               <span>{d}</span>
                             </p>
                           ))}
@@ -385,8 +385,8 @@ export default function Dashboard() {
 
             {/* Tips contextuales del nivel */}
             {tips.length > 0 && (
-              <div className="pt-2 border-t border-[#2A1B14]/60 space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#A1A1AA] block flex items-center gap-1.5">
+              <div className="pt-2 border-t border-white/5 space-y-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] block flex items-center gap-1.5">
                   <Sparkles size={13} className="text-amber-400" />
                   Consejos Rápidos del Coach para {currentExpObj.title}:
                 </span>
@@ -394,16 +394,16 @@ export default function Dashboard() {
                   {tips.slice(0, 4).map((tip, idx) => (
                     <div
                       key={idx}
-                      className="rounded-xl border border-[#2A1B14]/70 bg-[#181210]/60 p-2.5 space-y-1"
+                      className="rounded-2xl border border-white/5 bg-[#121212] p-2.5 space-y-1"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black uppercase text-[#34D399]">
+                        <span className="text-[9px] font-semibold uppercase text-[#34D399]">
                           {tip.category}
                         </span>
-                        <span className="text-[9px] text-[#71717A]">P{tip.priority}</span>
+                        <span className="text-[9px] text-[#8E8E93]">P{tip.priority}</span>
                       </div>
-                      <h5 className="text-[11px] font-bold text-white">{tip.title}</h5>
-                      <p className="text-[11px] text-[#A1A1AA] leading-snug">{tip.message}</p>
+                      <h5 className="text-[11px] font-semibold text-white">{tip.title}</h5>
+                      <p className="text-[11px] text-[#8E8E93] leading-snug">{tip.message}</p>
                     </div>
                   ))}
                 </div>
@@ -415,22 +415,22 @@ export default function Dashboard() {
 
 
       {/* 2.8. Coach IA: Diagnóstico Semanal & Asistente Interactivo (Fase 5) */}
-      <div className="rounded-2xl border border-[#FF5722]/30 bg-gradient-to-br from-[#2A1B14] via-[#181210] to-[#121113] p-4 sm:p-5 shadow-neon space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#2A1B14]/80 pb-3">
+      <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#C84218] to-[#FF5722] text-white shadow-sm">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white flex-shrink-0">
               <Bot size={18} />
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-black text-white">
+                <h3 className="text-sm sm:text-base font-bold text-white">
                   Coach IA: Diagnóstico Semanal &amp; Sobrecarga
                 </h3>
-                <span className="rounded-md border border-[#34D399]/30 bg-[#34D399]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#34D399]">
+                <span className="rounded-lg border border-[#34D399]/30 bg-[#34D399]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#34D399]">
                   {aiBriefing?.experience_level ? `Nivel ${aiBriefing.experience_level}` : "Inteligencia Activa"}
                 </span>
               </div>
-              <p className="text-xs text-[#A1A1AA]">
+              <p className="text-xs text-[#8E8E93]">
                 Análisis integral de sobrecarga progresiva, volumen y fatiga basado en tus series reales.
               </p>
             </div>
@@ -440,7 +440,7 @@ export default function Dashboard() {
             type="button"
             onClick={handleRefreshBriefing}
             disabled={loadingBriefing}
-            className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-[#2A1B14] bg-[#181210] px-3 py-1.5 text-xs font-bold text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#2A1B14] transition active:scale-95 disabled:opacity-50"
+            className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-2xl border border-white/5 bg-[#121212] px-3 py-1.5 text-xs font-semibold text-white hover:border-white/20 transition active:scale-95 disabled:opacity-50"
           >
             <RefreshCw size={13} className={loadingBriefing ? "animate-spin" : ""} />
             <span>Actualizar Diagnóstico</span>
@@ -450,8 +450,8 @@ export default function Dashboard() {
         {aiBriefing && (
           <div className="space-y-4">
             {/* Headline & Summary */}
-            <div className="rounded-xl border border-[#2A1B14] bg-[#121113]/70 p-3.5 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-black text-amber-300">
+            <div className="rounded-2xl border border-white/5 bg-[#121212] p-3.5 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
                 <Sparkles size={15} />
                 <span>{aiBriefing.headline}</span>
               </div>
@@ -462,33 +462,33 @@ export default function Dashboard() {
 
             {/* Status Badges Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-              <div className="rounded-xl border border-[#2A1B14] bg-[#181210] p-2.5">
-                <span className="text-[10px] uppercase font-bold text-[#71717A] block">Sesiones 7d</span>
-                <span className="text-base font-black text-white">{aiBriefing.total_workouts}</span>
+              <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5">
+                <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Sesiones 7d</span>
+                <span className="text-base font-bold text-white">{aiBriefing.total_workouts}</span>
               </div>
-              <div className="rounded-xl border border-[#2A1B14] bg-[#181210] p-2.5">
-                <span className="text-[10px] uppercase font-bold text-[#71717A] block">Volumen 7d</span>
-                <span className="text-base font-black text-[#34D399]">{Math.round(aiBriefing.total_volume_kg).toLocaleString()} kg</span>
+              <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5">
+                <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Volumen 7d</span>
+                <span className="text-base font-bold text-[#34D399]">{Math.round(aiBriefing.total_volume_kg).toLocaleString()} kg</span>
               </div>
-              <div className="rounded-xl border border-[#2A1B14] bg-[#181210] p-2.5">
-                <span className="text-[10px] uppercase font-bold text-[#71717A] block">Voluntad de Hierro</span>
-                <span className="text-base font-black text-amber-300">{aiBriefing.willpower_sessions} sesiones</span>
+              <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5">
+                <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Voluntad de Hierro</span>
+                <span className="text-base font-bold text-amber-300">{aiBriefing.willpower_sessions} sesiones</span>
               </div>
-              <div className="rounded-xl border border-[#2A1B14] bg-[#181210] p-2.5">
-                <span className="text-[10px] uppercase font-bold text-[#71717A] block">Recuperación</span>
-                <span className="text-base font-black text-[#FF6D00]">{aiBriefing.recovery_status}</span>
+              <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5">
+                <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Recuperación</span>
+                <span className="text-base font-bold text-[#FF5722]">{aiBriefing.recovery_status}</span>
               </div>
             </div>
 
             {/* Achievements & Recommendations */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {aiBriefing.achievements?.length > 0 && (
-                <div className="rounded-xl border border-[#2A1B14] bg-[#181210]/60 p-3 space-y-2">
-                  <h4 className="text-xs font-black uppercase text-[#34D399] flex items-center gap-1.5">
+                <div className="rounded-2xl border border-white/5 bg-[#121212] p-3 space-y-2">
+                  <h4 className="text-xs font-semibold uppercase text-[#34D399] flex items-center gap-1.5">
                     <CheckCircle2 size={14} />
                     Hitos y Rendimiento Destacado
                   </h4>
-                  <ul className="space-y-1.5 text-xs text-[#A1A1AA]">
+                  <ul className="space-y-1.5 text-xs text-[#8E8E93]">
                     {aiBriefing.achievements.map((ach, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <span className="text-[#34D399] font-bold">✓</span>
@@ -500,15 +500,15 @@ export default function Dashboard() {
               )}
 
               {aiBriefing.overload_recommendations?.length > 0 && (
-                <div className="rounded-xl border border-[#2A1B14] bg-[#181210]/60 p-3 space-y-2">
-                  <h4 className="text-xs font-black uppercase text-[#FF6D00] flex items-center gap-1.5">
+                <div className="rounded-2xl border border-white/5 bg-[#121212] p-3 space-y-2">
+                  <h4 className="text-xs font-semibold uppercase text-[#FF5722] flex items-center gap-1.5">
                     <Target size={14} />
                     Estrategia de Sobrecarga Progresiva
                   </h4>
-                  <ul className="space-y-1.5 text-xs text-[#A1A1AA]">
+                  <ul className="space-y-1.5 text-xs text-[#8E8E93]">
                     {aiBriefing.overload_recommendations.map((rec, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="text-[#FF6D00] font-bold">→</span>
+                        <span className="text-[#FF5722] font-semibold">→</span>
                         <span className="text-white font-medium">{rec}</span>
                       </li>
                     ))}
@@ -520,13 +520,13 @@ export default function Dashboard() {
         )}
 
         {/* Interactive Q&A Bar */}
-        <div className="pt-2 border-t border-[#2A1B14]/60 space-y-2.5">
+        <div className="pt-2 border-t border-white/5 space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#E4E4E7] flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-[#E4E4E7] flex items-center gap-1.5">
               <Brain size={14} className="text-[#FF5722]" />
               Consultale al Coach IA
             </span>
-            <span className="text-[10px] text-[#71717A]">
+            <span className="text-[10px] text-[#8E8E93]">
               Respuestas fundamentadas en tus series y fatiga
             </span>
           </div>
@@ -563,7 +563,7 @@ export default function Dashboard() {
                     setAiQuestion(chip);
                     handleAsk(chip);
                   }}
-                  className="rounded-lg border border-[#2A1B14] bg-[#121113] px-2.5 py-1 text-[11px] font-medium text-[#A1A1AA] hover:border-[#FF5722] hover:text-white transition"
+                  className="rounded-xl border border-white/5 bg-[#121212] px-2.5 py-1 text-[11px] font-medium text-[#8E8E93] hover:border-white/20 hover:text-white transition"
                 >
                   {chip}
                 </button>
@@ -585,7 +585,7 @@ export default function Dashboard() {
               placeholder="Preguntale al Coach IA sobre tu entrenamiento..."
               value={aiQuestion}
               onChange={(e) => setAiQuestion(e.target.value)}
-              className="flex-1 min-h-[40px] rounded-xl border border-[#2A1B14] bg-[#121113] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FF5722]"
+              className="flex-1 min-h-[40px] rounded-2xl border border-white/10 bg-[#121212] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FF5722]"
             />
             <button
               type="submit"
@@ -599,13 +599,13 @@ export default function Dashboard() {
 
           {/* AI Response Card */}
           {aiAnswer && (
-            <div className="rounded-xl border border-[#FF5722]/40 bg-[#121113] p-3.5 space-y-2 animate-in fade-in duration-200 shadow-neon">
+            <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 space-y-2 animate-in fade-in duration-200">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-[#FF6D00] flex items-center gap-1.5">
+                <span className="font-semibold text-[#FF5722] flex items-center gap-1.5">
                   <Bot size={15} />
                   Respuesta del Coach ({aiAnswer.category})
                 </span>
-                <span className="text-[10px] text-[#71717A]">
+                <span className="text-[10px] text-[#8E8E93]">
                   {new Date(aiAnswer.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
@@ -613,14 +613,14 @@ export default function Dashboard() {
                 {aiAnswer.answer}
               </p>
               {aiAnswer.cited_data?.length > 0 && (
-                <div className="pt-2 border-t border-[#2A1B14]/60 flex flex-wrap gap-1.5 items-center">
-                  <span className="text-[10px] font-bold uppercase text-[#71717A]">
+                <div className="pt-2 border-t border-white/5 flex flex-wrap gap-1.5 items-center">
+                  <span className="text-[10px] font-semibold uppercase text-[#8E8E93]">
                     Datos citados:
                   </span>
                   {aiAnswer.cited_data.map((c, i) => (
                     <span
                       key={i}
-                      className="rounded-md border border-[#2A1B14] bg-[#181210] px-2 py-0.5 text-[10px] text-amber-300 font-mono"
+                      className="rounded-lg border border-white/5 bg-[#1C1C1E] px-2 py-0.5 text-[10px] text-amber-300 font-mono"
                     >
                       {c}
                     </span>
@@ -633,18 +633,18 @@ export default function Dashboard() {
       </div>
 
       {/* 3. Consistencia Semanal (Últimas 8 Semanas - No Punitiva) */}
-      <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 sm:p-5 shadow-card space-y-3.5">
+      <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-xs font-semibold text-[#FF5722]">
                 <TrendingUp size={14} />
               </span>
-              <h3 className="text-sm sm:text-base font-black text-white">
+              <h3 className="text-sm sm:text-base font-bold text-white">
                 Consistencia Semanal &amp; Volumen de Carga
               </h3>
             </div>
-            <p className="text-xs text-[#A1A1AA] mt-0.5">
+            <p className="text-xs text-[#8E8E93] mt-0.5">
               Evolución de las últimas 8 semanas (el descanso también es parte de la recuperación).
             </p>
           </div>
@@ -673,7 +673,7 @@ export default function Dashboard() {
                 {data.weekly_consistency.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={entry.sessions_count > 0 ? "#FF5722" : "#2A1B14"}
+                    fill={entry.sessions_count > 0 ? "#FF5722" : "#252528"}
                   />
                 ))}
               </Bar>
@@ -686,16 +686,16 @@ export default function Dashboard() {
           {data.weekly_consistency.map((w, idx) => (
             <div
               key={idx}
-              className={`rounded-xl border p-2 text-center ${
+              className={`rounded-2xl border p-2 text-center ${
                 w.sessions_count > 0
-                  ? "border-[#FF5722]/40 bg-[#2A1B14]/70"
-                  : "border-[#2A1B14]/40 bg-[#121113]"
+                  ? "border-[#FF5722]/30 bg-[#FF5722]/10"
+                  : "border-white/5 bg-[#121212]"
               }`}
             >
-              <span className="text-[9px] uppercase font-bold text-[#71717A] block truncate">
+              <span className="text-[9px] uppercase font-semibold text-[#8E8E93] block truncate">
                 {w.week_label}
               </span>
-              <span className={`text-xs font-black block mt-0.5 ${w.sessions_count > 0 ? "text-[#34D399]" : "text-[#52525B]"}`}>
+              <span className={`text-xs font-bold block mt-0.5 ${w.sessions_count > 0 ? "text-[#34D399]" : "text-[#52525B]"}`}>
                 {w.sessions_count} {w.sessions_count === 1 ? "sesión" : "sesiones"}
               </span>
             </div>
@@ -706,34 +706,34 @@ export default function Dashboard() {
       {/* 4. Distribución por Grupo Muscular & Días de la Semana */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Distribución Muscular */}
-        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 sm:p-5 shadow-card space-y-3">
+        <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-xs font-semibold text-[#FF5722]">
               <Layers size={14} />
             </span>
-            <h3 className="text-sm sm:text-base font-black text-white">
+            <h3 className="text-sm sm:text-base font-bold text-white">
               Distribución por Grupo Muscular
             </h3>
           </div>
-          <p className="text-xs text-[#A1A1AA]">
+          <p className="text-xs text-[#8E8E93]">
             Balance de estímulo acumulado según el volumen total movido.
           </p>
 
           <div className="space-y-2.5 pt-1">
             {data.muscle_distribution.length === 0 ? (
-              <p className="text-xs text-[#71717A]">Sin datos musculares disponibles.</p>
+              <p className="text-xs text-[#8E8E93]">Sin datos musculares disponibles.</p>
             ) : (
               data.muscle_distribution.map((m, idx) => (
                 <div key={idx} className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
+                  <div className="flex justify-between text-xs font-semibold">
                     <span className="text-white">{m.name}</span>
-                    <span className="text-[#FF6D00]">
+                    <span className="text-[#FF5722]">
                       {Math.round(m.volume).toLocaleString()} kg ({m.percentage}%)
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#121113]">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#121212]">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#C84218] to-[#FF5722]"
+                      className="h-full rounded-full bg-gradient-to-r from-[#FF5722] to-[#7C4DFF]"
                       style={{ width: `${Math.min(100, m.percentage)}%` }}
                     />
                   </div>
@@ -744,16 +744,16 @@ export default function Dashboard() {
         </div>
 
         {/* Frecuencia por Día de la Semana */}
-        <div className="rounded-2xl border border-[#2A1B14] bg-[#181210] p-4 sm:p-5 shadow-card space-y-3">
+        <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C84218]/20 text-xs font-black text-[#FF6D00]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-xs font-semibold text-[#FF5722]">
               <Calendar size={14} />
             </span>
-            <h3 className="text-sm sm:text-base font-black text-white">
+            <h3 className="text-sm sm:text-base font-bold text-white">
               Patrón de Entrenamiento Semanal
             </h3>
           </div>
-          <p className="text-xs text-[#A1A1AA]">
+          <p className="text-xs text-[#8E8E93]">
             Tus días preferidos de asistencia al gimnasio.
           </p>
 
@@ -766,15 +766,15 @@ export default function Dashboard() {
                   <span className="text-[11px] font-bold text-white">
                     {d.count}
                   </span>
-                  <div className="h-24 w-full rounded-xl bg-[#121113] flex items-end p-1">
+                  <div className="h-24 w-full rounded-2xl bg-[#121212] flex items-end p-1">
                     <div
-                      className={`w-full rounded-lg transition-all ${
-                        d.count > 0 ? "bg-gradient-to-t from-[#C84218] to-[#FF5722]" : "bg-transparent"
+                      className={`w-full rounded-xl transition-all ${
+                        d.count > 0 ? "bg-gradient-to-t from-[#FF5722] to-[#7C4DFF]" : "bg-transparent"
                       }`}
                       style={{ height: `${Math.max(8, heightPct)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] font-bold uppercase text-[#71717A]">
+                  <span className="text-[10px] font-semibold uppercase text-[#8E8E93]">
                     {d.day_name}
                   </span>
                 </div>
@@ -786,19 +786,19 @@ export default function Dashboard() {
 
       {/* 5. Muro de Hitos de Voluntad de Hierro */}
       {data.recent_willpower_sessions.length > 0 && (
-        <div className="rounded-2xl border border-amber-500/30 bg-[#181210] p-4 sm:p-5 shadow-card space-y-3">
+        <div className="rounded-3xl border border-amber-500/20 bg-[#1C1C1E] p-4 sm:p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-amber-400" />
-              <h3 className="text-sm sm:text-base font-black text-white">
+              <h3 className="text-sm sm:text-base font-bold text-white">
                 Muro de Reconocimiento: Voluntad de Hierro
               </h3>
             </div>
-            <span className="rounded-md border border-amber-500/30 bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-black uppercase text-amber-300">
+            <span className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase text-amber-300">
               {data.willpower_sessions_count} Registradas
             </span>
           </div>
-          <p className="text-xs text-[#A1A1AA]">
+          <p className="text-xs text-[#8E8E93]">
             Sesiones donde te presentaste al gimnasio y rendiste a pesar de la baja energía o alta exigencia mental.
           </p>
 
@@ -806,35 +806,35 @@ export default function Dashboard() {
             {data.recent_willpower_sessions.map((s, idx) => (
               <div
                 key={idx}
-                className="rounded-xl border border-amber-500/25 bg-gradient-to-br from-[#2A1B14] to-[#121113] p-3.5 space-y-2 shadow-sm"
+                className="rounded-2xl border border-white/5 bg-[#121212] p-3.5 space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black capitalize text-white">
+                  <span className="text-xs font-bold capitalize text-white">
                     {formatDate(s.date)}
                   </span>
                   {s.muscle_group_name && (
-                    <span className="rounded-md border border-[#2A1B14] bg-[#181210] px-2 py-0.5 text-[10px] font-bold text-[#FF6D00]">
+                    <span className="rounded-lg border border-white/5 bg-[#1C1C1E] px-2 py-0.5 text-[10px] font-semibold text-[#FF5722]">
                       {s.muscle_group_name}
                     </span>
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 text-[10px] font-bold">
+                <div className="flex flex-wrap gap-1.5 text-[10px] font-semibold">
                   {s.readiness_energy && (
-                    <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-amber-300">
+                    <span className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-amber-300 font-medium">
                       ⚡ Energía: {s.readiness_energy}/5
                     </span>
                   )}
                   {s.mental_effort && (
-                    <span className="rounded-md border border-purple-500/30 bg-purple-500/10 px-1.5 py-0.5 text-purple-300">
+                    <span className="rounded-lg border border-purple-500/20 bg-purple-500/10 px-1.5 py-0.5 text-purple-300 font-medium">
                       🧠 Esfuerzo: {s.mental_effort}/5
                     </span>
                   )}
                 </div>
 
-                <div className="text-xs text-[#A1A1AA] pt-1 border-t border-[#2A1B14]/60 flex justify-between">
+                <div className="text-xs text-[#8E8E93] pt-1 border-t border-white/5 flex justify-between">
                   <span>{s.sets_count} series completadas</span>
-                  <span className="font-bold text-white">{Math.round(s.total_volume)} kg</span>
+                  <span className="font-semibold text-white">{Math.round(s.total_volume)} kg</span>
                 </div>
               </div>
             ))}

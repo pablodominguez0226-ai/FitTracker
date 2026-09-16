@@ -14,9 +14,9 @@ export const STRENGTH_RANKS = [
     textColor: "text-slate-400",
     bgColor: "bg-slate-500/10",
     borderColor: "border-slate-500/30",
-    shadowColor: "rgba(148, 163, 184, 0.25)",
+    shadowColor: "transparent",
     icon: "🛡️",
-    badgeClass: "border-slate-500/30 bg-slate-500/15 text-slate-300",
+    badgeClass: "border border-slate-500/30 bg-slate-500/10 text-slate-300 font-semibold",
   },
   {
     tier: 2,
@@ -26,9 +26,9 @@ export const STRENGTH_RANKS = [
     textColor: "text-amber-400",
     bgColor: "bg-amber-500/15",
     borderColor: "border-amber-400/40",
-    shadowColor: "rgba(245, 158, 11, 0.35)",
+    shadowColor: "transparent",
     icon: "⚔️",
-    badgeClass: "border-amber-400/40 bg-amber-500/15 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.25)]",
+    badgeClass: "border border-amber-400/40 bg-amber-500/10 text-amber-300 font-semibold",
   },
   {
     tier: 3,
@@ -38,9 +38,9 @@ export const STRENGTH_RANKS = [
     textColor: "text-slate-200",
     bgColor: "bg-slate-300/15",
     borderColor: "border-slate-300/40",
-    shadowColor: "rgba(203, 213, 225, 0.35)",
+    shadowColor: "transparent",
     icon: "⚡",
-    badgeClass: "border-slate-300/50 bg-slate-300/15 text-slate-100 shadow-[0_0_10px_rgba(203,213,225,0.25)]",
+    badgeClass: "border border-slate-300/40 bg-slate-300/10 text-slate-100 font-semibold",
   },
   {
     tier: 4,
@@ -50,33 +50,33 @@ export const STRENGTH_RANKS = [
     textColor: "text-yellow-400",
     bgColor: "bg-yellow-400/15",
     borderColor: "border-yellow-400/50",
-    shadowColor: "rgba(251, 191, 36, 0.4)",
+    shadowColor: "transparent",
     icon: "👑",
-    badgeClass: "border-yellow-400/60 bg-yellow-400/20 text-yellow-300 shadow-[0_0_12px_rgba(251,191,36,0.35)]",
+    badgeClass: "border border-yellow-400/50 bg-yellow-400/10 text-yellow-300 font-semibold",
   },
   {
     tier: 5,
     id: "elite",
     name: "Élite",
-    color: "#FF5722", // Neon Brick
+    color: "#FF5722", // Brick
     textColor: "text-[#FF5722]",
     bgColor: "bg-[#FF5722]/15",
     borderColor: "border-[#FF5722]/60",
-    shadowColor: "rgba(255, 87, 34, 0.45)",
+    shadowColor: "transparent",
     icon: "🔥",
-    badgeClass: "border-[#FF5722]/70 bg-[#FF5722]/20 text-[#FF5722] shadow-[0_0_14px_rgba(255,87,34,0.45)] font-black",
+    badgeClass: "border border-[#FF5722]/50 bg-[#FF5722]/10 text-[#FF5722] font-semibold",
   },
   {
     tier: 6,
     id: "elite_supremo",
     name: "Élite Supremo",
-    color: "#FF1744", // Crimson Glow
+    color: "#FF1744", // Crimson
     textColor: "text-[#FF1744]",
     bgColor: "bg-[#FF1744]/20",
     borderColor: "border-[#FF1744]/70",
-    shadowColor: "rgba(255, 23, 68, 0.55)",
+    shadowColor: "transparent",
     icon: "💎",
-    badgeClass: "border-[#FF1744] bg-[#FF1744]/25 text-[#FF1744] shadow-[0_0_18px_rgba(255,23,68,0.55)] font-black animate-pulse",
+    badgeClass: "border border-[#FF1744]/60 bg-[#FF1744]/10 text-[#FF1744] font-semibold",
   },
 ];
 
