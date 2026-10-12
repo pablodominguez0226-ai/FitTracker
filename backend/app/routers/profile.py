@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 
-from ..security import get_current_user
+from ..security import get_current_user, get_optional_current_user
 
 router = APIRouter()
 
@@ -239,6 +239,15 @@ def get_user_profile(
         bodyweight=current_user.bodyweight,
         height=current_user.height,
         training_goal=current_user.training_goal or "hipertrofia",
+        target_goal=current_user.target_goal or current_user.training_goal or "hipertrofia",
+        body_fat_percentage=current_user.body_fat_percentage,
+        biceps_girth=current_user.biceps_girth,
+        waist_girth=current_user.waist_girth,
+        target_protein_g=current_user.target_protein_g,
+        target_water_l=current_user.target_water_l,
+        nutrition_context=current_user.nutrition_context or "no_especifica",
+        supplements=current_user.supplements,
+        health_notes=current_user.health_notes,
         updated_at=current_user.updated_at,
     )
 
@@ -249,15 +258,10 @@ def update_user_profile(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    valid_levels = ["principiante", "intermedio", "avanzado"]
+    from ..services.biometrics import calculate_nutritional_requirements
+
     if payload.experience_level is not None:
-        level = payload.experience_level.strip().lower()
-        if level not in valid_levels:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Nivel de experiencia no válido. Opciones: {', '.join(valid_levels)}"
-            )
-        current_user.experience_level = level
+        current_user.experience_level = payload.experience_level.strip().lower()
 
     if payload.bodyweight is not None:
         if payload.bodyweight <= 0:
@@ -277,10 +281,62 @@ def update_user_profile(
                 detail=f"Objetivo no válido. Opciones: {', '.join(schemas.VALID_TRAINING_GOALS)}"
             )
         current_user.training_goal = goal
+        if payload.target_goal is None:
+            current_user.target_goal = goal
+
+    if payload.target_goal is not None:
+        t_goal = payload.target_goal.strip().lower()
+        if t_goal not in schemas.VALID_TARGET_GOALS and t_goal not in schemas.VALID_TRAINING_GOALS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Objetivo objetivo no válido. Opciones: {', '.join(schemas.VALID_TARGET_GOALS)}"
+            )
+        current_user.target_goal = t_goal
+
+    if payload.body_fat_percentage is not None:
+        if payload.body_fat_percentage <= 0 or payload.body_fat_percentage >= 100:
+            raise HTTPException(status_code=400, detail="El porcentaje de grasa debe estar entre 1% y 99%.")
+        current_user.body_fat_percentage = round(payload.body_fat_percentage, 1)
+
+    if payload.biceps_girth is not None:
+        if payload.biceps_girth <= 0:
+            raise HTTPException(status_code=400, detail="El perímetro de bíceps debe ser mayor a 0 cm.")
+        current_user.biceps_girth = round(payload.biceps_girth, 1)
+
+    if payload.waist_girth is not None:
+        if payload.waist_girth <= 0:
+            raise HTTPException(status_code=400, detail="El perímetro de cintura debe ser mayor a 0 cm.")
+        current_user.waist_girth = round(payload.waist_girth, 1)
+
+    if payload.target_protein_g is not None:
+        current_user.target_protein_g = round(payload.target_protein_g, 1)
+
+    if payload.target_water_l is not None:
+        current_user.target_water_l = round(payload.target_water_l, 2)
+
+    # Si se actualizó el peso o el objetivo y no se fijaron manualmente proteína/agua, recalcular sugerencias
+    if current_user.bodyweight and (payload.target_protein_g is None or payload.target_water_l is None):
+        nutr = calculate_nutritional_requirements(
+            bodyweight=current_user.bodyweight,
+            body_fat_percentage=current_user.body_fat_percentage,
+            target_goal=current_user.target_goal or current_user.training_goal or "hipertrofia",
+            height=current_user.height,
+        )
+        if payload.target_protein_g is None:
+            current_user.target_protein_g = nutr["target_protein_g"]
+        if payload.target_water_l is None:
+            current_user.target_water_l = nutr["target_water_l"]
+
+    if payload.nutrition_context is not None:
+        current_user.nutrition_context = payload.nutrition_context
+    if payload.supplements is not None:
+        current_user.supplements = payload.supplements
+    if payload.health_notes is not None:
+        current_user.health_notes = payload.health_notes
 
     current_user.updated_at = dt.datetime.now(dt.timezone.utc)
 
-    # Keep user_profile table in sync for compatibility
+    # Sincronizar tabla user_profile
     profile = db.get(models.UserProfile, 1)
     if not profile:
         profile = models.UserProfile(
@@ -289,6 +345,15 @@ def update_user_profile(
             bodyweight=current_user.bodyweight,
             height=current_user.height,
             training_goal=current_user.training_goal or "hipertrofia",
+            target_goal=current_user.target_goal or "hipertrofia",
+            body_fat_percentage=current_user.body_fat_percentage,
+            biceps_girth=current_user.biceps_girth,
+            waist_girth=current_user.waist_girth,
+            target_protein_g=current_user.target_protein_g,
+            target_water_l=current_user.target_water_l,
+            nutrition_context=current_user.nutrition_context,
+            supplements=current_user.supplements,
+            health_notes=current_user.health_notes,
             updated_at=dt.datetime.now(dt.timezone.utc),
         )
         db.add(profile)
@@ -297,6 +362,15 @@ def update_user_profile(
         profile.bodyweight = current_user.bodyweight
         profile.height = current_user.height
         profile.training_goal = current_user.training_goal or "hipertrofia"
+        profile.target_goal = current_user.target_goal or "hipertrofia"
+        profile.body_fat_percentage = current_user.body_fat_percentage
+        profile.biceps_girth = current_user.biceps_girth
+        profile.waist_girth = current_user.waist_girth
+        profile.target_protein_g = current_user.target_protein_g
+        profile.target_water_l = current_user.target_water_l
+        profile.nutrition_context = current_user.nutrition_context
+        profile.supplements = current_user.supplements
+        profile.health_notes = current_user.health_notes
         profile.updated_at = dt.datetime.now(dt.timezone.utc)
 
     db.commit()
@@ -308,7 +382,82 @@ def update_user_profile(
         bodyweight=current_user.bodyweight,
         height=current_user.height,
         training_goal=current_user.training_goal or "hipertrofia",
+        target_goal=current_user.target_goal or "hipertrofia",
+        body_fat_percentage=current_user.body_fat_percentage,
+        biceps_girth=current_user.biceps_girth,
+        waist_girth=current_user.waist_girth,
+        target_protein_g=current_user.target_protein_g,
+        target_water_l=current_user.target_water_l,
+        nutrition_context=current_user.nutrition_context or "no_especifica",
+        supplements=current_user.supplements,
+        health_notes=current_user.health_notes,
         updated_at=current_user.updated_at,
+    )
+
+
+@router.get("/analytics", response_model=schemas.ProfileAnalyticsOut)
+def get_profile_analytics(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retorna análisis biométrico de alta precisión:
+    - FFMI de Casey Butt normalizado a 1.80m y masa magra/grasa
+    - TMB y TDEE mediante fórmula Katch-McArdle
+    - Requerimientos diarios sugeridos de proteína y agua
+    - Potencial remanente hacia el límite genético natural
+    """
+    from ..services.biometrics import (
+        calculate_ffmi,
+        calculate_nutritional_requirements,
+    )
+
+    # Valores por defecto para cálculos si el usuario no los tiene cargados
+    bw = current_user.bodyweight or 75.0
+    h = current_user.height or 175.0
+    bf = current_user.body_fat_percentage
+    goal = current_user.target_goal or current_user.training_goal or "hipertrofia"
+
+    ffmi_data = calculate_ffmi(bodyweight=bw, height=h, body_fat_percentage=bf)
+    nutr_data = calculate_nutritional_requirements(
+        bodyweight=bw,
+        body_fat_percentage=bf,
+        target_goal=goal,
+        height=h
+    )
+
+    notes = []
+    if current_user.bodyweight is None:
+        notes.append("Peso corporal no configurado; se usó 75.0 kg de referencia.")
+    if current_user.height is None:
+        notes.append("Altura no configurada; se usó 175.0 cm de referencia.")
+    if current_user.body_fat_percentage is None:
+        notes.append("Porcentaje de grasa no configurado; se estimó con 15.0% de referencia atlética.")
+
+    return schemas.ProfileAnalyticsOut(
+        user_id=current_user.id,
+        username=current_user.username,
+        bodyweight=current_user.bodyweight,
+        height=current_user.height,
+        body_fat_percentage=current_user.body_fat_percentage,
+        biceps_girth=current_user.biceps_girth,
+        waist_girth=current_user.waist_girth,
+        target_goal=goal,
+        lean_mass_kg=ffmi_data["lean_mass_kg"],
+        fat_mass_kg=ffmi_data["fat_mass_kg"],
+        ffmi=ffmi_data["ffmi"],
+        raw_ffmi=ffmi_data["raw_ffmi"],
+        normalized_ffmi=ffmi_data["normalized_ffmi"],
+        max_natural_ffmi=ffmi_data["max_natural_ffmi"],
+        remaining_potential_ffmi=ffmi_data["remaining_potential"],
+        potential_percentage=ffmi_data["potential_percentage"],
+        is_natural_limit_reached=ffmi_data["is_natural_limit_reached"],
+        tmb=nutr_data["tmb"],
+        bmr=nutr_data["bmr"],
+        tdee=nutr_data["tdee"],
+        target_protein_g=nutr_data["target_protein_g"],
+        target_water_l=nutr_data["target_water_l"],
+        notes=notes,
     )
 
 
@@ -324,5 +473,220 @@ def get_experience_explanations(
     return schemas.ProfileExplanationsResponse(
         current_level=current_level,
         levels=LEVEL_EXPLANATIONS,
+    )
+
+
+def compute_training_guidelines(
+    training_goal: str,
+    experience_level: str,
+    nutrition_context: str = "no_especifica",
+) -> schemas.TrainingGuidelinesOut:
+    goal = (training_goal or "hipertrofia").lower().strip()
+    level = (experience_level or "intermedio").lower().strip()
+    nutrition = (nutrition_context or "no_especifica").lower().strip()
+
+    if goal not in schemas.VALID_TRAINING_GOALS:
+        goal = "hipertrofia"
+    if level not in schemas.VALID_EXPERIENCE_LEVELS:
+        level = "intermedio"
+    if nutrition not in schemas.VALID_NUTRITION_CONTEXTS:
+        nutrition = "no_especifica"
+
+    matrix = {
+        ("hipertrofia", "principiante"): {
+            "optimal_rep_range": "8 a 12 repeticiones",
+            "rest_time": "90 a 120 segundos",
+            "recommended_rir": "RIR 2 a 3 (lejos del fallo, foco en control motor)",
+            "weekly_sets_per_muscle": "8 a 12 series efectivas semanales",
+            "technical_recommendations": [
+                "Controlá 2-3 segundos la bajada (fase excéntrica) para enseñar el patrón biomecánico a los tendones.",
+                "Realizá rango completo de movimiento sin impulsos compensatorios.",
+                "Utilizá la progresión doble: subí repeticiones antes de aumentar kilos en la barra.",
+            ],
+            "summary": "Estímulo muscular óptimo con baja fatiga axial y máxima seguridad articular.",
+        },
+        ("hipertrofia", "intermedio"): {
+            "optimal_rep_range": "6 a 12 reps (compuestos) / 10 a 15 reps (aislamiento)",
+            "rest_time": "90 a 180 segundos",
+            "recommended_rir": "RIR 1 a 2 (1 o 2 repeticiones en reserva al finalizar)",
+            "weekly_sets_per_muscle": "12 a 16 series efectivas semanales (Frecuencia 2 recomendada)",
+            "technical_recommendations": [
+                "Progresión sistemática: cuando completes el tope del rango en todas las series, sumá de 1.25 a 2.5 kg.",
+                "Mantené tensión continua en la porción media del recorrido.",
+                "Descansá 2 a 3 minutos en multiarticulares pesados para disipar la fatiga central antes de la siguiente serie.",
+            ],
+            "summary": "Sobrecarga progresiva sistemática para maximizar la síntesis proteica miofibrilar.",
+        },
+        ("hipertrofia", "avanzado"): {
+            "optimal_rep_range": "6 a 15 reps (periodización ondulante DUP)",
+            "rest_time": "2 a 3 minutos en básicos / 60 a 90 segundos en poleas y máquinas",
+            "recommended_rir": "RIR 0 a 1 en última serie (fallo técnico controlado en ejercicios guiados)",
+            "weekly_sets_per_muscle": "14 a 20 series semanales (cerca del MAV, programando deloads)",
+            "technical_recommendations": [
+                "Alineá implementos con el perfil de resistencia óptimo (estiramiento vs acortamiento).",
+                "Gestioná el MRV mediante semanas de descarga activa cada 5-6 semanas de alta intensidad.",
+                "Utilizá microcargas de 0.5 a 1.25 kg para continuar forzando adaptaciones mecánicas.",
+            ],
+            "summary": "Autorregulación biomecánica fina y periodización ondulante de volumen e intensidad.",
+        },
+        ("fuerza", "principiante"): {
+            "optimal_rep_range": "5 a 8 repeticiones",
+            "rest_time": "2 a 3 minutos",
+            "recommended_rir": "RIR 2 a 3 (técnica inmaculada)",
+            "weekly_sets_per_muscle": "9 a 12 series semanales",
+            "technical_recommendations": [
+                "Aprendizaje de la maniobra de Valsalva e intra-abdominal pressure (IAP).",
+                "Constancia en el set-up y postura de agarre en los levantamientos básicos.",
+                "Calentamiento estructurado con series piramidales de aproximación.",
+            ],
+            "summary": "Coordinación neuromuscular inicial y consolidación de patrones motrices axiales.",
+        },
+        ("fuerza", "intermedio"): {
+            "optimal_rep_range": "3 a 6 repeticiones",
+            "rest_time": "3 a 4 minutos",
+            "recommended_rir": "RIR 1 a 2 (alta tensión mecánica)",
+            "weekly_sets_per_muscle": "10 a 14 series semanales",
+            "technical_recommendations": [
+                "Trabajo específico en sticking points mediante pausas isométricas de 1-2 segundos.",
+                "Uso de tempo controlado para evitar pérdidas de rigidez en el punto de cambio de fase.",
+                "Rotación planificada de variantes cada 4 a 6 semanas si se estanca la marca principal.",
+            ],
+            "summary": "Reclutamiento de unidades motoras de alto umbral y tensión mecánica máxima.",
+        },
+        ("fuerza", "avanzado"): {
+            "optimal_rep_range": "1 a 5 repeticiones (bloques de peaking y 1RM)",
+            "rest_time": "3 a 5 minutos",
+            "recommended_rir": "RIR 1 (RIR 0 reservado exclusivamente a pruebas programadas)",
+            "weekly_sets_per_muscle": "12 a 16 series semanales con taper",
+            "technical_recommendations": [
+                "Potenciación post-activación (PAP): singles pesados al 90% antes del volumen de trabajo.",
+                "Velocidad de barra (VBT): detén la serie si la velocidad desciende más del 20%.",
+                "Fase de descarga activa (tapering) para disipar fatiga residual antes de buscar récords personales.",
+            ],
+            "summary": "Máxima eficiencia neural, disipación de fatiga y expresión pico de fuerza absoluta.",
+        },
+        ("definicion_adelgazar", "principiante"): {
+            "optimal_rep_range": "8 a 12 repeticiones",
+            "rest_time": "60 a 90 segundos",
+            "recommended_rir": "RIR 2",
+            "weekly_sets_per_muscle": "8 a 12 series semanales",
+            "technical_recommendations": [
+                "Priorizá sostener los kilos que levantás en lugar de bajar peso para hacer repeticiones infinitas.",
+                "El entrenamiento con cargas es el estímulo principal para indicar al cuerpo que no degrade músculo.",
+                "Completá el descanso adecuado para no acumular fatiga innecesaria.",
+            ],
+            "summary": "Preservación estricta de tejido magro y mantenimiento del gasto metabólico basal.",
+        },
+        ("definicion_adelgazar", "intermedio"): {
+            "optimal_rep_range": "6 a 10 reps (pesadas en básicos) + 10 a 15 (accesorios)",
+            "rest_time": "90 a 120 segundos",
+            "recommended_rir": "RIR 1 a 2",
+            "weekly_sets_per_muscle": "10 a 14 series semanales (volumen moderado)",
+            "technical_recommendations": [
+                "No uses el entrenamiento con pesas para quemar calorías: mantené las cargas altas para proteger la masa magra.",
+                "Reducí ligeramente el volumen de series si la recuperación se ve afectada por el déficit calórico.",
+                "Priorizá ejercicios guiados o con soporte en banco para no sobrecargar la espalda baja.",
+            ],
+            "summary": "Retención miofibrilar máxima bajo déficit calórico con control de fatiga central.",
+        },
+        ("definicion_adelgazar", "avanzado"): {
+            "optimal_rep_range": "6 a 10 reps firmes (cerca de MEV)",
+            "rest_time": "2 minutos",
+            "recommended_rir": "RIR 1 a 2",
+            "weekly_sets_per_muscle": "10 a 14 series (evitar rebasar MRV que causaría catabolismo)",
+            "technical_recommendations": [
+                "Monitoreá de cerca el drop de fuerza: una caída >10% en cargas de trabajo indica déficit excesivo o sobreentrenamiento.",
+                "Mantené alta ingesta proteica (2.0-2.4 g/kg) para preservar nitrógeno muscular.",
+                "Sustituí parte del trabajo axial pesado por poleas para mitigar el riesgo articular con menor glucógeno.",
+            ],
+            "summary": "Estrategia de retención muscular y protección articular en porcentajes bajos de grasa corporal.",
+        },
+        ("potencia_rapidez", "principiante"): {
+            "optimal_rep_range": "4 a 6 repeticiones a máxima aceleración",
+            "rest_time": "2 a 3 minutos",
+            "recommended_rir": "RIR 3 a 4 (detenerse antes de cualquier desaceleración)",
+            "weekly_sets_per_muscle": "8 a 10 series semanales",
+            "technical_recommendations": [
+                "Cargas livianas a medias (40-50% 1RM) movidas con la máxima intención de velocidad posible.",
+                "Pausa en el punto de cambio para eliminar el reflejo miotático parásito.",
+                "Descanso completo entre series para recargar la fosfocreatina muscular.",
+            ],
+            "summary": "Intención concéntrica máxima y desarrollo de aceleración sin fatiga periférica.",
+        },
+        ("potencia_rapidez", "intermedio"): {
+            "optimal_rep_range": "3 a 5 repeticiones",
+            "rest_time": "2 a 3 minutos",
+            "recommended_rir": "RIR 3",
+            "weekly_sets_per_muscle": "10 a 12 series semanales",
+            "technical_recommendations": [
+                "Cargas al 50-65% 1RM para maximizar la tasa de desarrollo de fuerza (Rate of Force Development - RFD).",
+                "Entrenamiento de contraste o complejos post-activación.",
+                "Cada repetición debe ser tan explosiva como la primera.",
+            ],
+            "summary": "Tasa de desarrollo de fuerza y reclutamiento sincronizado de motoneuronas.",
+        },
+        ("potencia_rapidez", "avanzado"): {
+            "optimal_rep_range": "2 a 4 repeticiones (series cluster)",
+            "rest_time": "3 minutos",
+            "recommended_rir": "RIR 3 a 4",
+            "weekly_sets_per_muscle": "10 a 14 series",
+            "technical_recommendations": [
+                "Uso de series cluster (ej: 2+2+2 reps con 20s de micropausa) para mantener la velocidad pico en cada repetición.",
+                "Medición de m/s con transductor o acelerómetro.",
+                "Descargas regulares para preservar la reactividad del sistema tendón-músculo.",
+            ],
+            "summary": "Potencia elástica y reactiva de nivel competitivo con mantenimiento de velocidad terminal.",
+        },
+    }
+
+    goal_matrix_key = {
+        "powerlifting": "fuerza",
+        "alto_rendimiento": "potencia_rapidez",
+        "definicion": "definicion_adelgazar",
+    }.get(goal, goal)
+
+    entry = matrix.get(
+        (goal_matrix_key, level),
+        matrix.get(("hipertrofia", level), matrix[("hipertrofia", "intermedio")])
+    )
+
+    nutrition_notes = {
+        "superavit_volumen": "Superávit calórico controlado (+250 a +400 kcal) y 1.6-2.2g de proteína/kg. Entorno óptimo para tolerar volumen de trabajo alto y facilitar hipertrofia y ganancias de fuerza.",
+        "deficit_definicion": "Déficit calórico moderado (-300 a -500 kcal) y proteína elevada (2.0-2.4g/kg). La regla de oro es defender las cargas levantadas para señalizar retención de masa muscular magra.",
+        "mantenimiento": "Calorías en balance con 1.6-2.0g de proteína/kg. Ideal para recomposición corporal, perfeccionamiento biomecánico y adaptación neural sin sobrecarga metabólica.",
+        "no_especifica": "Mantené un consumo adecuado de proteínas (1.6 a 2.0g/kg de peso corporal) e hidratación constante (al menos 35-40 ml/kg) para optimizar el rendimiento y recuperación entre series.",
+    }
+
+    nutrition_advice = nutrition_notes.get(nutrition, nutrition_notes["no_especifica"])
+
+    return schemas.TrainingGuidelinesOut(
+        training_goal=goal,
+        experience_level=level,
+        nutrition_context=nutrition,
+        optimal_rep_range=entry["optimal_rep_range"],
+        rest_time=entry["rest_time"],
+        recommended_rir=entry["recommended_rir"],
+        weekly_sets_per_muscle=entry["weekly_sets_per_muscle"],
+        technical_recommendations=entry["technical_recommendations"],
+        nutrition_advice=nutrition_advice,
+        summary=entry["summary"],
+    )
+
+
+@router.get("/training-guidelines", response_model=schemas.TrainingGuidelinesOut)
+def get_training_guidelines(
+    training_goal: str | None = None,
+    experience_level: str | None = None,
+    current_user: models.User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+):
+    goal = training_goal or (current_user.training_goal if current_user else "hipertrofia")
+    level = experience_level or (current_user.experience_level if current_user else "intermedio")
+    nutrition = current_user.nutrition_context if current_user else "no_especifica"
+
+    return compute_training_guidelines(
+        training_goal=goal,
+        experience_level=level,
+        nutrition_context=nutrition,
     )
 

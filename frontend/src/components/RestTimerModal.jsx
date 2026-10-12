@@ -71,8 +71,6 @@ export default function RestTimerModal({
   setInfo,
   onSelectEffort,
 }) {
-  if (!isOpen) return null;
-
   // Configuration state
   const [selectedEffort, setSelectedEffort] = useState("moderado");
   const [isExtendedHeavy, setIsExtendedHeavy] = useState(false);
@@ -87,6 +85,13 @@ export default function RestTimerModal({
   const isRunningRef = useRef(true);
   const pausedRemainingRef = useRef(null);
   const chimeTriggeredRef = useRef(false);
+
+  // MM:SS format
+  const formattedTime = useMemo(() => {
+    const mins = Math.floor(secondsLeft / 60);
+    const secs = secondsLeft % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }, [secondsLeft]);
 
   const clearTimerInterval = useCallback(() => {
     if (timerIntervalRef.current) {
@@ -125,6 +130,7 @@ export default function RestTimerModal({
 
   // Recalculate remaining on screen unlock / browser focus / tab visibility
   useEffect(() => {
+    if (!isOpen) return;
     const handleSyncRemaining = () => {
       if (!isRunningRef.current) return;
       const remaining = Math.max(0, Math.round((targetEndTimeRef.current - Date.now()) / 1000));
@@ -155,10 +161,14 @@ export default function RestTimerModal({
       window.removeEventListener("focus", handleSyncRemaining);
       window.removeEventListener("pageshow", handleSyncRemaining);
     };
-  }, [clearTimerInterval]);
+  }, [isOpen, clearTimerInterval]);
 
   // Initialize or reset when modal opens
   useEffect(() => {
+    if (!isOpen) {
+      clearTimerInterval();
+      return;
+    }
     clearTimerInterval();
 
     // Check if there was an active timer in localStorage
@@ -218,7 +228,7 @@ export default function RestTimerModal({
     return () => {
       clearTimerInterval();
     };
-  }, [setInfo?.setId, setInfo?.setIndex, clearTimerInterval, startTimerTick, onSelectEffort]);
+  }, [isOpen, setInfo?.setId, setInfo?.setIndex, clearTimerInterval, startTimerTick, onSelectEffort]);
 
   // Handle 1-tap quick effort selection
   const handleSelectEffort = (effortId, extendHeavy = null) => {
@@ -337,12 +347,6 @@ export default function RestTimerModal({
     onClose();
   };
 
-  // MM:SS format
-  const formattedTime = useMemo(() => {
-    const mins = Math.floor(secondsLeft / 60);
-    const secs = secondsLeft % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  }, [secondsLeft]);
 
   // Circular progress SVG
   const RADIUS = 108;
@@ -350,9 +354,11 @@ export default function RestTimerModal({
   const progressFraction = totalSeconds > 0 ? secondsLeft / totalSeconds : 0;
   const strokeDashoffset = CIRCUMFERENCE * (1 - progressFraction);
 
+  if (!isOpen) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50 bg-[#000000] flex flex-col justify-between text-white p-4 sm:p-6 overflow-y-auto select-none safe-top safe-bottom animate-fadeIn"
+      className="fixed inset-0 z-[60] bg-[#000000] flex flex-col justify-between text-white p-4 sm:p-6 overflow-y-auto select-none safe-top safe-bottom animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-label="Temporizador de descanso en Focus Mode"

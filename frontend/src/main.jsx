@@ -17,3 +17,17 @@ if (rootElement) {
     </React.StrictMode>
   );
 }
+
+// Registro defensivo de Service Worker para soporte Offline-First PWA
+if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((reg) => {
+        console.log("Service Worker FitTracker registrado con éxito:", reg.scope);
+      })
+      .catch((err) => {
+        console.warn("Error al registrar Service Worker:", err);
+      });
+  });
+}

@@ -18,14 +18,134 @@ def calculate_1rm(w: float, r: int) -> float:
     return round(float(w) * (1.0 + float(r) / 30.0), 1)
 
 
+def get_exercise_prime_multiplier(exercise_name: str) -> float:
+    """Returns the theoretical prime strength multiplier relative to bodyweight."""
+    name = (exercise_name or "").lower()
+    # Sentadillas / Tren inferior pesado
+    if any(k in name for k in ("sentadilla", "squat", "hack", "prensa")):
+        return 2.00
+    # Peso Muerto
+    if any(k in name for k in ("peso muerto", "deadlift")):
+        return 2.30
+    # Hip Thrust
+    if "hip thrust" in name:
+        return 2.50
+    # Press Banca / Empuje pectoral
+    if any(k in name for k in ("banca", "bench", "press plano", "press declinado", "press inclinado")):
+        return 1.50
+    # Press Militar / Empuje vertical de hombro
+    if any(k in name for k in ("militar", "overhead", "press de hombro", "press hombro", "arnold")):
+        return 0.90
+    # Remos / Tracción horizontal
+    if any(k in name for k in ("remo", "row", "seal row")):
+        return 1.35
+    # Dominadas / Tracción vertical (carga añadida / lastre)
+    if any(k in name for k in ("dominada", "pull-up", "chin-up")):
+        return 0.50
+    # Jalón
+    if any(k in name for k in ("jalón", "jalon", "pulldown")):
+        return 1.25
+    # Fondos (lastre)
+    if any(k in name for k in ("fondo", "dip")):
+        return 0.60
+    # Aislamiento (curls, elevaciones, tríceps, extensiones)
+    if any(k in name for k in ("curl", "martillo", "lateral", "pájaro", "pajaro", "francés", "frances", "tríceps", "triceps", "polea")):
+        return 0.50
+    # Default press/empuje
+    if "press" in name:
+        return 1.40
+    return 1.50
+
+
+def calculate_prime_target(exercise_name: str, bodyweight: float, height: float | None = None) -> float:
+    """Calculates the theoretical prime target weight directly as bodyweight * factor_biomecanico."""
+    bw = max(30.0, float(bodyweight or 75.0))
+    multiplier = get_exercise_prime_multiplier(exercise_name)
+    target = round(bw * multiplier * 2.0) / 2.0
+    return target
+
+
+def calculate_relative_league(current_weight: float | None, bodyweight: float):
+    """Calculates relative strength league and next tier target based on load / bodyweight ratio."""
+    bw = max(30.0, float(bodyweight or 75.0))
+    w = max(0.0, float(current_weight or 0.0))
+    ratio = round(w / bw, 2)
+
+    # 🥉 Liga Bronce: < 0.9x peso corporal
+    # 🥈 Liga Plata: 0.9x a 1.2x peso corporal
+    # 🥇 Liga Oro: 1.2x a 1.5x peso corporal
+    # 💎 Liga Diamante: 1.5x a 1.8x peso corporal
+    # 👑 Liga Prime (Élite Natural): > 1.8x peso corporal
+    if ratio < 0.9:
+        league_id = "bronce"
+        league_name = "Liga Bronce"
+        league_icon = "🥉"
+        league_color = "#CD7F32"
+        next_league_name = "Liga Plata"
+        next_target = round(0.9 * bw * 2.0) / 2.0
+        kg_to_next = max(0.5, round((next_target - w) * 10.0) / 10.0)
+        progress_pct = min(100.0, max(0.0, round((ratio / 0.9) * 100.0, 1)))
+    elif ratio < 1.2:
+        league_id = "plata"
+        league_name = "Liga Plata"
+        league_icon = "🥈"
+        league_color = "#CBD5E1"
+        next_league_name = "Liga Oro"
+        next_target = round(1.2 * bw * 2.0) / 2.0
+        kg_to_next = max(0.5, round((next_target - w) * 10.0) / 10.0)
+        span = 1.2 - 0.9
+        progress_pct = min(100.0, max(0.0, round(((ratio - 0.9) / span) * 100.0, 1)))
+    elif ratio < 1.5:
+        league_id = "oro"
+        league_name = "Liga Oro"
+        league_icon = "🥇"
+        league_color = "#F59E0B"
+        next_league_name = "Liga Diamante"
+        next_target = round(1.5 * bw * 2.0) / 2.0
+        kg_to_next = max(0.5, round((next_target - w) * 10.0) / 10.0)
+        span = 1.5 - 1.2
+        progress_pct = min(100.0, max(0.0, round(((ratio - 1.2) / span) * 100.0, 1)))
+    elif ratio < 1.8:
+        league_id = "diamante"
+        league_name = "Liga Diamante"
+        league_icon = "💎"
+        league_color = "#38BDF8"
+        next_league_name = "Liga Prime"
+        next_target = round(1.8 * bw * 2.0) / 2.0
+        kg_to_next = max(0.5, round((next_target - w) * 10.0) / 10.0)
+        span = 1.8 - 1.5
+        progress_pct = min(100.0, max(0.0, round(((ratio - 1.5) / span) * 100.0, 1)))
+    else:
+        league_id = "prime"
+        league_name = "Liga Prime (Élite Natural)"
+        league_icon = "👑"
+        league_color = "#A855F7"
+        next_league_name = None
+        next_target = None
+        kg_to_next = 0.0
+        progress_pct = 100.0
+
+    return {
+        "relative_ratio": ratio,
+        "league_id": league_id,
+        "league_name": league_name,
+        "league_icon": league_icon,
+        "league_color": league_color,
+        "next_league_name": next_league_name,
+        "next_league_target_kg": next_target,
+        "kg_to_next_league": kg_to_next,
+        "league_progress_pct": progress_pct,
+    }
+
+
 def compute_user_records(
     db: Session,
     current_user: models.User,
     exercise_id: int | None = None,
     muscle_group_id: int | None = None,
 ) -> list[schemas.RecordOut]:
-    """Computes PRs and 1RM progression for user exercises.
-    Sanitizes exercise_id and muscle_group_id so FastAPI Query defaults or non-ints are never passed to SQL.
+    """Computes PRs and last session progression for user exercises.
+    Returns clean, simplified RecordOut structure filtered by current_user.id.
     """
     clean_exercise_id = exercise_id if isinstance(exercise_id, int) else None
     clean_muscle_group_id = muscle_group_id if isinstance(muscle_group_id, int) else None
@@ -40,6 +160,7 @@ def compute_user_records(
             models.WorkoutSession.user_id == current_user.id,
             models.Exercise.is_active == True,
             (models.WorkoutSet.weight > 0) | (models.WorkoutSet.reps > 0),
+            models.WorkoutSet.is_valid != False,
         )
     )
 
@@ -68,6 +189,7 @@ def compute_user_records(
         .filter(
             models.WorkoutSet.exercise_id.in_(ex_ids),
             models.WorkoutSession.user_id == current_user.id,
+            models.WorkoutSet.is_valid != False,
         )
         .order_by(
             models.WorkoutSession.date.asc(),
@@ -81,31 +203,29 @@ def compute_user_records(
     for row in sets_data:
         grouped_sets[row.exercise_id].append(row)
 
-    records = []
+    records: list[schemas.RecordOut] = []
     for ex in exercises:
         ex_sets = grouped_sets.get(ex.id, [])
         if not ex_sets:
             continue
 
-        # Exclude warmup sets from records and 1RM calculations
+        # Exclude warmup sets from records
         valid_non_warmup = [s for s in ex_sets if getattr(s, "set_type", "normal") not in ("warmup", "W")]
         if not valid_non_warmup:
             continue
 
-        # Valid sets: completed first if available, otherwise any with weight > 0 or reps > 0
         valid_completed = [s for s in valid_non_warmup if s.completed and (s.weight > 0 or s.reps > 0)]
         valid_sets = valid_completed if valid_completed else [s for s in valid_non_warmup if (s.weight > 0 or s.reps > 0)]
 
         if not valid_sets:
             continue
 
-        # 1. Best estimated 1RM across all valid sets
-        best_estimated_1rm = max(
-            (calculate_1rm(s.weight, s.reps) for s in valid_sets),
-            default=0.0,
-        )
+        # Best Personal Record (PR) across all valid sets
+        best_pr_set = max(valid_sets, key=lambda s: (float(s.weight or 0), int(s.reps or 0)))
+        pr_weight = float(best_pr_set.weight or 0)
+        pr_reps = int(best_pr_set.reps or 0)
 
-        # 2. Track chronological PR milestones by session
+        # Group chronologically by session
         sessions_map = {}
         for s in valid_sets:
             if s.session_id not in sessions_map:
@@ -115,68 +235,41 @@ def compute_user_records(
                 }
             sessions_map[s.session_id]["sets"].append(s)
 
-        milestones = []
-        running_max_w = 0.0
-        running_max_r = 0
+        sessions_list = list(sessions_map.values())
+        if not sessions_list:
+            continue
 
-        for sess_id, sess_info in sessions_map.items():
-            sess_sets = sess_info["sets"]
-            best_sess_set = max(sess_sets, key=lambda s: (s.weight, s.reps))
-            sw = float(best_sess_set.weight)
-            sr = int(best_sess_set.reps)
-            sdate = sess_info["date"]
+        latest_session = sessions_list[-1]
+        best_last_set = max(
+            latest_session["sets"],
+            key=lambda s: (float(s.weight or 0), int(s.reps or 0)),
+        )
+        last_weight = float(best_last_set.weight or 0)
+        last_reps = int(best_last_set.reps or 0)
+        last_date = latest_session["date"]
 
-            is_new_milestone = False
-            if sw > running_max_w:
-                is_new_milestone = True
-            elif sw == running_max_w and sw > 0 and sr > running_max_r:
-                is_new_milestone = True
-            elif running_max_w == 0 and sr > running_max_r:
-                is_new_milestone = True
+        improved = False
+        diff_weight = 0.0
 
-            if is_new_milestone:
-                milestones.append({
-                    "weight": sw,
-                    "reps": sr,
-                    "date": sdate,
-                })
-                running_max_w = max(running_max_w, sw)
-                running_max_r = max(running_max_r, sr)
+        if len(sessions_list) >= 2:
+            prev_session = sessions_list[-2]
+            best_prev_set = max(
+                prev_session["sets"],
+                key=lambda s: (float(s.weight or 0), int(s.reps or 0)),
+            )
+            prev_weight = float(best_prev_set.weight or 0)
+            prev_reps = int(best_prev_set.reps or 0)
 
-        if not milestones:
-            best_s = max(valid_sets, key=lambda s: (s.weight, s.reps))
-            milestones.append({
-                "weight": float(best_s.weight),
-                "reps": int(best_s.reps),
-                "date": best_s.date,
-            })
-
-        current_pr = milestones[-1]
-        pr_weight = current_pr["weight"]
-        pr_reps = current_pr["reps"]
-        pr_date = current_pr["date"]
-
-        previous_pr_weight = None
-        previous_pr_date = None
-        if len(milestones) >= 2:
-            prev_milestone = milestones[-2]
-            previous_pr_weight = prev_milestone["weight"]
-            previous_pr_date = prev_milestone["date"]
-
-        if best_estimated_1rm <= 0.0 and pr_weight > 0:
-            best_estimated_1rm = calculate_1rm(pr_weight, pr_reps)
-
-        # Last session info (most recent session in chronological order)
-        latest_session_id = ex_sets[-1].session_id
-        latest_session_sets = [s for s in ex_sets if s.session_id == latest_session_id]
-        last_weight = None
-        last_reps = None
-        last_date = None
-        if latest_session_sets:
-            best_last = max(latest_session_sets, key=lambda s: (s.weight, s.reps))
-            last_weight = best_last.weight
-            last_reps = best_last.reps
-            last_date = best_last.date
+            diff = round(last_weight - prev_weight, 1)
+            if diff > 0:
+                improved = True
+                diff_weight = diff
+            elif diff == 0 and last_reps > prev_reps:
+                improved = True
+                diff_weight = 0.0
+            else:
+                improved = False
+                diff_weight = diff if diff < 0 else 0.0
 
         muscle_name = ex.muscle_group.name if ex.muscle_group else ""
 
@@ -185,17 +278,13 @@ def compute_user_records(
                 exercise_id=ex.id,
                 exercise_name=ex.name,
                 muscle_group=muscle_name,
-                muscle_group_id=ex.muscle_group_id,
-                muscle_group_name=muscle_name,
                 pr_weight=pr_weight,
                 pr_reps=pr_reps,
-                pr_date=pr_date,
-                previous_pr_weight=previous_pr_weight,
-                previous_pr_date=previous_pr_date,
-                best_estimated_1rm=best_estimated_1rm,
                 last_weight=last_weight,
                 last_reps=last_reps,
                 last_date=last_date,
+                improved=improved,
+                diff_weight=diff_weight,
             )
         )
 

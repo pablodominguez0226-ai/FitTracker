@@ -95,10 +95,13 @@ def get_optional_current_user(
         return None
 
 
-def require_admin(current_user: models.User = Depends(get_current_user)) -> models.User:
-    if current_user.role != "admin":
+def get_current_admin_user(current_user: models.User = Depends(get_current_user)) -> models.User:
+    if not (current_user.is_admin or current_user.role == "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso restringido. Se requieren permisos de Administrador.",
+            detail="Acceso restringido a administradores.",
         )
     return current_user
+
+
+require_admin = get_current_admin_user

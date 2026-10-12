@@ -5,80 +5,207 @@
  * tiers from Iniciado up to Élite Supremo.
  */
 
-export const STRENGTH_RANKS = [
+export const BIOMECHANICAL_LEAGUES = [
   {
     tier: 1,
-    id: "basico",
-    name: "Básico",
-    color: "#94A3B8", // Slate
-    textColor: "text-slate-400",
-    bgColor: "bg-slate-500/10",
-    borderColor: "border-slate-500/30",
-    shadowColor: "transparent",
-    icon: "🛡️",
-    badgeClass: "border border-slate-500/30 bg-slate-500/10 text-slate-300 font-semibold",
+    id: "bronce",
+    name: "Liga Bronce",
+    minRatio: 0,
+    maxRatio: 0.9,
+    color: "#CD7F32",
+    textColor: "text-amber-600",
+    bgColor: "bg-amber-900/15",
+    borderColor: "border-amber-800/40",
+    icon: "🥉",
+    badgeClass: "border border-amber-700/40 bg-amber-900/20 text-amber-300 font-bold",
   },
   {
     tier: 2,
-    id: "guerrero",
-    name: "Guerrero",
-    color: "#F59E0B", // Amber
-    textColor: "text-amber-400",
-    bgColor: "bg-amber-500/15",
-    borderColor: "border-amber-400/40",
-    shadowColor: "transparent",
-    icon: "⚔️",
-    badgeClass: "border border-amber-400/40 bg-amber-500/10 text-amber-300 font-semibold",
+    id: "plata",
+    name: "Liga Plata",
+    minRatio: 0.9,
+    maxRatio: 1.2,
+    color: "#CBD5E1",
+    textColor: "text-slate-300",
+    bgColor: "bg-slate-400/15",
+    borderColor: "border-slate-400/40",
+    icon: "🥈",
+    badgeClass: "border border-slate-400/40 bg-slate-500/20 text-slate-200 font-bold",
   },
   {
     tier: 3,
-    id: "avanzado",
-    name: "Avanzado",
-    color: "#CBD5E1", // Silver
-    textColor: "text-slate-200",
-    bgColor: "bg-slate-300/15",
-    borderColor: "border-slate-300/40",
-    shadowColor: "transparent",
-    icon: "⚡",
-    badgeClass: "border border-slate-300/40 bg-slate-300/10 text-slate-100 font-semibold",
+    id: "oro",
+    name: "Liga Oro",
+    minRatio: 1.2,
+    maxRatio: 1.5,
+    color: "#F59E0B",
+    textColor: "text-amber-400",
+    bgColor: "bg-amber-500/15",
+    borderColor: "border-amber-400/40",
+    icon: "🥇",
+    badgeClass: "border border-amber-400/40 bg-amber-500/20 text-amber-300 font-bold",
   },
   {
     tier: 4,
-    id: "maestro",
-    name: "Maestro",
-    color: "#FBBF24", // Gold
-    textColor: "text-yellow-400",
-    bgColor: "bg-yellow-400/15",
-    borderColor: "border-yellow-400/50",
-    shadowColor: "transparent",
-    icon: "👑",
-    badgeClass: "border border-yellow-400/50 bg-yellow-400/10 text-yellow-300 font-semibold",
+    id: "diamante",
+    name: "Liga Diamante",
+    minRatio: 1.5,
+    maxRatio: 1.8,
+    color: "#38BDF8",
+    textColor: "text-sky-400",
+    bgColor: "bg-sky-500/15",
+    borderColor: "border-sky-400/40",
+    icon: "💎",
+    badgeClass: "border border-sky-400/40 bg-sky-500/20 text-sky-300 font-bold",
   },
   {
     tier: 5,
-    id: "elite",
-    name: "Élite",
-    color: "#FF5722", // Brick
-    textColor: "text-[#FF5722]",
-    bgColor: "bg-[#FF5722]/15",
-    borderColor: "border-[#FF5722]/60",
-    shadowColor: "transparent",
-    icon: "🔥",
-    badgeClass: "border border-[#FF5722]/50 bg-[#FF5722]/10 text-[#FF5722] font-semibold",
-  },
-  {
-    tier: 6,
-    id: "elite_supremo",
-    name: "Élite Supremo",
-    color: "#FF1744", // Crimson
-    textColor: "text-[#FF1744]",
-    bgColor: "bg-[#FF1744]/20",
-    borderColor: "border-[#FF1744]/70",
-    shadowColor: "transparent",
-    icon: "💎",
-    badgeClass: "border border-[#FF1744]/60 bg-[#FF1744]/10 text-[#FF1744] font-semibold",
+    id: "prime",
+    name: "Liga Prime (Élite Natural)",
+    shortName: "Liga Prime",
+    minRatio: 1.8,
+    maxRatio: Infinity,
+    color: "#A855F7",
+    textColor: "text-purple-400",
+    bgColor: "bg-purple-500/20",
+    borderColor: "border-purple-400/50",
+    icon: "👑",
+    badgeClass: "border border-purple-400/50 bg-purple-500/25 text-purple-200 font-bold",
   },
 ];
+
+export const STRENGTH_RANKS = BIOMECHANICAL_LEAGUES;
+
+/**
+ * Returns theoretical prime strength multiplier relative to bodyweight for each exercise.
+ */
+export function getExercisePrimeMultiplier(exerciseName = "") {
+  const name = (exerciseName || "").toLowerCase();
+  // Sentadillas / Tren inferior pesado
+  if (name.includes("sentadilla") || name.includes("squat") || name.includes("hack") || name.includes("prensa")) {
+    return 2.00;
+  }
+  // Peso Muerto
+  if (name.includes("peso muerto") || name.includes("deadlift")) {
+    return 2.30;
+  }
+  // Hip Thrust
+  if (name.includes("hip thrust")) {
+    return 2.50;
+  }
+  // Press Banca / Empuje pectoral
+  if (name.includes("banca") || name.includes("bench") || name.includes("press plano") || name.includes("press declinado") || name.includes("press inclinado")) {
+    return 1.50;
+  }
+  // Press Militar / Empuje vertical de hombros
+  if (name.includes("militar") || name.includes("overhead") || name.includes("press de hombro") || name.includes("press hombro") || name.includes("arnold")) {
+    return 0.90;
+  }
+  // Remos / Tracción horizontal
+  if (name.includes("remo") || name.includes("row") || name.includes("seal row")) {
+    return 1.35;
+  }
+  // Dominadas / Tracción vertical (carga añadida / lastre)
+  if (name.includes("dominada") || name.includes("pull-up") || name.includes("chin-up")) {
+    return 0.50;
+  }
+  // Jalón
+  if (name.includes("jalón") || name.includes("jalon") || name.includes("pulldown")) {
+    return 1.25;
+  }
+  // Fondos (lastre)
+  if (name.includes("fondo") || name.includes("dip")) {
+    return 0.60;
+  }
+  // Aislamiento
+  if (name.includes("curl") || name.includes("martillo") || name.includes("lateral") || name.includes("pájaro") || name.includes("pajaro") || name.includes("francés") || name.includes("frances") || name.includes("tríceps") || name.includes("triceps") || name.includes("polea")) {
+    return 0.50;
+  }
+  if (name.includes("press")) {
+    return 1.40;
+  }
+  return 1.50;
+}
+
+/**
+ * Calculates theoretical prime target in kg directly as bodyweight * factor_biomecanico.
+ */
+export function calculatePrimeTarget(exerciseName = "", userBodyweight = 75, userHeight = 175) {
+  const bw = userBodyweight && parseFloat(userBodyweight) > 0 ? parseFloat(userBodyweight) : 75;
+  const multiplier = getExercisePrimeMultiplier(exerciseName);
+  return Math.round(bw * multiplier * 2) / 2;
+}
+
+/**
+ * Computes Biomechanical League, ratio, next league target and remaining kg.
+ */
+export function getBiomechanicalLeague(currentWeight = 0, userBodyweight = 75) {
+  const bw = userBodyweight && parseFloat(userBodyweight) > 0 ? parseFloat(userBodyweight) : 75;
+  const w = Math.max(0, parseFloat(currentWeight) || 0);
+  const ratio = bw > 0 ? +(w / bw).toFixed(2) : 0;
+
+  const bLeagues =
+    Array.isArray(BIOMECHANICAL_LEAGUES) && BIOMECHANICAL_LEAGUES.length >= 5
+      ? BIOMECHANICAL_LEAGUES
+      : [
+          { tier: 1, id: "bronce", name: "Liga Bronce", color: "#CD7F32", icon: "🥉", badgeClass: "" },
+          { tier: 2, id: "plata", name: "Liga Plata", color: "#CBD5E1", icon: "🥈", badgeClass: "" },
+          { tier: 3, id: "oro", name: "Liga Oro", color: "#F59E0B", icon: "🥇", badgeClass: "" },
+          { tier: 4, id: "diamante", name: "Liga Diamante", color: "#38BDF8", icon: "💎", badgeClass: "" },
+          { tier: 5, id: "prime", name: "Liga Prime (Élite Natural)", color: "#A855F7", icon: "👑", badgeClass: "" },
+        ];
+
+  let league;
+  let nextLeague;
+  let nextTargetKg;
+  let kgToNext;
+  let progressPct;
+
+  if (ratio < 0.9) {
+    league = bLeagues[0]; // Bronce
+    nextLeague = bLeagues[1]; // Plata
+    nextTargetKg = Math.round(0.9 * bw * 2) / 2;
+    kgToNext = Math.max(0.5, +(nextTargetKg - w).toFixed(1));
+    progressPct = Math.min(100, Math.max(0, Math.round((ratio / 0.9) * 100)));
+  } else if (ratio < 1.2) {
+    league = bLeagues[1]; // Plata
+    nextLeague = bLeagues[2]; // Oro
+    nextTargetKg = Math.round(1.2 * bw * 2) / 2;
+    kgToNext = Math.max(0.5, +(nextTargetKg - w).toFixed(1));
+    const span = 1.2 - 0.9;
+    progressPct = Math.min(100, Math.max(0, Math.round(((ratio - 0.9) / span) * 100)));
+  } else if (ratio < 1.5) {
+    league = bLeagues[2]; // Oro
+    nextLeague = bLeagues[3]; // Diamante
+    nextTargetKg = Math.round(1.5 * bw * 2) / 2;
+    kgToNext = Math.max(0.5, +(nextTargetKg - w).toFixed(1));
+    const span = 1.5 - 1.2;
+    progressPct = Math.min(100, Math.max(0, Math.round(((ratio - 1.2) / span) * 100)));
+  } else if (ratio < 1.8) {
+    league = bLeagues[3]; // Diamante
+    nextLeague = bLeagues[4]; // Prime
+    nextTargetKg = Math.round(1.8 * bw * 2) / 2;
+    kgToNext = Math.max(0.5, +(nextTargetKg - w).toFixed(1));
+    const span = 1.8 - 1.5;
+    progressPct = Math.min(100, Math.max(0, Math.round(((ratio - 1.5) / span) * 100)));
+  } else {
+    league = bLeagues[4]; // Prime
+    nextLeague = null;
+    nextTargetKg = null;
+    kgToNext = 0;
+    progressPct = 100;
+  }
+
+  return {
+    league: league || bLeagues[0],
+    ratio,
+    nextLeague,
+    nextTargetKg,
+    kgToNext,
+    progressPct,
+  };
+}
+
 
 /**
  * Movement pattern ratio thresholds: [Iniciado/Guerrero, Guerrero/Avanzado, Avanzado/Maestro, Maestro/Élite, Élite/Élite Supremo]
@@ -107,7 +234,7 @@ export function detectMovementPattern(exerciseName = "", muscleGroup = "") {
   const mg = (muscleGroup || "").toLowerCase();
   const text = `${name} ${mg}`;
 
-  // 1. Aislamiento / Brazos / Core (specific single-joint movements)
+  // 1. Aislamiento / Bíceps / Tríceps / Core (specific single-joint movements)
   if (
     text.includes("curl") ||
     text.includes("martillo") ||
@@ -249,23 +376,30 @@ export function getStrengthRank(
   const pattern = detectMovementPattern(exerciseName);
   const thresholds = PATTERN_THRESHOLDS[pattern] || PATTERN_THRESHOLDS.General;
 
-  // Identify Tier (1 to 6)
+  // Identify Tier (1 to 5)
   let tier = 1;
-  if (ratio >= thresholds[4]) {
-    tier = 6;
-  } else if (ratio >= thresholds[3]) {
+  if (ratio >= (thresholds?.[3] ?? 1.8)) {
     tier = 5;
-  } else if (ratio >= thresholds[2]) {
+  } else if (ratio >= (thresholds?.[2] ?? 1.5)) {
     tier = 4;
-  } else if (ratio >= thresholds[1]) {
+  } else if (ratio >= (thresholds?.[1] ?? 1.2)) {
     tier = 3;
-  } else if (ratio >= thresholds[0]) {
+  } else if (ratio >= (thresholds?.[0] ?? 0.9)) {
     tier = 2;
   } else {
     tier = 1;
   }
 
-  const currentRankInfo = STRENGTH_RANKS[tier - 1];
+  const currentRankInfo =
+    STRENGTH_RANKS?.[tier - 1] ||
+    STRENGTH_RANKS?.[0] || {
+      tier: 1,
+      id: "bronce",
+      name: "Liga Bronce",
+      color: "#CD7F32",
+      icon: "🥉",
+      badgeClass: "",
+    };
 
   // Progression to next rank
   let nextRankName = null;
@@ -273,15 +407,15 @@ export function getStrengthRank(
   let nextRankTargetKg = null;
   let percentageToNext = 0;
 
-  if (tier === 6) {
-    // Top tier reached
+  if (tier >= 5 || tier >= (STRENGTH_RANKS?.length || 5)) {
+    // Top tier reached (Prime / Élite Natural)
     percentageToNext = 100;
   } else {
-    const nextRankInfo = STRENGTH_RANKS[tier];
-    nextRankName = nextRankInfo.name;
-    nextRankRatio = thresholds[tier - 1];
+    const nextRankInfo = STRENGTH_RANKS?.[tier];
+    nextRankName = nextRankInfo?.name ?? null;
+    nextRankRatio = thresholds?.[tier - 1] ?? 1.8;
 
-    const currentMinRatio = tier === 1 ? 0 : thresholds[tier - 2];
+    const currentMinRatio = tier === 1 ? 0 : (thresholds?.[tier - 2] ?? 0);
     const span = nextRankRatio - currentMinRatio;
 
     if (span > 0) {
@@ -298,19 +432,22 @@ export function getStrengthRank(
   }
 
   return {
-    rankName: currentRankInfo.name,
-    rankColor: currentRankInfo.color,
+    rankName: currentRankInfo?.name || "Liga Bronce",
+    name: currentRankInfo?.name || "Liga Bronce",
+    rankColor: currentRankInfo?.color || "#CD7F32",
+    color: currentRankInfo?.color || "#CD7F32",
     ratio,
     nextRankTargetKg,
     percentageToNext,
-    tier: currentRankInfo.tier,
-    rankId: currentRankInfo.id,
+    tier: currentRankInfo?.tier || 1,
+    rankId: currentRankInfo?.id || "bronce",
+    id: currentRankInfo?.id || "bronce",
     nextRankName,
     nextRankRatio,
     estimated1RM,
     pattern,
-    icon: currentRankInfo.icon,
-    badgeClass: currentRankInfo.badgeClass,
+    icon: currentRankInfo?.icon || "🥉",
+    badgeClass: currentRankInfo?.badgeClass || "",
   };
 }
 
@@ -328,30 +465,53 @@ export function getUserGlobalStrengthRank(records = [], userBodyweight = 75) {
       ? parseFloat(userBodyweight)
       : 75;
 
-  if (!records || !Array.isArray(records) || records.length === 0) {
+  const defaultRank =
+    STRENGTH_RANKS?.[0] || {
+      tier: 1,
+      id: "bronce",
+      name: "Liga Bronce",
+      color: "#CD7F32",
+      icon: "🥉",
+      badgeClass: "",
+    };
+
+  const safeRecords = Array.isArray(records)
+    ? records
+    : records && typeof records === "object"
+    ? Object.values(records)
+    : [];
+
+  if (safeRecords.length === 0) {
     return {
-      ...STRENGTH_RANKS[0],
+      ...defaultRank,
+      name: defaultRank?.name || "Liga Bronce",
+      color: defaultRank?.color || "#CD7F32",
+      icon: defaultRank?.icon || "🥉",
       ratio: 0,
       recordsEvaluated: 0,
       topLiftsCount: 0,
     };
   }
 
-  const validRecords = records
+  const validRecords = safeRecords
     .filter((r) => {
+      if (!r) return false;
       const w = parseFloat(r.pr_weight) || 0;
       const rm = parseFloat(r.best_estimated_1rm) || 0;
       return w > 0 || rm > 0;
     })
     .map((r) => {
-      const curW = parseFloat(r.pr_weight) || 0;
-      const curR = parseInt(r.pr_reps, 10) || 10;
-      return getStrengthRank(r.exercise_name, curW, curR, bw);
+      const curW = parseFloat(r?.pr_weight) || 0;
+      const curR = parseInt(r?.pr_reps, 10) || 10;
+      return getStrengthRank(r?.exercise_name || "", curW, curR, bw);
     });
 
   if (validRecords.length === 0) {
     return {
-      ...STRENGTH_RANKS[0],
+      ...defaultRank,
+      name: defaultRank?.name || "Liga Bronce",
+      color: defaultRank?.color || "#CD7F32",
+      icon: defaultRank?.icon || "🥉",
       ratio: 0,
       recordsEvaluated: 0,
       topLiftsCount: 0,
@@ -359,25 +519,29 @@ export function getUserGlobalStrengthRank(records = [], userBodyweight = 75) {
   }
 
   // Sort by tier descending, then by ratio descending
-  validRecords.sort((a, b) => b.tier - a.tier || b.ratio - a.ratio);
+  validRecords.sort((a, b) => (b?.tier || 1) - (a?.tier || 1) || (b?.ratio || 0) - (a?.ratio || 0));
 
   // Take the top 3 best lifts (or all if fewer)
   const topLifts = validRecords.slice(0, 3);
+  const maxTier = STRENGTH_RANKS?.length || 5;
   const avgTier = Math.min(
-    6,
+    maxTier,
     Math.max(
       1,
-      Math.round(topLifts.reduce((s, item) => s + item.tier, 0) / topLifts.length)
+      Math.round(topLifts.reduce((s, item) => s + (item?.tier || 1), 0) / topLifts.length)
     )
   );
   const avgRatio = +(
-    topLifts.reduce((s, item) => s + item.ratio, 0) / topLifts.length
+    topLifts.reduce((s, item) => s + (item?.ratio || 0), 0) / topLifts.length
   ).toFixed(2);
 
-  const matchedRank = STRENGTH_RANKS[avgTier - 1];
+  const matchedRank = STRENGTH_RANKS?.[avgTier - 1] || defaultRank;
 
   return {
     ...matchedRank,
+    name: matchedRank?.name || "Liga Bronce",
+    color: matchedRank?.color || "#CD7F32",
+    icon: matchedRank?.icon || "🥉",
     ratio: avgRatio,
     recordsEvaluated: validRecords.length,
     topLiftsCount: topLifts.length,

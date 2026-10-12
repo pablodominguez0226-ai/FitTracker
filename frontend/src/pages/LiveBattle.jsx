@@ -485,9 +485,9 @@ export default function LiveBattle() {
                     onChange={(e) => setCreateExerciseId(e.target.value)}
                     className="w-full min-h-[48px] rounded-2xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm font-semibold text-white outline-none focus:border-[#FF5722]"
                   >
-                    {exercises.map((ex) => (
-                      <option key={ex.id} value={ex.id}>
-                        {ex.name} ({ex.muscle_group_name || "Músculo"})
+                    {(exercises || []).map((ex) => (
+                      <option key={ex?.id || Math.random()} value={ex?.id}>
+                        {ex?.name || "Ejercicio"} ({ex?.muscle_group_name || "Músculo"})
                       </option>
                     ))}
                   </select>
@@ -735,54 +735,54 @@ export default function LiveBattle() {
 
             <div className="grid grid-cols-2 gap-2 sm:gap-4 items-center">
               {/* Participant 1 */}
-              {battle.participants[0] && (
+              {battle?.participants?.[0] && (
                 <div
                   className={`rounded-2xl border p-3 transition ${
-                    battle.current_turn_user_name === battle.participants[0].user_name
+                    battle?.current_turn_user_name === battle?.participants?.[0]?.user_name
                       ? "border-[#FF5722] bg-[#FF5722]/10"
                       : "border-white/5 bg-[#121212]"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-xs sm:text-sm font-semibold text-white truncate">
-                      {battle.participants[0].user_name}
-                      {battle.participants[0].user_name === myParticipantName ? " (Vos)" : ""}
+                      {battle?.participants?.[0]?.user_name || "Participante 1"}
+                      {battle?.participants?.[0]?.user_name === myParticipantName ? " (Vos)" : ""}
                     </span>
-                    {battle.current_turn_user_name === battle.participants[0].user_name && (
+                    {battle?.current_turn_user_name === battle?.participants?.[0]?.user_name && (
                       <span className="h-2 w-2 rounded-full bg-[#34D399] animate-ping" />
                     )}
                   </div>
                   <div className="mt-1 flex items-center justify-between text-[11px] text-[#8E8E93]">
-                    <span>{battle.participants[0].bodyweight} kg</span>
+                    <span>{battle?.participants?.[0]?.bodyweight || 0} kg</span>
                     <span className="font-mono font-semibold text-[#34D399]">
-                      {battle.participants[0].total_score} pts
+                      {battle?.participants?.[0]?.total_score || 0} pts
                     </span>
                   </div>
                 </div>
               )}
 
               {/* Participant 2 */}
-              {battle.participants[1] && (
+              {battle?.participants?.[1] && (
                 <div
                   className={`rounded-2xl border p-3 transition ${
-                    battle.current_turn_user_name === battle.participants[1].user_name
+                    battle?.current_turn_user_name === battle?.participants?.[1]?.user_name
                       ? "border-[#FF5722] bg-[#FF5722]/10"
                       : "border-white/5 bg-[#121212]"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-xs sm:text-sm font-semibold text-white truncate">
-                      {battle.participants[1].user_name}
-                      {battle.participants[1].user_name === myParticipantName ? " (Vos)" : ""}
+                      {battle?.participants?.[1]?.user_name || "Participante 2"}
+                      {battle?.participants?.[1]?.user_name === myParticipantName ? " (Vos)" : ""}
                     </span>
-                    {battle.current_turn_user_name === battle.participants[1].user_name && (
+                    {battle?.current_turn_user_name === battle?.participants?.[1]?.user_name && (
                       <span className="h-2 w-2 rounded-full bg-[#34D399] animate-ping" />
                     )}
                   </div>
                   <div className="mt-1 flex items-center justify-between text-[11px] text-[#8E8E93]">
-                    <span>{battle.participants[1].bodyweight} kg</span>
+                    <span>{battle?.participants?.[1]?.bodyweight || 0} kg</span>
                     <span className="font-mono font-semibold text-[#34D399]">
-                      {battle.participants[1].total_score} pts
+                      {battle?.participants?.[1]?.total_score || 0} pts
                     </span>
                   </div>
                 </div>

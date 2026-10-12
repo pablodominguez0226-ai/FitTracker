@@ -45,7 +45,7 @@ export class ErrorBoundary extends React.Component {
         (typeof this.state.error === "string" ? this.state.error : "Error desconocido");
 
       return (
-        <div className="min-h-screen bg-[#000000] text-white flex flex-col items-center justify-center p-4 sm:p-6 select-none relative overflow-hidden">
+        <div className="min-h-[100dvh] bg-[#050505] text-white flex flex-col items-center justify-center p-4 sm:p-6 select-none relative overflow-x-hidden">
           <div className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-[#1C1C1E] p-6 sm:p-8 text-center space-y-6">
             {/* Header Icon */}
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-red-400">

@@ -25,17 +25,18 @@ export function analyzeWorkoutSession(currentSessionExercises = [], userHistory 
   // or flat array of sets.
   let exercisesList = [];
   if (Array.isArray(currentSessionExercises) && currentSessionExercises.length > 0) {
-    if (currentSessionExercises[0].sets !== undefined) {
+    if (currentSessionExercises?.[0]?.sets !== undefined) {
       exercisesList = currentSessionExercises;
     } else {
       // Group flat sets by exercise_id
       const map = {};
-      currentSessionExercises.forEach((s) => {
-        const eid = s.exercise_id || s.exerciseId;
+      (currentSessionExercises || []).forEach((s) => {
+        if (!s) return;
+        const eid = s?.exercise_id || s?.exerciseId || "0";
         if (!map[eid]) {
           map[eid] = {
             exerciseId: eid,
-            exerciseName: s.exercise_name || s.exerciseName || `Ejercicio #${eid}`,
+            exerciseName: s?.exercise_name || s?.exerciseName || s?.name || `Ejercicio #${eid}`,
             sets: [],
           };
         }
@@ -46,30 +47,43 @@ export function analyzeWorkoutSession(currentSessionExercises = [], userHistory 
   }
 
   // Normalize records lookup
-  const recordsMap =
-    userHistory.recordsMap ||
-    (Array.isArray(userHistory.records)
-      ? userHistory.records.reduce((acc, r) => {
-          acc[r.exercise_id] = r;
-          return acc;
-        }, {})
-      : {});
+  let recordsMap = userHistory.recordsMap;
+  if (!recordsMap || typeof recordsMap !== "object") {
+    const ee = {};
+    const m = userHistory.records;
+    if (Array.isArray(m)) {
+      m.forEach((pe) => {
+        if (pe && pe.exercise_id) {
+          ee[pe.exercise_id] = pe;
+        }
+      });
+    } else if (m && typeof m === "object") {
+      // Si m vino como objeto en vez de array
+      Object.values(m).forEach((pe) => {
+        if (pe && pe.exercise_id) {
+          ee[pe.exercise_id] = pe;
+        }
+      });
+    }
+    recordsMap = ee;
+  }
 
   // Analyze each exercise
-  exercisesList.forEach((exItem) => {
-    const exerciseId = exItem.exerciseId || exItem.exercise_id;
-    const exerciseName = exItem.exerciseName || exItem.name || `Ejercicio #${exerciseId}`;
-    const sets = exItem.sets || [];
+  (Array.isArray(exercisesList) ? exercisesList : []).forEach((exItem) => {
+    if (!exItem) return;
+    const exerciseId = exItem?.exerciseId || exItem?.exercise_id;
+    const exerciseName = exItem?.exerciseName || exItem?.name || `Ejercicio #${exerciseId}`;
+    const sets = Array.isArray(exItem?.sets) ? exItem.sets : [];
 
     // Filter valid non-warmup sets
     const nonWarmupSets = sets.filter(
-      (s) => (s.set_type || "normal") !== "warmup" && (s.set_type || "normal") !== "W"
+      (s) => (s?.set_type || "normal") !== "warmup" && (s?.set_type || "normal") !== "W"
     );
     const validSets = nonWarmupSets.length > 0 ? nonWarmupSets : sets;
 
     // Filter sets with actual load or reps
     const effectiveSets = validSets.filter((s) => {
-      const w = parseFloat(s.weight) || 0;
+      const w = parseFloat(s?.weight) || 0;
       const r = parseInt(s.reps, 10) || 0;
       return w > 0 || r > 0;
     });
@@ -148,7 +162,7 @@ export function analyzeWorkoutSession(currentSessionExercises = [], userHistory 
       prevSession?.prev_max_weight !== undefined
         ? parseFloat(prevSession.prev_max_weight)
         : prevSession?.sets?.[0]?.weight !== undefined
-        ? parseFloat(prevSession.sets[0].weight)
+        ? parseFloat(prevSession?.sets?.[0]?.weight ?? 0)
         : record?.last_weight !== undefined
         ? parseFloat(record.last_weight)
         : null;
@@ -157,7 +171,7 @@ export function analyzeWorkoutSession(currentSessionExercises = [], userHistory 
       prevSession?.prev_max_reps !== undefined
         ? parseInt(prevSession.prev_max_reps, 10)
         : prevSession?.sets?.[0]?.reps !== undefined
-        ? parseInt(prevSession.sets[0].reps, 10)
+        ? parseInt(prevSession?.sets?.[0]?.reps ?? 0, 10)
         : record?.last_reps !== undefined
         ? parseInt(record.last_reps, 10)
         : null;
@@ -251,13 +265,13 @@ export function analyzeWorkoutSession(currentSessionExercises = [], userHistory 
     "Mantener sobrecarga progresiva y consolidar volumen en ejercicios principales.";
 
   if (declines.length > 0) {
-    const decEx = declines[0].exerciseName;
+    const decEx = declines?.[0]?.exerciseName || "ejercicio";
     nextSessionSuggestion = `Priorizar descanso y buscar recuperar repeticiones en ${decEx}.`;
   } else if (improvements.length > 0) {
-    const impEx = improvements[0].exerciseName;
+    const impEx = improvements?.[0]?.exerciseName || "ejercicio";
     nextSessionSuggestion = `Mantener cargas en accesorios y buscar +1 rep en ${impEx}.`;
   } else if (prsBroken.length > 0) {
-    const prEx = prsBroken[0].exerciseName;
+    const prEx = prsBroken?.[0]?.exerciseName || "ejercicio";
     nextSessionSuggestion = `Consolidar el nuevo récord alcanzado en ${prEx} para la próxima sesión.`;
   }
 

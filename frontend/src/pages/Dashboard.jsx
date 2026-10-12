@@ -44,7 +44,6 @@ import {
   getLevelExplanations,
   getUserProfile,
 } from "../api/client";
-import { DEFAULT_LEVEL_EXPLANATIONS } from "../components/ProfileModal";
 import Header from "../components/Header";
 import { formatDateSafe, getLocalDateString, parseDateSafe } from "../utils/dateUtils";
 
@@ -54,16 +53,19 @@ function CustomTooltip({ active, payload, label }) {
     return (
       <div className="rounded-2xl border border-white/10 bg-[#1C1C1E]/95 p-3 text-xs text-white backdrop-blur-md">
         <p className="font-bold text-[#FF5722] mb-1">{label}</p>
-        {payload.map((entry, index) => (
-          <p key={`item-${index}`} className="flex justify-between gap-4 font-medium">
-            <span className="text-[#8E8E93]">{entry.name}:</span>
-            <span className="font-semibold text-white">
-              {entry.name.toLowerCase().includes("volumen")
-                ? `${Math.round(entry.value).toLocaleString()} kg`
-                : `${entry.value} sesiones`}
-            </span>
-          </p>
-        ))}
+        {payload.map((entry, index) => {
+          const entryName = entry?.name || "";
+          return (
+            <p key={`item-${index}`} className="flex justify-between gap-4 font-medium">
+              <span className="text-[#8E8E93]">{entryName}:</span>
+              <span className="font-semibold text-white">
+                {entryName.toLowerCase().includes("volumen")
+                  ? `${Math.round(entry?.value || 0).toLocaleString()} kg`
+                  : `${entry?.value || 0} sesiones`}
+              </span>
+            </p>
+          );
+        })}
       </div>
     );
   }
@@ -74,8 +76,6 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [tips, setTips] = useState([]);
   const [userLevel, setUserLevel] = useState("intermedio");
-  const [levelExplanations, setLevelExplanations] = useState(DEFAULT_LEVEL_EXPLANATIONS);
-  const [expandedExpId, setExpandedExpId] = useState(null);
   const [aiBriefing, setAiBriefing] = useState(null);
   const [loadingBriefing, setLoadingBriefing] = useState(false);
   const [aiQuestion, setAiQuestion] = useState("");
@@ -83,18 +83,21 @@ export default function Dashboard() {
   const [askingAi, setAskingAi] = useState(false);
   const [loading, setLoading] = useState(true);
 
-
   const loadDashboard = async () => {
     try {
       setLoading(true);
-      const [dashRes, tipsRes, aiRes] = await Promise.all([
+      const [dashRes, tipsRes, aiRes, profRes] = await Promise.all([
         getAnalyticsDashboard(getLocalDateString()),
         getContextualTips().catch(() => []),
         getAIWeeklyBriefing().catch(() => null),
+        getUserProfile().catch(() => null),
       ]);
       setData(dashRes);
       setTips(tipsRes);
       setAiBriefing(aiRes);
+      if (profRes?.training_level || profRes?.level) {
+        setUserLevel(profRes.training_level || profRes.level);
+      }
     } catch (err) {
       console.error("Error cargando dashboard:", err);
     } finally {
@@ -130,29 +133,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadDashboard();
-
-    getUserProfile()
-      .then((p) => {
-        if (p && p.experience_level) setUserLevel(p.experience_level);
-      })
-      .catch(() => {});
-
-    getLevelExplanations()
-      .then((res) => {
-        if (res && res.levels) setLevelExplanations(res.levels);
-      })
-      .catch(() => {});
-
-    const handleLevelEvt = (e) => {
-      if (e.detail) {
-        setUserLevel(e.detail);
-        loadDashboard();
-      }
-    };
-
-    window.addEventListener("fittracker:levelChanged", handleLevelEvt);
-    return () => window.removeEventListener("fittracker:levelChanged", handleLevelEvt);
   }, []);
+
 
 
   const formatDate = (val) =>
@@ -297,124 +279,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 2.5. Guía de Entrenamiento & Conceptos Clave según el Nivel */}
-      {(() => {
-        const currentExpObj =
-          levelExplanations[userLevel] ||
-          DEFAULT_LEVEL_EXPLANATIONS[userLevel] ||
-          DEFAULT_LEVEL_EXPLANATIONS.intermedio;
-
-        return (
-          <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white flex-shrink-0">
-                  <BookOpen size={18} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm sm:text-base font-bold text-white">
-                      Guía del Atleta: {currentExpObj.title}
-                    </h3>
-                    <span className="rounded-lg border border-[#34D399]/30 bg-[#34D399]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#34D399]">
-                      {currentExpObj.badge}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#8E8E93]">
-                    {currentExpObj.subtitle}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("fittracker:openProfile"))}
-                className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-xl border border-[#2A1B14] bg-[#181210] px-3 py-1.5 text-xs font-bold text-[#FF6D00] hover:border-[#FF5722] hover:bg-[#2A1B14] transition active:scale-95"
-              >
-                <User size={13} className="text-[#FF5722]" />
-                <span>Cambiar Nivel</span>
-              </button>
-            </div>
-
-            {/* Conceptos clave explicados */}
-            <div className="space-y-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
-                Explicaciones Adaptadas a tu Perfil ({currentExpObj.title}):
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {currentExpObj.explanations?.map((item) => {
-                  const isExpanded = expandedExpId === item.id;
-                  return (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl border border-white/5 bg-[#121212] p-3 transition hover:border-white/10 space-y-1.5"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setExpandedExpId(isExpanded ? null : item.id)}
-                        className="w-full text-left flex items-start justify-between gap-2"
-                      >
-                        <div>
-                          <span className="text-[10px] font-semibold uppercase text-[#FF5722] tracking-wider block">
-                            {item.topic.replace("_", " ")}
-                          </span>
-                          <h4 className="text-xs font-semibold text-white mt-0.5">{item.title}</h4>
-                        </div>
-                        <span className="text-[#8E8E93] hover:text-white p-0.5">
-                          {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                        </span>
-                      </button>
-                      <p className="text-xs text-[#8E8E93] leading-relaxed">
-                        {item.summary}
-                      </p>
-                      {isExpanded && item.details && (
-                        <div className="pt-2 border-t border-white/5 space-y-1.5 animate-in fade-in duration-150">
-                          {item.details.map((d, dIdx) => (
-                            <p key={dIdx} className="text-[11px] text-[#D4D4D8] leading-normal flex items-start gap-1.5">
-                              <span className="text-[#FF5722] font-semibold">•</span>
-                              <span>{d}</span>
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Tips contextuales del nivel */}
-            {tips.length > 0 && (
-              <div className="pt-2 border-t border-white/5 space-y-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] block flex items-center gap-1.5">
-                  <Sparkles size={13} className="text-amber-400" />
-                  Consejos Rápidos del Coach para {currentExpObj.title}:
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {tips.slice(0, 4).map((tip, idx) => (
-                    <div
-                      key={idx}
-                      className="rounded-2xl border border-white/5 bg-[#121212] p-2.5 space-y-1"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-semibold uppercase text-[#34D399]">
-                          {tip.category}
-                        </span>
-                        <span className="text-[9px] text-[#8E8E93]">P{tip.priority}</span>
-                      </div>
-                      <h5 className="text-[11px] font-semibold text-white">{tip.title}</h5>
-                      <p className="text-[11px] text-[#8E8E93] leading-snug">{tip.message}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-
-      {/* 2.8. Coach IA: Diagnóstico Semanal & Asistente Interactivo (Fase 5) */}
+      {/* 2.8. Coach IA: Diagnóstico Semanal & Asistente Interactivo */}
       <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
           <div className="flex items-center gap-2.5">
@@ -427,7 +292,7 @@ export default function Dashboard() {
                   Coach IA: Diagnóstico Semanal &amp; Sobrecarga
                 </h3>
                 <span className="rounded-lg border border-[#34D399]/30 bg-[#34D399]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#34D399]">
-                  {aiBriefing?.experience_level ? `Nivel ${aiBriefing.experience_level}` : "Inteligencia Activa"}
+                  Inteligencia Biomecánica
                 </span>
               </div>
               <p className="text-xs text-[#8E8E93]">
@@ -435,6 +300,7 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
+
 
           <button
             type="button"
@@ -531,45 +397,28 @@ export default function Dashboard() {
             </span>
           </div>
 
-          {/* Quick Query Chips (Adapted by Level) */}
+          {/* Quick Query Chips */}
           <div className="flex flex-wrap gap-1.5">
-            {(() => {
-              const levelPrompts = {
-                principiante: [
-                  "¿Cómo mejorar mi técnica básica?",
-                  "¿Qué es una serie y cuántas repeticiones hacer?",
-                  "¿Cómo se calcula el volumen?",
-                  "¿Qué es un PR y cuándo buscarlo?",
-                ],
-                intermedio: [
-                  "¿Cómo viene mi sobrecarga progresiva?",
-                  "¿Cuándo subir 1.25kg?",
-                  "¿Cómo influye mi energía al rendir?",
-                  "¿Qué músculo tiene menos volumen?",
-                ],
-                avanzado: [
-                  "¿Debería programar una descarga activa?",
-                  "¿Cómo romper mi estancamiento actual?",
-                  "¿Cómo calcular si toqué mi MRV?",
-                  "¿Cómo periodizar la fuerza máxima?",
-                ],
-              };
-              const chips = levelPrompts[userLevel] || levelPrompts.intermedio;
-              return chips.map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setAiQuestion(chip);
-                    handleAsk(chip);
-                  }}
-                  className="rounded-xl border border-white/5 bg-[#121212] px-2.5 py-1 text-[11px] font-medium text-[#8E8E93] hover:border-white/20 hover:text-white transition"
-                >
-                  {chip}
-                </button>
-              ));
-            })()}
+            {[
+              "¿Cómo viene mi sobrecarga progresiva?",
+              "¿El sistema detecta fatiga o necesidad de descarga?",
+              "¿Qué grupo muscular tiene menor estímulo este mes?",
+              "¿Cómo romper mi estancamiento actual?",
+            ].map((chip, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  setAiQuestion(chip);
+                  handleAsk(chip);
+                }}
+                className="rounded-xl border border-white/5 bg-[#121212] px-2.5 py-1 text-[11px] font-medium text-[#8E8E93] hover:border-white/20 hover:text-white transition"
+              >
+                {chip}
+              </button>
+            ))}
           </div>
+
 
 
           {/* Input & Send Form */}
@@ -726,7 +575,7 @@ export default function Dashboard() {
               data.muscle_distribution.map((m, idx) => (
                 <div key={idx} className="space-y-1">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-white">{m.name}</span>
+                    <span className="text-white">{m?.name || "Músculo"}</span>
                     <span className="text-[#FF5722]">
                       {Math.round(m.volume).toLocaleString()} kg ({m.percentage}%)
                     </span>

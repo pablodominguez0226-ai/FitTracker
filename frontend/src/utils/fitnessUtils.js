@@ -164,15 +164,16 @@ export function getPrStatus(prDateVal) {
 
 /**
  * Muscle group matching for pills:
- * [Todos | Pecho | Pierna | Espalda | Hombro | Brazos | Core]
+ * [Todos | Pecho | Espalda | Piernas | Hombros | Bíceps | Tríceps | Core]
  * @param {object} record
  * @param {string} pill
  * @returns {boolean}
  */
 export function matchMusclePill(record, pill) {
   if (!pill || pill === "Todos") return true;
-  const groupName = (record.muscle_group || record.muscle_group_name || "").toLowerCase();
-  const exName = (record.exercise_name || "").toLowerCase();
+  if (!record) return false;
+  const groupName = (record?.muscle_group || record?.muscle_group_name || "").toLowerCase();
+  const exName = (record?.exercise_name || record?.name || "").toLowerCase();
   const text = `${groupName} ${exName}`;
 
   switch (pill) {
@@ -188,6 +189,7 @@ export function matchMusclePill(record, pill) {
         text.includes("aperturas")
       );
     case "Pierna":
+    case "Piernas":
       return (
         groupName.includes("pierna") ||
         text.includes("pierna") ||
@@ -222,6 +224,7 @@ export function matchMusclePill(record, pill) {
         text.includes("face pull")
       );
     case "Hombro":
+    case "Hombros":
       return (
         groupName.includes("hombro") ||
         text.includes("hombro") ||
@@ -232,19 +235,29 @@ export function matchMusclePill(record, pill) {
         text.includes("pájaro") ||
         text.includes("pajaro")
       );
-    case "Brazos":
+    case "Bíceps":
       return (
-        groupName.includes("brazo") ||
-        text.includes("brazo") ||
+        groupName.includes("bíceps") ||
+        groupName.includes("biceps") ||
         text.includes("bíceps") ||
         text.includes("biceps") ||
-        text.includes("tríceps") ||
-        text.includes("triceps") ||
         text.includes("curl") ||
         text.includes("martillo") ||
+        text.includes("predicador") ||
+        text.includes("antebrazo")
+      );
+    case "Tríceps":
+      return (
+        groupName.includes("tríceps") ||
+        groupName.includes("triceps") ||
+        text.includes("tríceps") ||
+        text.includes("triceps") ||
         text.includes("francés") ||
         text.includes("frances") ||
-        text.includes("antebrazo")
+        text.includes("cuerda") ||
+        text.includes("fondos") ||
+        text.includes("pushdown") ||
+        text.includes("patada")
       );
     case "Core":
       return (

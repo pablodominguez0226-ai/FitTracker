@@ -13,9 +13,10 @@ export default function History() {
     try {
       setLoading(true);
       const data = await getWorkouts();
-      setWorkouts(data);
+      setWorkouts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error cargando historial:", err);
+      setWorkouts([]);
     } finally {
       setLoading(false);
     }
@@ -29,7 +30,7 @@ export default function History() {
     if (!window.confirm("¿Seguro que querés eliminar esta sesión del historial?")) return;
     const backup = workouts;
     // Optimistic UI update: immediate removal
-    setWorkouts((prev) => prev.filter((w) => w.id !== id));
+    setWorkouts((prev) => (prev || []).filter((w) => w?.id !== id));
     try {
       await deleteWorkout(id);
     } catch (err) {
@@ -64,12 +65,12 @@ export default function History() {
         rightElement={
           <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] px-4 py-2 text-right">
             <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Total Sesiones</span>
-            <span className="text-lg font-bold text-white">{workouts.length}</span>
+            <span className="text-lg font-bold text-white">{(workouts || []).length}</span>
           </div>
         }
       />
 
-      {workouts.length === 0 ? (
+      {(workouts || []).length === 0 ? (
         <div className="rounded-3xl border border-dashed border-white/10 bg-[#1C1C1E]/50 p-12 text-center">
           <Dumbbell size={36} className="mx-auto text-[#8E8E93]" />
           <h3 className="mt-3 text-base font-semibold text-white">Aún no hay sesiones guardadas</h3>
@@ -77,16 +78,16 @@ export default function History() {
         </div>
       ) : (
         <div className="space-y-3.5">
-          {workouts.map((w) => {
-            const isExpanded = expandedId === w.id;
+          {(workouts || []).map((w) => {
+            const isExpanded = expandedId === w?.id;
             const grouped = {};
-            (w.sets || []).forEach((s) => {
-              const name = s.exercise_name || `Ejercicio #${s.exercise_id}`;
+            (w?.sets || []).forEach((s) => {
+              const name = s?.exercise_name || (s?.exercise_id ? `Ejercicio #${s.exercise_id}` : "Ejercicio");
               if (!grouped[name]) grouped[name] = [];
               grouped[name].push(s);
             });
 
-            const totalVol = (w.sets || []).reduce((acc, s) => acc + (s.weight * s.reps), 0);
+            const totalVol = (w?.sets || []).reduce((acc, s) => acc + ((parseFloat(s?.weight) || 0) * (parseInt(s?.reps, 10) || 0)), 0);
             const isWillpowerDay = Boolean(
               (w.readiness_energy && w.readiness_energy <= 2) ||
               (w.mental_effort && w.mental_effort >= 4)

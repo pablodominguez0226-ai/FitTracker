@@ -12,6 +12,7 @@ import {
   Sparkles,
   Trash2,
   X,
+  Camera,
 } from "lucide-react";
 import {
   createExercise,
@@ -23,6 +24,9 @@ import {
   updateMuscleGroup,
 } from "../api/client";
 import Header from "../components/Header";
+import ExerciseMediaModal from "../components/ExerciseMediaModal";
+import { isOnline } from "../services/exerciseCache";
+
 
 export default function Exercises() {
   const [muscleGroups, setMuscleGroups] = useState([]);
@@ -48,6 +52,10 @@ export default function Exercises() {
   const [deletingGroup, setDeletingGroup] = useState(null); // { id, name, exercise_count }
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Exercise Media & Diagram Modal state
+  const [selectedMediaExercise, setSelectedMediaExercise] = useState(null);
+
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -55,10 +63,12 @@ export default function Exercises() {
         getMuscleGroups(),
         getExercises(),
       ]);
-      setMuscleGroups(groups);
-      setExercises(exList);
-      if (groups.length > 0 && !targetGroupId) {
-        setTargetGroupId(String(groups[0].id));
+      const safeGroups = Array.isArray(groups) ? groups : [];
+      const safeExList = Array.isArray(exList) ? exList : [];
+      setMuscleGroups(safeGroups);
+      setExercises(safeExList);
+      if (safeGroups.length > 0 && !targetGroupId && safeGroups[0]?.id) {
+        setTargetGroupId(String(safeGroups[0].id));
       }
     } catch (err) {
       console.error("Error cargando ejercicios:", err);
@@ -71,6 +81,17 @@ export default function Exercises() {
     loadData();
   }, []);
 
+  const filteredExercises = useMemo(() => {
+    const q = (search || "").trim().toLowerCase();
+    return (exercises || []).filter((ex) => {
+      if (!ex) return false;
+      const matchSearch = (ex?.name || "").toLowerCase().includes(q);
+      const matchGroup =
+        selectedGroupId === "all" || String(ex.muscle_group_id) === String(selectedGroupId);
+      return matchSearch && matchGroup;
+    });
+  }, [exercises, search, selectedGroupId]);
+
   const handleCreateExercise = async (e) => {
     e.preventDefault();
     const name = newExName.trim();
@@ -78,7 +99,10 @@ export default function Exercises() {
 
     try {
       const created = await createExercise(name, Number(targetGroupId));
-      setExercises((prev) => [...prev, created]);
+      setExercises((prev) => {
+        const filtered = (prev || []).filter((e) => e.id !== created.id);
+        return [...filtered, created];
+      });
       setNewExName("");
       const groups = await getMuscleGroups();
       setMuscleGroups(groups);
@@ -122,7 +146,7 @@ export default function Exercises() {
 
   const handleStartEditGroup = (group) => {
     setEditingGroup(group);
-    setEditingGroupName(group.name);
+    setEditingGroupName(group?.name || "");
   };
 
   const handleSaveEditGroup = async (e) => {
@@ -169,15 +193,6 @@ export default function Exercises() {
     }
   };
 
-  const filteredExercises = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return exercises.filter((ex) => {
-      const matchSearch = ex.name.toLowerCase().includes(q);
-      const matchGroup =
-        selectedGroupId === "all" || String(ex.muscle_group_id) === String(selectedGroupId);
-      return matchSearch && matchGroup;
-    });
-  }, [exercises, search, selectedGroupId]);
 
   if (loading) {
     return (
@@ -227,15 +242,23 @@ export default function Exercises() {
           <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#FF5722]">
-                ★ Catálogo Oficial de Gimnasio
+                ★ Catálogo de Ejercicios
               </h3>
               <p className="mt-0.5 text-xs text-[#8E8E93]">
-                80 ejercicios oficiales estructurados por grupo muscular (20 en Pecho y Pierna, 10 en los demás).
+                Catálogo biomecánico completo para hipertrofia y fuerza.
               </p>
             </div>
-            <div className="flex items-center gap-1.5 self-start sm:self-auto text-xs font-semibold text-[#34D399] bg-[#34D399]/10 px-3 py-1.5 rounded-xl border border-[#34D399]/20">
-              <Sparkles size={14} />
-              <span>{exercises.length} Ejercicios Oficiales</span>
+            <div className="flex flex-wrap items-center gap-2">
+              {!isOnline() && (
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-300 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/30">
+                  <span>📶</span>
+                  <span>Modo sin conexión (Catálogo local activo)</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 self-start sm:self-auto text-xs font-semibold text-[#34D399] bg-[#34D399]/10 px-3 py-1.5 rounded-xl border border-[#34D399]/20">
+                <Sparkles size={14} />
+                <span>{exercises.length} Ejercicios</span>
+              </div>
             </div>
           </div>
 
@@ -294,7 +317,7 @@ export default function Exercises() {
                       : "border border-white/5 bg-[#121212] text-[#8E8E93] hover:border-white/20 hover:text-white"
                   }`}
                 >
-                  <span className="truncate break-words max-w-[120px] inline-block">{g.name}</span>
+                  <span className="truncate break-words max-w-[120px] inline-block">{g?.name || "Músculo"}</span>
                 </button>
               ))}
             </div>
@@ -304,26 +327,38 @@ export default function Exercises() {
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
             {filteredExercises.map((ex) => (
               <div
-                key={ex.id}
+                key={ex?.id || Math.random()}
                 className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-[#1C1C1E] p-4 hover:border-white/10 hover:bg-[#252528] transition"
               >
                 <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-semibold text-white truncate break-words">
-                    {ex.name}
+                    {ex?.name || "Ejercicio"}
                   </h4>
                   <span className="mt-0.5 inline-block text-[11px] font-medium text-[#FF5722] truncate break-words">
-                    {ex.muscle_group_name || "Músculo"}
+                    {ex?.muscle_group_name || "Músculo"}
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleDeleteExercise(ex.id, ex.name)}
-                  title="Eliminar ejercicio"
-                  className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8E8E93] hover:text-red-400 active:scale-90 transition flex-shrink-0"
-                >
-                  <Trash2 size={18} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMediaExercise(ex)}
+                    title="Ver biomecánica & imagen / gif"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8E8E93] hover:text-[#FF5722] active:scale-90 transition flex-shrink-0"
+                  >
+                    <Camera size={18} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExercise(ex?.id, ex?.name || "Ejercicio")}
+                    title="Eliminar ejercicio"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8E8E93] hover:text-red-400 active:scale-90 transition flex-shrink-0"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+
               </div>
             ))}
 
@@ -400,7 +435,7 @@ export default function Exercises() {
               >
                 <div className="min-w-0 flex-1">
                   <h4 className="text-base font-semibold text-white truncate break-words">
-                    {group.name}
+                    {group?.name || "Músculo"}
                   </h4>
                   <div className="mt-1 flex items-center gap-1.5 text-xs text-[#8E8E93]">
                     <span className="rounded-md border border-white/5 bg-[#121212] px-2 py-0.5 text-[11px] font-semibold text-[#FF5722]">
@@ -438,11 +473,11 @@ export default function Exercises() {
       {/* Edit Muscle Group Modal */}
       {editingGroup && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-150"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1C1C1E] p-5 space-y-4 animate-fadeIn">
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1C1C1E] p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-5 space-y-4 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2 text-white font-semibold">
                 <Pencil size={18} className="text-[#FF5722]" />
@@ -499,11 +534,11 @@ export default function Exercises() {
       {/* Delete Muscle Group Confirmation Modal */}
       {deletingGroup && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+          className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-150"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md rounded-3xl border border-red-500/30 bg-[#1C1C1E] p-5 space-y-4 animate-fadeIn">
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-red-500/30 bg-[#1C1C1E] p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-5 space-y-4 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 shadow-2xl">
             <div className="flex items-center gap-3 text-red-400">
               <div className="h-10 w-10 rounded-2xl bg-red-500/15 border border-red-500/20 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle size={22} />
@@ -513,7 +548,7 @@ export default function Exercises() {
                   ¿Eliminar grupo muscular?
                 </h3>
                 <span className="text-xs text-red-300 font-medium truncate break-words block">
-                  "{deletingGroup.name}"
+                  "{deletingGroup?.name || "este grupo"}"
                 </span>
               </div>
             </div>
@@ -562,6 +597,20 @@ export default function Exercises() {
           </div>
         </div>
       )}
+
+      {/* Exercise Media & Diagram Modal */}
+      <ExerciseMediaModal
+        isOpen={Boolean(selectedMediaExercise)}
+        onClose={() => setSelectedMediaExercise(null)}
+        exercise={selectedMediaExercise}
+        onExerciseUpdated={(updated) => {
+          setExercises((prev) =>
+            prev.map((e) => (e.id === updated.id ? { ...e, ...updated } : e))
+          );
+          setSelectedMediaExercise(updated);
+        }}
+      />
     </div>
   );
 }
+

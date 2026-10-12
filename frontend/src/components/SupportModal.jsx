@@ -46,8 +46,8 @@ export default function SupportModal({ isOpen, onClose, initialUsername = "", in
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-[#1C1C1E] p-5 sm:p-6 text-white">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1C1C1E] p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-white shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
         {/* Close button */}
         <button
           onClick={handleReset}

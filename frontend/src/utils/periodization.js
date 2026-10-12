@@ -11,14 +11,14 @@ export const PERIODIZATION_MODES = {
 export const PERIODIZATION_LABELS = {
   overload: {
     id: "overload",
-    name: "Semana Dura / Sobrecarga",
-    shortName: "Semana Dura",
+    name: "Fase de Sobrecarga",
+    shortName: "Sobrecarga",
     icon: "⚡",
     color: "#FF5722",
   },
   deload: {
     id: "deload",
-    name: "Semana de Descarga (Deload)",
+    name: "Recuperación Activa (Descarga)",
     shortName: "Descarga",
     icon: "🛡️",
     color: "#38BDF8",

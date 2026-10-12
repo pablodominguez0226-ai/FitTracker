@@ -4,7 +4,7 @@
 
 :root {
   color: #FFFFFF;
-  background-color: #000000;
+  background-color: #050505;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -16,19 +16,17 @@ html, body {
   padding: 0;
   min-width: 320px;
   min-height: 100dvh;
-  background-color: #000000;
+  overflow-x: hidden; /* Solo bloqueamos el desborde horizontal */
+  background-color: #050505;
   color: #FFFFFF;
-  touch-action: manipulation;
-  overflow-x: hidden;
-  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch; /* Scroll suave en iOS/Android */
 }
 
-body, #root {
+#root {
   width: 100%;
   min-height: 100dvh;
   overflow-x: hidden;
-  overscroll-behavior-y: none;
-  background-color: #000000;
+  background-color: #050505;
   color: #FFFFFF;
   display: flex;
   flex-direction: column;

@@ -1,332 +1,115 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Activity,
-  Award,
-  BookOpen,
-  Brain,
+  Apple,
   Check,
   ChevronDown,
   ChevronUp,
   Dumbbell,
+  FileText,
   Flame,
-  HelpCircle,
-  Info,
-  Layers,
-  Lightbulb,
+  HeartPulse,
   Loader2,
-  Repeat,
+  Lock,
+  LogOut,
+  Mail,
+  Pill,
   Ruler,
   Save,
   Scale,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  TrendingUp,
-  Trophy,
   User,
   X,
-  Zap,
 } from "lucide-react";
-import { getLevelExplanations, getProfile, updateProfile, updateUserProfile } from "../api/client";
+import {
+  changePassword,
+  getProfile,
+  getProfileAnalytics,
+  updateProfile,
+} from "../api/client";
+import { showToast } from "./Toast.jsx";
 
-// Static level definitions with complete explanations as requested
-export const DEFAULT_LEVEL_EXPLANATIONS = {
-  principiante: {
-    id: "principiante",
-    title: "Principiante",
-    subtitle: "Construcción de hábitos, técnica sólida y fundamentos",
-    badge: "Fundamentos",
-    description:
-      "Foco en dominar la biomecánica, aprender la terminología de cargas y construir adherencia sin riesgo de lesión.",
-    color: "emerald",
-    topics: ["Conceptos Básicos", "Técnica", "Series y Repeticiones", "Volumen", "PR (Récord Personal)"],
-    explanations: [
-      {
-        id: "p_series_reps",
-        topic: "conceptos_basicos",
-        title: "Series y Repeticiones: Conceptos Clave",
-        summary:
-          "Una repetición es cada ejecución completa del movimiento. Una serie es el bloque de repeticiones seguidas antes de tomar una pausa.",
-        details: [
-          "Repetición (Rep): Es realizar la fase completa del ejercicio (subida y bajada controlada). Por ejemplo, 10 sentadillas seguidas equivalen a 10 repeticiones.",
-          "Serie (Set): Es el conjunto de repeticiones continuas antes de descansar. Por ejemplo, '3 series de 10 reps' significa: 10 reps → descanso → 10 reps → descanso → 10 reps.",
-          "Rango recomendado: Entre 8 y 12 repeticiones por serie proporciona el mejor equilibrio entre control motor, estimulación muscular y seguridad para tendones.",
-        ],
-        icon: "repeat",
-      },
-      {
-        id: "p_tecnica",
-        topic: "tecnica",
-        title: "Técnica y Biomecánica: Prioridad Número Uno",
-        summary:
-          "El control postural y la cadencia excéntrica importan mucho más que los kilos que pongas en la barra o máquina.",
-        details: [
-          "Control excéntrico: Tardá de 2 a 3 segundos en bajar el peso. Esta fase enseña el patrón motor a tus neuronas y estimula la fibra muscular sin sacudidas.",
-          "Rango de Movimiento Completo (ROM): Evitá repeticiones cortas. Realizar el recorrido completo fortalece articulaciones y maximiza la respuesta hipertrófica.",
-          "Cero impulsos compensatorios: Si balanceás el torso o arquás la espalda baja para subir, el estímulo se escapa del músculo y aumenta el riesgo de lesión.",
-          "Series de aproximación: Hacé 1 o 2 series livianas solo para lubricar las articulaciones antes de colocar tu peso de trabajo.",
-        ],
-        icon: "shield-check",
-      },
-      {
-        id: "p_volumen",
-        topic: "volumen",
-        title: "¿Qué es el Volumen de Entrenamiento?",
-        summary:
-          "Es la cantidad total de trabajo muscular acumulado, calculado como Series × Repeticiones × Peso levantado (kg).",
-        details: [
-          "Fórmula del volumen: Si realizás 3 series de 10 reps con 20 kg, tu volumen total en ese ejercicio es 3 × 10 × 20 = 600 kg.",
-          "Menos es más al comenzar: Como principiante, tu cuerpo responde rápido. Realizar entre 6 y 10 series semanales bien hechas por grupo muscular es suficiente para ver adaptaciones notables.",
-          "Calidad sobre volumen basura: Agregar series de más cuando ya estás fatigado solo retrasa la recuperación sin aportar más crecimiento.",
-        ],
-        icon: "layers",
-      },
-      {
-        id: "p_pr",
-        topic: "pr",
-        title: "¿Qué es un PR (Personal Record / Récord Personal)?",
-        summary:
-          "PR significa 'Personal Record': es la mejor marca histórica registrada en un ejercicio particular.",
-        details: [
-          "Qué mide un PR: Puede ser el peso máximo a 1 repetición, o tu mejor registro a un número determinado de reps (ej: 40 kg × 10 reps).",
-          "No busques romperlo en cada sesión: En nivel principiante, tus récords personales subirán de forma natural cada 1 o 2 semanas gracias a la adaptación neuromuscular.",
-          "Regla de oro: Un PR solo es válido si se realizó con la misma técnica impecable que una serie liviana. Nunca sacrifiques postura por un récord.",
-        ],
-        icon: "trophy",
-      },
-    ],
-    recommendations: [
-      "Descansá entre 90 y 120 segundos entre series de fuerza para comenzar la siguiente con energía renovada.",
-      "Respetá al menos 48 horas de descanso antes de volver a solicitar de forma intensa el mismo grupo muscular.",
-      "Anotá cada serie en FitTracker de inmediato mientras la sensación del peso sigue fresca.",
-    ],
+export const NUTRITION_OPTIONS = [
+  {
+    id: "superavit_volumen",
+    label: "Superávit / Volumen",
+    shortLabel: "Superávit",
+    emoji: "⚡",
+    description: "Superávit calórico enfocado en hipertrofia y fuerza",
   },
-  intermedio: {
-    id: "intermedio",
-    title: "Intermedio",
-    subtitle: "Sobrecarga progresiva sistemática, hipertrofia y consistencia",
-    badge: "Progresión",
-    description:
-      "Foco en optimizar el volumen semanal, programar incrementos de carga precisos y sostener la disciplina en el tiempo.",
-    color: "purple",
-    topics: ["Progresión", "Volumen", "Cargas", "Consistencia"],
-    explanations: [
-      {
-        id: "i_progresion",
-        topic: "progresion",
-        title: "El Principio de Sobrecarga Progresiva",
-        summary:
-          "Para que el músculo siga creciendo cuando la adaptación inicial termina, debés desafiarlo con estímulos incrementalmente mayores.",
-        details: [
-          "Progresión doble: Fijá un rango objetivo (por ejemplo 8 a 12 reps). Mantené el mismo peso hasta completar 12 reps en todas tus series; recién entonces sumá 1.25kg a 2.5kg y volvé a la base de 8 reps.",
-          "Proximidad al fallo (RIR 1-2): RIR significa 'Reps in Reserve'. Finalizá tus series efectivas sintiendo que podías hacer 1 o 2 repeticiones más con buena forma. Ir al fallo absoluto en cada serie solo acumula fatiga prematura.",
-          "Múltiples formas de progresar: Sumar 1 rep extra, mejorar la cadencia o reducir 15 segundos el descanso también constituye sobrecarga progresiva.",
-        ],
-        icon: "trending-up",
-      },
-      {
-        id: "i_volumen",
-        topic: "volumen",
-        title: "Volumen Óptimo de Hipertrofia",
-        summary:
-          "El rango de máxima respuesta muscular se sitúa entre 10 y 16 series efectivas semanales por grupo muscular.",
-        details: [
-          "Series efectivas: Solo cuentan las series con esfuerzo real (RIR 1-3). Las aproximaciones no se computan como volumen de hipertrofia.",
-          "Frecuencia 2: Distribuir 12 series semanales en dos sesiones de 6 series (ej: Lunes y Jueves) genera mayor síntesis proteica acumulada que 12 series en un solo día.",
-          "Monitoreo semanal: Usá la sección 'Consistencia Semanal' en FitTracker para asegurar que tu tonelaje se mantenga estable o en leve ascenso.",
-        ],
-        icon: "layers",
-      },
-      {
-        id: "i_cargas",
-        topic: "cargas",
-        title: "Manejo de Cargas y Micro-Incrementos",
-        summary:
-          "Los saltos de peso deben ser sostenibles: las micro-cargas de 1.25 kg a 2.5 kg son el secreto del progreso continuo.",
-        details: [
-          "Básicos vs aislados: En ejercicios compuestos (sentadilla, press banca, peso muerto) progresá con 2.5 kg. En aislamiento (vuelos laterales, brazos) progresá primero en reps antes de subir peso.",
-          "Carga consolidada: Cuando alcances el tope de repeticiones en todas tus series de trabajo con buena forma, el peso está consolidado para el siguiente escalón.",
-          "Calentamiento piramidal: Hacé series cortas al 40%, 60% y 80% del peso de trabajo para activar el sistema nervioso sin gastar glucógeno.",
-        ],
-        icon: "dumbbell",
-      },
-      {
-        id: "i_consistencia",
-        topic: "consistencia",
-        title: "Consistencia y Gestión del Esfuerzo",
-        summary:
-          "La adherencia al programa semana a semana vence a la intensidad esporádica desmedida.",
-        details: [
-          "Días de baja energía (Voluntad de Hierro): Entrenar con energía 1 o 2 sobre 5 es sumamente valioso. No busques récords: cumplí el volumen previsto, descansá generosamente y protegé la constancia.",
-          "Regla del 85%: Cumplir con 3 o 4 sesiones semanales de forma ininterrumpida durante 6 meses transforma cualquier físico.",
-          "Monitoreo de fatiga: Calibrá tu estado de ánimo y esfuerzo mental en FitTracker para prevenir acumulación de fatiga residual.",
-        ],
-        icon: "flame",
-      },
-    ],
-    recommendations: [
-      "Priorizá progresar en repeticiones antes de forzar más kilos en la barra.",
-      "Descansá entre 2 y 3 minutos en movimientos compuestos pesados y 60-90 segundos en aislamiento.",
-      "Si una carga no sube en 3 semanas, revisá si estás durmiendo 7-8h y consumiendo suficiente proteína.",
-    ],
+  {
+    id: "mantenimiento",
+    label: "Mantenimiento",
+    shortLabel: "Mantenimiento",
+    emoji: "⚖️",
+    description: "Normocalórico para recomposición o sostenimiento de marcas",
   },
-  avanzado: {
-    id: "avanzado",
-    title: "Avanzado",
-    subtitle: "Optimización neuromuscular, periodización, autorregulación y estancamientos",
-    badge: "Alto Rendimiento",
-    description:
-      "Foco en análisis fino de fatiga del SNC, manejo de mesetas, periodización ondulante y técnica biomecánica de precisión.",
-    color: "amber",
-    topics: [
-      "Análisis de Rendimiento",
-      "Volumen y MRV",
-      "PR & Peaking",
-      "Progresión Ondulante",
-      "Estancamientos",
-      "Técnica Avanzada",
-    ],
-    explanations: [
-      {
-        id: "a_rendimiento",
-        topic: "rendimiento",
-        title: "Análisis de Rendimiento & Fatiga del SNC",
-        summary:
-          "Medición precisa de fatiga neuromuscular para autorregular el volumen antes de caer en sobreentrenamiento.",
-        details: [
-          "Monitoreo de RPE / RIR: Diferenciar con rigor si una serie fue RPE 8, 9 o 10. Fallar mecánicamente en ejercicios axiales genera fatiga sistémica que compromete los siguientes 4 días.",
-          "Velocidad de ejecución (VBT): Una desaceleración involuntaria en la primera repetición con tu peso habitual es la señal directa de fatiga residual del sistema nervioso central.",
-          "Retención en días bajos: Tu porcentaje de retención en días de energía ≤ 2 revela la solidez de tu fuerza base frente a días óptimos.",
-        ],
-        icon: "activity",
-      },
-      {
-        id: "a_volumen",
-        topic: "volumen",
-        title: "Gestión de MEV, MAV y MRV",
-        summary:
-          "El volumen debe oscilar estratégicamente a lo largo de los mesociclos para romper barreras adaptativas.",
-        details: [
-          "MEV (Volumen Mínimo Efectivo): El piso necesario para sostener músculo (~6-8 series/semana por grupo). Se utiliza en semanas de descarga.",
-          "MAV (Volumen Máximo Adaptativo): El punto dulce de máximo crecimiento (~12-20 series/semana según tolerancia y grupo muscular).",
-          "MRV (Volumen Máximo Recuperable): El techo biológico donde el volumen extra deteriora la recuperación y frena adaptaciones.",
-          "Estrategia de mesociclo: Comenzar cerca del MEV y sumar 1-2 series semanales hasta alcanzar el MRV, seguido de una descarga planificada.",
-        ],
-        icon: "layers",
-      },
-      {
-        id: "a_pr",
-        topic: "pr",
-        title: "Estrategia de PRs & Peaking de Fuerza",
-        summary:
-          "Los récords a nivel avanzado se conquistan mediante fases de acumulación, intensificación y picos de rendimiento.",
-        details: [
-          "Diferenciación de PRs: Distinguí entre 1RM absoluto, PRs de repeticiones (ej: 5RM o 8RM) y PR de tonelaje global en la sesión.",
-          "Peaking de fuerza: Reducir el volumen un 40-50% manteniendo la intensidad de carga durante 7 a 10 días disipa la fatiga y revela la verdadera capacidad del SNC.",
-          "Potenciación Post-Activación (PAP): Una repetición pesada al 90% antes de las series de trabajo recluta unidades motoras de alto umbral.",
-        ],
-        icon: "trophy",
-      },
-      {
-        id: "a_progresion",
-        topic: "progresion",
-        title: "Progresión No Lineal y Periodización Ondulante",
-        summary:
-          "La progresión lineal ya no es suficiente: la periodización ondulante diaria (DUP) evita mesetas adaptativas.",
-        details: [
-          "DUP (Daily Undulating Periodization): Trabajar el mismo músculo con diferentes rangos en la semana (ej: Día 1 = Fuerza a 4-6 reps; Día 2 = Hipertrofia a 8-12 reps; Día 3 = Bombeo a 15-20 reps).",
-          "Variación sin cambiar de ejercicio: Conservá los movimientos madre para perfeccionar el patrón neuromuscular mientras alternás rangos de intensidad.",
-          "Micro-cargas fraccionadas: Discos de 0.5 kg y 1.25 kg son indispensables para continuar elevando la curva de fuerza en básicos consolidados.",
-        ],
-        icon: "trending-up",
-      },
-      {
-        id: "a_estancamientos",
-        topic: "estancamientos",
-        title: "Superación de Estancamientos y Mesetas",
-        summary:
-          "Protocolos basados en evidencia para destrabar estancamientos crónicos en cargas o repeticiones.",
-        details: [
-          "Descarga Activa Programada (Deload): Reducir al 50% las series de trabajo manteniendo el 85% de la carga habitual durante 1 semana para restaurar sensibilidad y tendones.",
-          "Puntos de estancamiento (Sticking points): Emplear pausas isométricas de 2 segundos en el punto de máxima desventaja mecánica (ej: en el pecho en banca o en paralelo en sentadillas).",
-          "Rotación de variantes: Si un ejercicio básico está estancado por más de 6 semanas, rotar a una variante similar (barra a mancuernas pesadas o déficit) por 4 semanas para reactivar adaptaciones sin interferencia neural.",
-        ],
-        icon: "zap",
-      },
-      {
-        id: "a_tecnica_avanzada",
-        topic: "tecnica_avanzada",
-        title: "Técnica Biomecánica Avanzada y Autorregulación",
-        summary:
-          "Alineación personalizada según la anatomía individual y gestión inteligente de la fatiga articular.",
-        details: [
-          "Alineación de perfil de resistencia y curva de fuerza: Elegir implementos que apliquen máxima resistencia donde el músculo tiene mayor ventaja mecánica.",
-          "Gestión de fatiga axial: Equilibrar movimientos que cargan la columna con variantes apoyadas en banco o poleas para sostener el volumen sin agotar el raquis.",
-          "Autorregulación intrasesión: Si la primera serie efectiva se percibe a RPE 9 cuando estaba prevista a RPE 7, recortar 1 serie accesoria para priorizar calidad adaptativa.",
-        ],
-        icon: "target",
-      },
-    ],
-    recommendations: [
-      "Programá semanas de descarga activa cada 5 a 7 semanas de alta intensidad continua.",
-      "Monitoreá de cerca el RPE y reservá el RPE 10 exclusivamente para tests programados.",
-      "Combiná ejercicios con máxima tensión en estiramiento con perfiles de polea en acortamiento.",
-    ],
+  {
+    id: "deficit_definicion",
+    label: "Déficit / Definición",
+    shortLabel: "Déficit",
+    emoji: "🔥",
+    description: "Restricción calórica protegiendo la masa magra",
   },
-};
-
-function getTopicIcon(iconName) {
-  switch (iconName) {
-    case "repeat":
-      return Repeat;
-    case "shield-check":
-      return ShieldCheck;
-    case "layers":
-      return Layers;
-    case "trophy":
-      return Trophy;
-    case "trending-up":
-      return TrendingUp;
-    case "bar-chart-2":
-      return Activity;
-    case "dumbbell":
-      return Dumbbell;
-    case "flame":
-      return Flame;
-    case "activity":
-      return Activity;
-    case "zap":
-      return Zap;
-    case "target":
-      return Target;
-    default:
-      return Lightbulb;
-  }
-}
+  {
+    id: "no_especifica",
+    label: "Sin especificar",
+    shortLabel: "Flexible",
+    emoji: "🔘",
+    description: "Alimentación libre o flexible",
+  },
+];
 
 export default function ProfileModal({
   isOpen,
   onClose,
-  currentLevel = "intermedio",
-  onLevelChange,
   userProfile = null,
+  onRequestLogout,
+  onOpenMasterPanel,
 }) {
-  const [activeModalTab, setActiveModalTab] = useState("physical"); // "physical" | "guide"
-  const [activeTabLevel, setActiveTabLevel] = useState(currentLevel);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [explanationsData, setExplanationsData] = useState(DEFAULT_LEVEL_EXPLANATIONS);
-  const [expandedTopicId, setExpandedTopicId] = useState(null);
+  const isAdmin = Boolean(
+    userProfile?.is_admin === true ||
+    userProfile?.is_admin === 1 ||
+    userProfile?.role === "admin"
+  );
 
-  // Physical profile state
   const [bodyweight, setBodyweight] = useState("");
   const [height, setHeight] = useState("");
-  const [trainingGoal, setTrainingGoal] = useState("hipertrofia");
+  const [bodyFat, setBodyFat] = useState("");
+  const [bicepsGirth, setBicepsGirth] = useState("");
+  const [waistGirth, setWaistGirth] = useState("");
   const [isSavingPhysical, setIsSavingPhysical] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  useEffect(() => {
-    setActiveTabLevel(currentLevel);
-  }, [currentLevel, isOpen]);
+  // Biological Context state
+  const [nutritionContext, setNutritionContext] = useState("no_especifica");
+  const [supplements, setSupplements] = useState("");
+  const [healthNotes, setHealthNotes] = useState("");
+  const [isBioContextOpen, setIsBioContextOpen] = useState(false);
+
+  // Analytics & Profile Username
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [profileUsername, setProfileUsername] = useState("");
+
+  // Email and Password Management State
+  const [email, setEmail] = useState("");
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const data = await getProfileAnalytics().catch(() => null);
+      if (data) {
+        setAnalyticsData(data);
+      }
+    } catch (err) {
+      console.warn("Error cargando analítica de perfil:", err);
+    }
+  }, []);
 
   useEffect(() => {
     if (userProfile) {
@@ -336,17 +119,43 @@ export default function ProfileModal({
       if (userProfile?.height !== null && userProfile?.height !== undefined) {
         setHeight(String(userProfile?.height ?? 170));
       }
-      if (userProfile?.training_goal) {
-        setTrainingGoal(userProfile?.training_goal ?? "hipertrofia");
+      if (userProfile?.body_fat_percentage !== null && userProfile?.body_fat_percentage !== undefined) {
+        setBodyFat(String(userProfile.body_fat_percentage));
       }
-      if (userProfile?.experience_level) {
-        setActiveTabLevel(userProfile?.experience_level ?? "intermedio");
+      if (userProfile?.biceps_girth !== null && userProfile?.biceps_girth !== undefined) {
+        setBicepsGirth(String(userProfile.biceps_girth));
+      }
+      if (userProfile?.waist_girth !== null && userProfile?.waist_girth !== undefined) {
+        setWaistGirth(String(userProfile.waist_girth));
+      }
+      if (userProfile?.nutrition_context) {
+        setNutritionContext(userProfile.nutrition_context);
+      }
+      if (userProfile?.supplements !== undefined && userProfile?.supplements !== null) {
+        setSupplements(userProfile.supplements);
+        if (userProfile.supplements.trim()) {
+          setIsBioContextOpen(true);
+        }
+      }
+      if (userProfile?.health_notes !== undefined && userProfile?.health_notes !== null) {
+        setHealthNotes(userProfile.health_notes);
+        if (userProfile.health_notes.trim()) {
+          setIsBioContextOpen(true);
+        }
+      }
+      if (userProfile?.email) {
+        setEmail(userProfile.email);
+      }
+      if (userProfile?.username) {
+        setProfileUsername(userProfile.username);
       }
     }
   }, [userProfile, isOpen]);
 
   useEffect(() => {
     if (isOpen) {
+      fetchAnalytics();
+
       getProfile()
         .then((profile) => {
           if (profile) {
@@ -356,29 +165,43 @@ export default function ProfileModal({
             if (profile?.height !== null && profile?.height !== undefined) {
               setHeight(String(profile?.height ?? 170));
             }
-            if (profile?.training_goal) {
-              setTrainingGoal(profile?.training_goal ?? "hipertrofia");
+            if (profile?.body_fat_percentage !== null && profile?.body_fat_percentage !== undefined) {
+              setBodyFat(String(profile.body_fat_percentage));
             }
-            if (profile?.experience_level) {
-              setActiveTabLevel(profile?.experience_level ?? "intermedio");
+            if (profile?.biceps_girth !== null && profile?.biceps_girth !== undefined) {
+              setBicepsGirth(String(profile.biceps_girth));
+            }
+            if (profile?.waist_girth !== null && profile?.waist_girth !== undefined) {
+              setWaistGirth(String(profile.waist_girth));
+            }
+            if (profile?.nutrition_context) {
+              setNutritionContext(profile.nutrition_context);
+            }
+            if (profile?.supplements !== undefined && profile?.supplements !== null) {
+              setSupplements(profile.supplements);
+              if (profile.supplements.trim()) {
+                setIsBioContextOpen(true);
+              }
+            }
+            if (profile?.health_notes !== undefined && profile?.health_notes !== null) {
+              setHealthNotes(profile.health_notes);
+              if (profile.health_notes.trim()) {
+                setIsBioContextOpen(true);
+              }
+            }
+            if (profile?.email) {
+              setEmail(profile.email);
+            }
+            if (profile?.username) {
+              setProfileUsername(profile.username);
             }
           }
         })
         .catch((err) => {
-          console.warn("Error cargando perfil físico:", err);
-        });
-
-      getLevelExplanations()
-        .then((res) => {
-          if (res && res.levels) {
-            setExplanationsData(res.levels);
-          }
-        })
-        .catch(() => {
-          // Use fallback data seamlessly
+          console.warn("Error cargando perfil:", err);
         });
     }
-  }, [isOpen]);
+  }, [isOpen, fetchAnalytics]);
 
   const bmiData = useMemo(() => {
     const bw = parseFloat(bodyweight);
@@ -387,23 +210,73 @@ export default function ProfileModal({
     const hM = h / 100;
     const val = bw / (hM * hM);
     const bmi = Math.round(val * 10) / 10;
-    let label = "Saludable / Atlético";
-    let color = "text-emerald-400";
+    let label = "Saludable";
+    let badgeClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
     if (bmi < 18.5) {
       label = "Bajo peso";
-      color = "text-amber-400";
+      badgeClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
     } else if (bmi < 25) {
-      label = "Saludable / En Forma";
-      color = "text-emerald-400";
+      label = "Saludable";
+      badgeClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
     } else if (bmi < 30) {
-      label = "Hipertrofia / Robusto";
-      color = "text-[#C084FC]";
+      label = "Robusto / Masa";
+      badgeClass = "bg-[#7C4DFF]/10 text-[#C084FC] border-[#7C4DFF]/20";
     } else {
       label = "Elevado";
-      color = "text-rose-400";
+      badgeClass = "bg-rose-500/10 text-rose-400 border-rose-500/20";
     }
-    return { bmi, label, color };
+    return { bmi, label, badgeClass };
   }, [bodyweight, height]);
+
+  const calculatedBiometrics = useMemo(() => {
+    const bw = parseFloat(bodyweight) || analyticsData?.bodyweight || 75.0;
+    const h = parseFloat(height) || analyticsData?.height || 175.0;
+    const bf = bodyFat !== "" ? parseFloat(bodyFat) : (analyticsData?.body_fat_percentage ?? 15.0);
+
+    // Casey Butt FFMI & Lean mass
+    const leanMass = analyticsData?.lean_mass_kg ?? +(bw * (1 - (bf / 100))).toFixed(1);
+    const hM = h / 100;
+    const rawFfmi = leanMass / (hM * hM);
+    const ffmi = analyticsData?.ffmi ?? +(rawFfmi + 6.1 * (1.8 - hM)).toFixed(2);
+    const remainingPotentialKg = analyticsData?.remaining_muscular_potential_kg ?? +(Math.max(0, (25.0 - rawFfmi) * (hM * hM))).toFixed(1);
+
+    // Katch-McArdle TMB & TDEE
+    const bmr = analyticsData?.bmr_kcal ?? Math.round(370 + (21.6 * leanMass));
+    const tdee = analyticsData?.tdee_kcal ?? Math.round(bmr * 1.55);
+
+    let calorieDelta = 0;
+    let calorieGoalLabel = "Mantenimiento";
+    let proteinFactor = 2.0;
+
+    if (nutritionContext === "deficit_definicion") {
+      calorieDelta = -400;
+      calorieGoalLabel = "Déficit (-400)";
+      proteinFactor = 2.3;
+    } else if (nutritionContext === "superavit_volumen") {
+      calorieDelta = 300;
+      calorieGoalLabel = "Superávit (+300)";
+      proteinFactor = 2.0;
+    }
+
+    const targetCalories = Math.round(tdee + calorieDelta);
+    const targetProtein = analyticsData?.target_protein_g ?? Math.round(bw * proteinFactor);
+    const targetWater = analyticsData?.target_water_l ?? +((bw * 0.04) + 0.8).toFixed(1);
+
+    return {
+      bw,
+      h,
+      bf,
+      leanMass,
+      ffmi,
+      remainingPotentialKg,
+      bmr,
+      tdee,
+      targetCalories,
+      calorieGoalLabel,
+      targetProtein,
+      targetWater,
+    };
+  }, [bodyweight, height, bodyFat, nutritionContext, analyticsData]);
 
   const handleSavePhysicalProfile = async (e) => {
     if (e) e.preventDefault();
@@ -411,20 +284,32 @@ export default function ProfileModal({
       setIsSavingPhysical(true);
       const bw = bodyweight !== "" ? parseFloat(bodyweight) : null;
       const h = height !== "" ? parseFloat(height) : null;
+      const bf = bodyFat !== "" ? parseFloat(bodyFat) : null;
+      const bg = bicepsGirth !== "" ? parseFloat(bicepsGirth) : null;
+      const wg = waistGirth !== "" ? parseFloat(waistGirth) : null;
 
       const updated = await updateProfile({
         bodyweight: bw,
         height: h,
-        training_goal: trainingGoal,
-        experience_level: activeTabLevel,
+        body_fat_percentage: bf,
+        biceps_girth: bg,
+        waist_girth: wg,
+        nutrition_context: nutritionContext,
+        supplements: supplements.trim() || null,
+        health_notes: healthNotes.trim() || null,
       });
 
-      if (updated && updated.experience_level && onLevelChange) {
-        onLevelChange(updated.experience_level);
-      }
+      window.dispatchEvent(
+        new CustomEvent("fittracker:profileChanged", { detail: updated })
+      );
 
+      fetchAnalytics();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3500);
+
+      showToast("Perfil físico y biométrico actualizado correctamente.", {
+        variant: "emerald",
+      });
     } catch (err) {
       console.error("Error guardando perfil físico:", err);
       alert(err.response?.data?.detail || "Error al guardar el perfil físico.");
@@ -433,125 +318,71 @@ export default function ProfileModal({
     }
   };
 
-  const handleSelectLevel = async (lvl) => {
-    if (lvl === activeTabLevel) return;
+  const handleSaveEmail = async (e) => {
+    if (e) e.preventDefault();
+    const clean = email.trim().toLowerCase();
+    if (!clean) {
+      alert("Por favor ingresá un correo electrónico válido.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(clean)) {
+      alert("Formato de correo electrónico no válido.");
+      return;
+    }
     try {
-      setIsUpdating(true);
-      const updated = await updateProfile({ experience_level: lvl });
-      if (updated && updated.experience_level) {
-        if (onLevelChange) onLevelChange(updated.experience_level);
-        window.dispatchEvent(
-          new CustomEvent("fittracker:levelChanged", { detail: updated.experience_level })
-        );
-      }
-      setActiveTabLevel(lvl);
+      setIsSavingEmail(true);
+      const updated = await updateProfile({ email: clean });
+      if (updated?.email) setEmail(updated.email);
+      showToast("Correo electrónico vinculado con éxito", { variant: "emerald" });
     } catch (err) {
-      console.error("Error actualizando nivel:", err);
+      console.error("Error guardando email:", err);
+      alert(err.response?.data?.detail || "Error al vincular el correo electrónico.");
     } finally {
-      setIsUpdating(false);
+      setIsSavingEmail(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    if (e) e.preventDefault();
+    setPasswordError("");
+    if (!currentPassword) {
+      setPasswordError("Ingresá tu contraseña actual.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("La nueva contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Las contraseñas no coinciden.");
+      return;
+    }
+    try {
+      setIsSavingPassword(true);
+      await changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsChangePasswordOpen(false);
+      showToast("Contraseña actualizada correctamente", { variant: "emerald" });
+    } catch (err) {
+      console.error("Error cambiando contraseña:", err);
+      setPasswordError(
+        err.response?.data?.detail || "Error al cambiar la contraseña."
+      );
+    } finally {
+      setIsSavingPassword(false);
     }
   };
 
   if (!isOpen) return null;
 
-  const currentLevelObj =
-    explanationsData[activeTabLevel] ||
-    DEFAULT_LEVEL_EXPLANATIONS[activeTabLevel] ||
-    DEFAULT_LEVEL_EXPLANATIONS.intermedio;
-
-  const goalsList = [
-    {
-      id: "hipertrofia",
-      title: "Hipertrofia",
-      badgeLabel: "⚡ Hipertrofia",
-      repsRange: "8 a 12 reps",
-      intensity: "65-80% 1RM",
-      adviceBadge: "⚡ En rango de Hipertrofia óptimo",
-      description: "Crecimiento muscular estético, volumen acumulado y RPE 7-9.",
-      icon: Zap,
-      borderActive: "border-[#FF5722] bg-[#FF5722]/10 text-white",
-      borderInactive: "border-white/10 bg-[#121212] hover:border-white/20",
-      accentText: "text-[#FF5722]",
-    },
-    {
-      id: "fuerza",
-      title: "Fuerza Máxima",
-      badgeLabel: "💥 Fuerza Pura",
-      repsRange: "1 a 5 reps",
-      intensity: ">85% 1RM",
-      adviceBadge: "💥 Estímulo de Fuerza pura",
-      description: "Alta tensión mecánica, adaptación del SNC y densidad neural.",
-      icon: Flame,
-      borderActive: "border-amber-500 bg-amber-500/10 text-white",
-      borderInactive: "border-white/10 bg-[#121212] hover:border-white/20",
-      accentText: "text-amber-400",
-    },
-    {
-      id: "potencia_rapidez",
-      title: "Potencia y Rapidez",
-      badgeLabel: "🚀 Potencia",
-      repsRange: "3 a 6 reps",
-      intensity: "40-60% 1RM",
-      adviceBadge: "⚡ Estímulo de Potencia y Velocidad",
-      description: "Cargas medias movidas a la máxima aceleración concéntrica posible.",
-      icon: TrendingUp,
-      borderActive: "border-cyan-500 bg-cyan-500/10 text-white",
-      borderInactive: "border-white/10 bg-[#121212] hover:border-white/20",
-      accentText: "text-cyan-400",
-    },
-    {
-      id: "definicion_adelgazar",
-      title: "Definición / Adelgazar",
-      badgeLabel: "🛡️ Protección",
-      repsRange: "4 a 10 reps firmes",
-      intensity: "Pesada en déficit",
-      adviceBadge: "🛡️ Carga protectora de masa",
-      description: "Mantenimiento estricto de cargas pesadas para retener masa en déficit calórico.",
-      icon: ShieldCheck,
-      borderActive: "border-emerald-500 bg-emerald-500/10 text-white",
-      borderInactive: "border-white/10 bg-[#121212] hover:border-white/20",
-      accentText: "text-emerald-400",
-    },
-  ];
-
-  const levelsList = [
-    {
-      id: "principiante",
-      title: "Principiante",
-      badge: "Fundamentos",
-      summary: "Técnica, series, repeticiones, volumen y PRs básicos.",
-      colorClass: "from-emerald-600 to-teal-500",
-      borderActive: "border-[#FF5722]",
-      bgActive: "bg-[#FF5722]/10",
-      badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    },
-    {
-      id: "intermedio",
-      title: "Intermedio",
-      badge: "Progresión",
-      summary: "Sobrecarga progresiva, volumen, cargas y consistencia.",
-      colorClass: "from-purple-600 to-fuchsia-500",
-      borderActive: "border-[#FF5722]",
-      bgActive: "bg-[#FF5722]/10",
-      badgeColor: "bg-[#7C4DFF]/10 text-[#C084FC] border-[#7C4DFF]/20",
-    },
-    {
-      id: "avanzado",
-      title: "Avanzado",
-      badge: "Alto Rendimiento",
-      summary: "Análisis de rendimiento, MRV, estancamientos, técnica y periodización.",
-      colorClass: "from-amber-600 to-orange-500",
-      borderActive: "border-[#FF5722]",
-      bgActive: "bg-[#FF5722]/10",
-      badgeColor: "bg-amber-500/10 text-amber-300 border-amber-500/20",
-    },
-  ];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 animate-in fade-in duration-150 overflow-y-auto">
-      <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-3xl border border-white/10 bg-[#1C1C1E] overflow-hidden my-auto">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-150">
+      <div className="relative w-full max-w-2xl max-h-[88dvh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-[#2C2C2E] bg-[#050505] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-white/10 bg-[#1C1C1E] p-4 sm:p-5">
+        <div className="flex items-center justify-between border-b border-[#2C2C2E] bg-[#050505] p-4 sm:p-5 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white flex-shrink-0">
               <User size={20} />
@@ -559,92 +390,119 @@ export default function ProfileModal({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-lg font-bold text-white">
-                  Mi Perfil Físico &amp; Nivel
+                  {profileUsername ? `@${profileUsername}` : "Perfil Físico"}
                 </h2>
-                <span className="rounded-md border border-[#FF5722]/30 bg-[#FF5722]/10 px-2 py-0.5 text-[9px] font-semibold uppercase text-[#FF5722]">
-                  {goalsList.find((g) => g.id === trainingGoal)?.title || "Hipertrofia"}
+
+                <span className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-400 font-mono">
+                  FFMI {calculatedBiometrics.ffmi}
                 </span>
+
                 {bodyweight && (
-                  <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase text-emerald-400">
+                  <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 font-mono">
                     {bodyweight} kg
+                  </span>
+                )}
+                {nutritionContext !== "no_especifica" && (
+                  <span className="rounded-md border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-[#8E8E93]">
+                    {NUTRITION_OPTIONS.find((n) => n.id === nutritionContext)?.shortLabel || nutritionContext}
                   </span>
                 )}
               </div>
               <p className="text-xs text-[#8E8E93]">
-                Personalizá tu peso, altura y objetivo para el Asesor Inteligente de Cargas
+                Calibración biomecánica cuantitativa para fuerza relativa y requerimientos metabólicos
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl p-2 text-[#8E8E93] hover:bg-white/5 hover:text-white transition"
-            title="Cerrar"
-          >
-            <X size={20} />
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                window.dispatchEvent(new CustomEvent("fittracker:openCheckIn"));
+              }}
+              className="flex items-center gap-1.5 bg-[#1C1C1E] border border-white/15 hover:border-[#FF5722]/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-white/5 transition active:scale-95 cursor-pointer shadow-sm"
+              title="Abrir Sistema de Check-Ins Periódicos"
+            >
+              <span className="text-[#FF5722]">⚖️</span>
+              <span>Check-In</span>
+            </button>
+
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onOpenMasterPanel) {
+                    onOpenMasterPanel();
+                  } else {
+                    onClose();
+                    window.location.pathname = "/admin";
+                  }
+                }}
+                className="flex items-center gap-1.5 bg-[#1C1C1E] border border-[#FF5722]/40 text-[#FF5722] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#FF5722]/15 transition active:scale-95 cursor-pointer shadow-md shadow-[#FF5722]/10"
+                title="Abrir Panel de Control de Administrador"
+              >
+                <span>🛡️</span>
+                <span>Admin Panel</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl p-2 text-[#8E8E93] hover:bg-white/5 hover:text-white transition cursor-pointer"
+              title="Cerrar"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        {/* Modal Tab Switcher */}
-        <div className="flex border-b border-white/10 bg-[#1C1C1E] px-4 sm:px-6">
-          <button
-            type="button"
-            onClick={() => setActiveModalTab("physical")}
-            className={`flex items-center gap-2 border-b-2 py-3 px-3 text-xs sm:text-sm font-semibold transition ${
-              activeModalTab === "physical"
-                ? "border-[#FF5722] text-white"
-                : "border-transparent text-[#8E8E93] hover:text-white"
-            }`}
-          >
-            <Scale size={15} className={activeModalTab === "physical" ? "text-[#FF5722]" : ""} />
-            <span>Mi Perfil Físico</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveModalTab("guide")}
-            className={`flex items-center gap-2 border-b-2 py-3 px-3 text-xs sm:text-sm font-semibold transition ${
-              activeModalTab === "guide"
-                ? "border-[#FF5722] text-white"
-                : "border-transparent text-[#8E8E93] hover:text-white"
-            }`}
-          >
-            <BookOpen size={15} className={activeModalTab === "guide" ? "text-[#FF5722]" : ""} />
-            <span>Nivel &amp; Guía Educativa</span>
-          </button>
-        </div>
+        {/* Modal Body - Scrolleable */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5 custom-scrollbar bg-[#050505]">
+          <form id="profile-physical-form" onSubmit={handleSavePhysicalProfile} className="space-y-5">
+            {saveSuccess && (
+              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-3 flex items-center gap-2.5 text-xs text-emerald-300 animate-in fade-in">
+                <Check size={16} className="text-emerald-400 flex-shrink-0" />
+                <span className="font-bold">Datos físicos y biométricos actualizados correctamente.</span>
+              </div>
+            )}
 
-        {/* Modal Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar">
-          {activeModalTab === "physical" ? (
-            /* TAB 1: MI PERFIL FÍSICO */
-            <form onSubmit={handleSavePhysicalProfile} className="space-y-5">
-              {saveSuccess && (
-                <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-3 flex items-center gap-2.5 text-xs text-emerald-300 animate-in fade-in">
-                  <Check size={16} className="text-emerald-400 flex-shrink-0" />
-                  <span className="font-bold">¡Perfil físico guardado con éxito! El Asesor de Cargas y Ratios ya están activos.</span>
-                </div>
-              )}
+            {/* SECCIÓN 1: BIOMETRÍA & ANTROPOMETRÍA */}
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                  <Scale size={14} className="text-[#FF5722]" />
+                  <span>1. Biometría Cuantitativa &amp; Antropometría</span>
+                </label>
+                {bmiData && (
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${bmiData.badgeClass}`}>
+                    <span>IMC {bmiData.bmi}</span>
+                    <span>•</span>
+                    <span>{bmiData.label}</span>
+                  </span>
+                )}
+              </div>
 
-              {/* Weight & Height Inputs Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {/* Weight Input */}
-                <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 space-y-2">
+              {/* Grid de 5 inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* 1. Peso Corporal */}
+                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
-                      <Scale size={14} className="text-[#FF5722]" />
+                      <Scale size={13} className="text-[#FF5722]" />
                       <span>Peso Corporal</span>
                     </label>
-                    <span className="text-[10px] font-medium text-[#8E8E93]">Base Fuerza Relativa</span>
+                    <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Base Prime</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
-                        const cur = parseFloat(bodyweight) || (userProfile?.bodyweight ?? 70);
+                        const cur = parseFloat(bodyweight) || 75;
                         setBodyweight(String(Math.max(20, Math.round((cur - 0.5) * 10) / 10)));
                       }}
-                      className="oled-stepper-btn h-11 w-11 text-xs"
+                      className="oled-stepper-btn h-9 w-9 text-xs"
                       title="-0.5 kg"
                     >
                       -0.5
@@ -656,12 +514,12 @@ export default function ProfileModal({
                         step="0.1"
                         min="20"
                         max="350"
-                        placeholder="ej: 75.0"
+                        placeholder="75.0"
                         value={bodyweight}
                         onChange={(e) => setBodyweight(e.target.value)}
-                        className="iron-input w-full text-center text-base font-bold py-2 pr-9"
+                        className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
                       />
-                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
                         kg
                       </span>
                     </div>
@@ -669,38 +527,35 @@ export default function ProfileModal({
                     <button
                       type="button"
                       onClick={() => {
-                        const cur = parseFloat(bodyweight) || (userProfile?.bodyweight ?? 70);
+                        const cur = parseFloat(bodyweight) || 75;
                         setBodyweight(String(Math.min(300, Math.round((cur + 0.5) * 10) / 10)));
                       }}
-                      className="oled-stepper-btn h-11 w-11 text-xs"
+                      className="oled-stepper-btn h-9 w-9 text-xs"
                       title="+0.5 kg"
                     >
                       +0.5
                     </button>
                   </div>
-                  <p className="text-[11px] text-[#8E8E93]">
-                    Se usa para calcular: <strong className="text-white">PR / Peso (ej: 80kg = 1.05× tu peso)</strong>.
-                  </p>
                 </div>
 
-                {/* Height Input */}
-                <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 space-y-2">
+                {/* 2. Altura */}
+                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
-                      <Ruler size={14} className="text-[#FF5722]" />
+                      <Ruler size={13} className="text-[#FF5722]" />
                       <span>Altura</span>
                     </label>
-                    <span className="text-[10px] font-medium text-[#8E8E93]">Índice Biométrico</span>
+                    <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Palanca</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
-                        const cur = parseFloat(height) || (userProfile?.height ?? 170);
+                        const cur = parseFloat(height) || 175;
                         setHeight(String(Math.max(50, Math.round(cur - 1))));
                       }}
-                      className="oled-stepper-btn h-11 w-11 text-xs"
+                      className="oled-stepper-btn h-9 w-9 text-xs"
                       title="-1 cm"
                     >
                       -1
@@ -712,12 +567,12 @@ export default function ProfileModal({
                         step="1"
                         min="50"
                         max="250"
-                        placeholder="ej: 178"
+                        placeholder="175"
                         value={height}
                         onChange={(e) => setHeight(e.target.value)}
-                        className="iron-input w-full text-center text-base font-bold py-2 pr-9"
+                        className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
                       />
-                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
                         cm
                       </span>
                     </div>
@@ -725,364 +580,601 @@ export default function ProfileModal({
                     <button
                       type="button"
                       onClick={() => {
-                        const cur = parseFloat(height) || (userProfile?.height ?? 170);
+                        const cur = parseFloat(height) || 175;
                         setHeight(String(Math.min(240, Math.round(cur + 1))));
                       }}
-                      className="oled-stepper-btn h-11 w-11 text-xs"
+                      className="oled-stepper-btn h-9 w-9 text-xs"
                       title="+1 cm"
                     >
                       +1
                     </button>
                   </div>
+                </div>
 
-                  {bmiData ? (
-                    <p className="text-[11px] text-[#8E8E93] flex items-center justify-between">
-                      <span>IMC calculado: <strong className="text-white">{bmiData.bmi}</strong></span>
-                      <span className={`font-semibold ${bmiData.color}`}>{bmiData.label}</span>
-                    </p>
-                  ) : (
-                    <p className="text-[11px] text-[#8E8E93]">
-                      Ingresá peso y altura para calcular tu composición básica (IMC).
-                    </p>
-                  )}
+                {/* 3. % Grasa Corporal */}
+                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                      <Flame size={13} className="text-amber-400" />
+                      <span>% Grasa Corporal</span>
+                    </label>
+                    <span className="text-[9px] text-[#8E8E93]">Opcional</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = parseFloat(bodyFat) || 15.0;
+                        setBodyFat(String(Math.max(3, Math.round((cur - 0.5) * 10) / 10)));
+                      }}
+                      className="oled-stepper-btn h-9 w-9 text-xs"
+                      title="-0.5 %"
+                    >
+                      -0.5
+                    </button>
+
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="3"
+                        max="60"
+                        placeholder="15.0"
+                        value={bodyFat}
+                        onChange={(e) => setBodyFat(e.target.value)}
+                        className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
+                      />
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
+                        %
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = parseFloat(bodyFat) || 15.0;
+                        setBodyFat(String(Math.min(60, Math.round((cur + 0.5) * 10) / 10)));
+                      }}
+                      className="oled-stepper-btn h-9 w-9 text-xs"
+                      title="+0.5 %"
+                    >
+                      +0.5
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Perímetro Bíceps */}
+                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                      <Dumbbell size={13} className="text-[#C084FC]" />
+                      <span>Circunf. Bíceps</span>
+                    </label>
+                    <span className="text-[9px] text-[#8E8E93]">Opcional</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = parseFloat(bicepsGirth) || 35.0;
+                        setBicepsGirth(String(Math.max(15, Math.round((cur - 0.5) * 10) / 10)));
+                      }}
+                      className="oled-stepper-btn h-9 w-9 text-xs"
+                      title="-0.5 cm"
+                    >
+                      -0.5
+                    </button>
+
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="15"
+                        max="70"
+                        placeholder="35.0"
+                        value={bicepsGirth}
+                        onChange={(e) => setBicepsGirth(e.target.value)}
+                        className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
+                      />
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
+                        cm
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = parseFloat(bicepsGirth) || 35.0;
+                        setBicepsGirth(String(Math.min(70, Math.round((cur + 0.5) * 10) / 10)));
+                      }}
+                      className="oled-stepper-btn h-9 w-9 text-xs"
+                      title="+0.5 cm"
+                    >
+                      +0.5
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5. Perímetro Cintura */}
+                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                      <Ruler size={13} className="text-cyan-400" />
+                      <span>Circunf. Cintura</span>
+                    </label>
+                    <span className="text-[9px] text-[#8E8E93]">Opcional</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = parseFloat(waistGirth) || 80.0;
+                        setWaistGirth(String(Math.max(40, Math.round((cur - 0.5) * 10) / 10)));
+                      }}
+                      className="oled-stepper-btn h-9 w-9 text-xs"
+                      title="-0.5 cm"
+                    >
+                      -0.5
+                    </button>
+
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="40"
+                        max="160"
+                        placeholder="80.0"
+                        value={waistGirth}
+                        onChange={(e) => setWaistGirth(e.target.value)}
+                        className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
+                      />
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
+                        cm
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = parseFloat(waistGirth) || 80.0;
+                        setWaistGirth(String(Math.min(160, Math.round((cur + 0.5) * 10) / 10)));
+                      }}
+                      className="oled-stepper-btn h-9 w-9 text-xs"
+                      title="+0.5 cm"
+                    >
+                      +0.5
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Training Goal Selector */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
-                    <Target size={14} className="text-[#FF5722]" />
-                    <span>Objetivo de Entrenamiento</span>
-                  </label>
-                  <span className="text-[10px] font-semibold text-[#FF5722]">
-                    Adapta las alertas del Asesor Inteligente
+              {/* DASHBOARD BIOMÉTRICO TÉCNICO */}
+              <div className="rounded-2xl border border-[#2C2C2E] bg-[#0E0E10] p-4 space-y-3 shadow-lg">
+                <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Activity size={16} className="text-[#FF5722]" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-white">
+                      Dashboard Biométrico &amp; Nutricional
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#8E8E93] bg-[#1C1C1E] px-2 py-0.5 rounded border border-white/10">
+                    Katch-McArdle • Casey Butt
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {goalsList.map((g) => {
-                    const isSelected = trainingGoal === g.id;
-                    const Icon = g.icon;
-                    return (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => setTrainingGoal(g.id)}
-                        className={`relative rounded-2xl border p-3.5 text-left transition flex flex-col justify-between gap-2.5 active:scale-[0.98] ${
-                          isSelected ? g.borderActive : g.borderInactive
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FF5722]/10 text-[#FF5722]">
-                                <Icon size={15} />
-                              </span>
-                              <span className="text-sm font-bold text-white">{g.title}</span>
-                            </div>
-                            {isSelected && (
-                              <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-semibold uppercase">
-                                <Check size={11} /> Activo
-                              </span>
-                            )}
-                          </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {/* FFMI actual */}
+                  <div className="rounded-xl border border-white/5 bg-[#141416] p-3 flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#8E8E93]">FFMI / Límite Nat.</span>
+                    <div className="my-1 flex items-baseline gap-1">
+                      <span className="text-lg font-black text-white">{calculatedBiometrics.ffmi}</span>
+                      <span className="text-[11px] font-bold text-[#8E8E93]">/ 25.0</span>
+                    </div>
+                    <div className="w-full bg-[#242426] h-1.5 rounded-full overflow-hidden mb-1">
+                      <div
+                        className="bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] h-full"
+                        style={{ width: `${Math.min(100, Math.round((calculatedBiometrics.ffmi / 25.0) * 100))}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-[#8E8E93] font-medium">
+                      Masa Magra: <strong className="text-white">{calculatedBiometrics.leanMass} kg</strong>
+                    </span>
+                  </div>
 
-                          <div className="mt-1 flex items-center gap-2 text-[10px] font-semibold">
-                            <span className="rounded bg-[#1C1C1E] px-2 py-0.5 text-[#FF5722] border border-white/10">
-                              {g.repsRange}
-                            </span>
-                            <span className="text-[#8E8E93]">{g.intensity}</span>
-                          </div>
+                  {/* Potencial remanente */}
+                  <div className="rounded-xl border border-white/5 bg-[#141416] p-3 flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#8E8E93]">Potencial Magro</span>
+                    <div className="my-1">
+                      <span className="text-lg font-black text-emerald-400">
+                        +{calculatedBiometrics.remainingPotentialKg} <span className="text-xs font-bold">kg</span>
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-[#8E8E93] font-medium">
+                      Hasta techo 25.0 FFMI
+                    </span>
+                    <span className="text-[10px] text-emerald-400/80 font-mono">
+                      {Math.min(100, Math.round((calculatedBiometrics.ffmi / 25.0) * 100))}% alcanzado
+                    </span>
+                  </div>
 
-                          <p className="mt-2 text-[11px] text-[#8E8E93] leading-snug">
-                            {g.description}
-                          </p>
-                        </div>
+                  {/* TDEE & Meta calórica */}
+                  <div className="rounded-xl border border-white/5 bg-[#141416] p-3 flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#8E8E93]">TDEE / Meta</span>
+                    <div className="my-1 flex items-baseline gap-1">
+                      <span className="text-lg font-black text-[#C084FC]">{calculatedBiometrics.targetCalories}</span>
+                      <span className="text-[10px] font-bold text-[#8E8E93]">kcal/d</span>
+                    </div>
+                    <span className="text-[10px] text-[#8E8E93] font-medium">
+                      Mant: <strong className="text-white">{calculatedBiometrics.tdee}</strong> (TMB {calculatedBiometrics.bmr})
+                    </span>
+                    <span className="text-[10px] text-[#C084FC] font-semibold">
+                      {calculatedBiometrics.calorieGoalLabel}
+                    </span>
+                  </div>
 
-                        {/* Advisor preview pill */}
-                        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px]">
-                          <span className="text-[#8E8E93] font-medium">Mensaje en series:</span>
-                          <span className={`font-semibold ${g.accentText}`}>{g.adviceBadge}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
+                  {/* Proteína & Agua */}
+                  <div className="rounded-xl border border-white/5 bg-[#141416] p-3 flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#8E8E93]">Macro &amp; Hidratación</span>
+                    <div className="my-1 flex flex-col gap-0.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#8E8E93]">Proteína:</span>
+                        <span className="font-black text-white">{calculatedBiometrics.targetProtein} g/d</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#8E8E93]">Agua:</span>
+                        <span className="font-black text-cyan-400">{calculatedBiometrics.targetWater} L/d</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-[#8E8E93] font-mono">
+                      2.0 g/kg • 40ml/kg+0.8
+                    </span>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Experience Level Quick Selector inside Physical Tab */}
-              <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">
-                    Nivel de Experiencia
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModalTab("guide")}
-                    className="text-[11px] font-semibold text-[#FF5722] hover:underline"
-                  >
-                    Ver explicaciones detalladas →
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  {["principiante", "intermedio", "avanzado"].map((lvlKey) => {
-                    const isSelected = activeTabLevel === lvlKey;
-                    return (
-                      <button
-                        key={lvlKey}
-                        type="button"
-                        onClick={() => setActiveTabLevel(lvlKey)}
-                        className={`rounded-xl py-2 px-2 text-xs font-semibold capitalize transition border text-center ${
-                          isSelected
-                            ? "border-[#FF5722] bg-[#FF5722]/10 text-white"
-                            : "border-white/10 bg-[#1C1C1E] text-[#8E8E93] hover:text-white hover:border-white/20"
-                        }`}
-                      >
-                        {lvlKey}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Save Physical Profile CTA Button */}
+            {/* SECCIÓN 2: CONTEXTO NUTRICIONAL & SALUD (COLAPSABLE) */}
+            <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] overflow-hidden transition">
               <button
-                type="submit"
-                disabled={isSavingPhysical}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-90 active:scale-[0.99] text-white font-semibold text-sm flex items-center justify-center gap-2 transition select-none"
+                type="button"
+                onClick={() => setIsBioContextOpen((prev) => !prev)}
+                className="w-full p-4 flex items-center justify-between text-left hover:bg-white/[0.02] transition cursor-pointer"
               >
-                {isSavingPhysical ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Guardando datos del perfil...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save size={16} />
-                    <span>Guardar Mi Perfil Físico</span>
-                  </>
-                )}
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">
+                    <HeartPulse size={18} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs sm:text-sm font-bold text-white">
+                        2. Contexto Nutricional &amp; Biológico
+                      </h4>
+                      {nutritionContext !== "no_especifica" && (
+                        <span className="rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-semibold">
+                          {NUTRITION_OPTIONS.find((o) => o.id === nutritionContext)?.shortLabel || nutritionContext}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[#8E8E93]">
+                      Fase nutricional activa, suplementación y anotaciones privadas
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-[#8E8E93]">
+                  <span className="text-[11px] font-medium hidden sm:inline">
+                    {isBioContextOpen ? "Plegar" : "Expandir"}
+                  </span>
+                  {isBioContextOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </div>
               </button>
-            </form>
-          ) : (
-            /* TAB 2: GUÍA EDUCATIVA & NIVEL */
-            <div className="space-y-5">
-              {/* Non-Blocking Notice Banner */}
-              <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 flex items-start gap-2.5 text-xs text-[#8E8E93]">
-                <ShieldCheck size={18} className="text-emerald-400 flex-shrink-0 mt-0.5" />
+
+              {isBioContextOpen && (
+                <div className="p-4 pt-2 border-t border-[#2C2C2E] space-y-4 animate-in fade-in duration-150">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-[#8E8E93] flex items-center gap-1.5">
+                      <Apple size={14} className="text-emerald-400" />
+                      <span>Fase o Contexto Nutricional</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {NUTRITION_OPTIONS.map((opt) => {
+                        const isSelected = nutritionContext === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setNutritionContext(opt.id)}
+                            className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between gap-1 active:scale-[0.98] cursor-pointer ${
+                              isSelected
+                                ? "border-[#FF5722] bg-[#FF5722]/15 text-white"
+                                : "border-[#2C2C2E] bg-[#1C1C1E] text-[#8E8E93] hover:text-white hover:border-white/20"
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm">{opt.emoji}</span>
+                              <span className="text-xs font-bold truncate">{opt.label}</span>
+                            </div>
+                            <p className="text-[10px] text-[#8E8E93] leading-snug line-clamp-2">
+                              {opt.description}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8E8E93] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Pill size={14} className="text-[#7C4DFF]" />
+                        <span>Suplementación Habitual</span>
+                      </span>
+                      <span className="text-[10px] text-[#8E8E93] font-normal">Opcional</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={supplements}
+                      onChange={(e) => setSupplements(e.target.value)}
+                      placeholder="ej. Creatina 5g, Proteína Whey, Omega 3, Magnesio"
+                      className="iron-input w-full text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#8E8E93] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <FileText size={14} className="text-amber-400" />
+                        <span>Notas de Salud y Biológicas (Privado)</span>
+                      </span>
+                      <span className="text-[10px] text-amber-400/80 font-medium">Confidencial</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={healthNotes}
+                      onChange={(e) => setHealthNotes(e.target.value)}
+                      placeholder="Molestias previas, recomendaciones médicas, notas de descanso..."
+                      className="iron-input w-full text-sm resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Save Physical Profile CTA Button */}
+            <button
+              type="submit"
+              disabled={isSavingPhysical}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-90 active:scale-[0.99] text-white font-semibold text-sm flex items-center justify-center gap-2 transition select-none cursor-pointer"
+            >
+              {isSavingPhysical ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Guardando datos biométricos...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  <span>Guardar Mi Perfil Físico &amp; Biológico</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* ACCESO DIRECTO PANEL MASTER (SOLO ADMINS) */}
+          {isAdmin && (
+            <div className="bg-[#121212] border border-[#FF5722]/40 rounded-3xl p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-lg shadow-[#FF5722]/5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FF5722]/15 border border-[#FF5722]/30 text-lg flex-shrink-0">
+                  👑
+                </span>
                 <div>
-                  <strong className="text-white block font-semibold">100% de funcionalidades desbloqueadas</strong>
-                  <p className="text-[11px] text-[#8E8E93] mt-0.5 leading-relaxed">
-                    El nivel de experiencia adapta las explicaciones educativas, consejos del Coach y sugerencias de sobrecarga.
-                    <strong className="text-white"> No bloquea ninguna función de la aplicación:</strong> todos los ejercicios, métricas, récords y modos de entrenamiento están totalmente disponibles para todos los niveles.
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <span>Privilegios de Administrador</span>
+                  </h4>
+                  <p className="text-[11px] text-[#8E8E93] leading-relaxed">
+                    Gestión de usuarios registrados, catálogo de ejercicios y métricas del servidor.
                   </p>
                 </div>
               </div>
 
-              {/* Level Selector Buttons (3 cards) */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">
-                    Seleccioná o modificá tu nivel
-                  </label>
-                  {isUpdating && (
-                    <span className="flex items-center gap-1.5 text-[11px] text-[#FF5722] font-semibold">
-                      <Loader2 size={13} className="animate-spin" />
-                      Guardando perfil...
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {levelsList.map((lvl) => {
-                    const isActive = activeTabLevel === lvl.id;
-                    return (
-                      <button
-                        key={lvl.id}
-                        type="button"
-                        onClick={() => handleSelectLevel(lvl.id)}
-                        disabled={isUpdating}
-                        className={`relative rounded-2xl border p-3.5 text-left transition flex flex-col justify-between gap-2.5 active:scale-[0.98] ${
-                          isActive
-                            ? `${lvl.borderActive} ${lvl.bgActive}`
-                            : "border-white/10 bg-[#121212] hover:border-white/20"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-sm font-bold text-white">{lvl.title}</span>
-                            {isActive && (
-                              <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-semibold uppercase">
-                                <Check size={11} /> Activo
-                              </span>
-                            )}
-                          </div>
-                          <span className={`inline-block rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${lvl.badgeColor}`}>
-                            {lvl.badge}
-                          </span>
-                          <p className="mt-2 text-[11px] text-[#8E8E93] leading-snug">
-                            {lvl.summary}
-                          </p>
-                        </div>
-
-                        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-semibold">
-                          <span className={isActive ? "text-emerald-400" : "text-[#8E8E93]"}>
-                            {isActive ? "Nivel activo" : "Clic para activar"}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Guide Explanations Section */}
-              <div className="rounded-3xl border border-white/10 bg-[#121212] p-4 sm:p-5 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <BookOpen size={16} className="text-[#FF5722]" />
-                      <h3 className="text-sm sm:text-base font-bold text-white">
-                        Guía &amp; Conceptos Clave: {currentLevelObj.title}
-                      </h3>
-                      <span className="rounded-md border border-[#FF5722]/30 bg-[#FF5722]/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#FF5722]">
-                        {currentLevelObj.badge}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#8E8E93] mt-0.5">
-                      {currentLevelObj.description}
-                    </p>
-                  </div>
-
-                  {/* Quick tab switcher for previewing other levels */}
-                  <div className="flex items-center gap-1 self-start sm:self-center bg-[#1C1C1E] p-1 rounded-xl border border-white/10">
-                    {["principiante", "intermedio", "avanzado"].map((lvlKey) => (
-                      <button
-                        key={lvlKey}
-                        type="button"
-                        onClick={() => setActiveTabLevel(lvlKey)}
-                        className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold capitalize transition ${
-                          activeTabLevel === lvlKey
-                            ? "bg-[#FF5722] text-white"
-                            : "text-[#8E8E93] hover:text-white"
-                        }`}
-                      >
-                        {lvlKey}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Explanations List for the Active Tab */}
-                <div className="space-y-2.5">
-                  {currentLevelObj.explanations?.map((item) => {
-                    const IconComponent = getTopicIcon(item.icon);
-                    const isExpanded = expandedTopicId === item.id;
-                    return (
-                      <div
-                        key={item.id}
-                        className="rounded-2xl border border-white/10 bg-[#1C1C1E] p-3.5 transition hover:border-white/20 space-y-2"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setExpandedTopicId(isExpanded ? null : item.id)}
-                          className="w-full flex items-start justify-between gap-3 text-left"
-                        >
-                          <div className="flex items-start gap-2.5">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FF5722]/10 text-[#FF5722] flex-shrink-0 mt-0.5">
-                              <IconComponent size={15} />
-                            </span>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="text-xs sm:text-sm font-bold text-white">
-                                  {item.title}
-                                </h4>
-                                <span className="text-[9px] font-semibold uppercase tracking-wider text-[#8E8E93]">
-                                  {item.topic}
-                                </span>
-                              </div>
-                              <p className="text-xs text-[#8E8E93] mt-1 leading-relaxed">
-                                {item.summary}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="rounded-lg p-1 text-[#8E8E93] hover:bg-white/5 hover:text-white flex-shrink-0">
-                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          </span>
-                        </button>
-
-                        {/* Detailed expandable explanation */}
-                        {isExpanded && item.details && (
-                          <div className="pt-2 border-t border-white/5 pl-9 space-y-2 animate-in fade-in duration-150">
-                            <ul className="space-y-2 text-xs text-[#8E8E93]">
-                              {item.details.map((detail, dIdx) => (
-                                <li key={dIdx} className="flex items-start gap-2">
-                                  <span className="text-[#FF5722] font-semibold mt-0.5">•</span>
-                                  <span className="leading-relaxed">{detail}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Level Practical Recommendations */}
-                {currentLevelObj.recommendations?.length > 0 && (
-                  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3.5 space-y-2">
-                    <h4 className="text-xs font-semibold uppercase text-amber-300 flex items-center gap-1.5">
-                      <Sparkles size={14} className="text-amber-400" />
-                      Recomendaciones Clave para {currentLevelObj.title}
-                    </h4>
-                    <ul className="space-y-1.5 text-xs text-amber-200/90">
-                      {currentLevelObj.recommendations.map((rec, rIdx) => (
-                        <li key={rIdx} className="flex items-start gap-2">
-                          <span className="text-amber-400 font-semibold">→</span>
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Quick action to make the viewed tab active if different */}
-                {activeTabLevel !== currentLevel && (
-                  <div className="pt-2 flex justify-between items-center bg-[#1C1C1E] p-3.5 rounded-2xl border border-white/10">
-                    <span className="text-xs text-[#8E8E93]">
-                      ¿Querés cambiar tu perfil a <strong className="text-white">{currentLevelObj.title}</strong>?
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectLevel(activeTabLevel)}
-                      disabled={isUpdating}
-                      className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white hover:opacity-90 active:scale-95 transition flex items-center gap-1.5"
-                    >
-                      <Check size={14} />
-                      <span>Establecer como mi nivel</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onOpenMasterPanel) {
+                    onOpenMasterPanel();
+                  } else {
+                    onClose();
+                    window.location.pathname = "/admin";
+                  }
+                }}
+                className="flex items-center justify-center gap-1.5 bg-[#1C1C1E] border border-[#FF5722]/40 text-[#FF5722] text-xs font-semibold px-4 py-2 rounded-full hover:bg-[#FF5722]/15 transition active:scale-95 cursor-pointer shadow-md shadow-[#FF5722]/10 whitespace-nowrap self-stretch sm:self-auto"
+              >
+                <span>🛡️ Admin Panel</span>
+              </button>
             </div>
           )}
+
+          {/* TARJETA CUENTA, EMAIL & SEGURIDAD */}
+          <div className="bg-[#121212] border border-[#2C2C2E] rounded-3xl p-5 space-y-5">
+            {/* CORREO */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Mail size={16} className="text-[#FF5722]" />
+                  <h3 className="text-sm font-bold text-white">Correo Electrónico</h3>
+                </div>
+                {email ? (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                    ✓ Vinculado
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                    ⚠️ Sin vincular
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="tuemail@ejemplo.com"
+                  className="iron-input flex-1 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveEmail}
+                  disabled={isSavingEmail}
+                  className="iron-btn-secondary px-4 py-2.5 text-xs font-semibold whitespace-nowrap active:scale-95 disabled:opacity-50 cursor-pointer"
+                >
+                  {isSavingEmail ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <span>Guardar Email</span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* CAMBIAR CONTRASEÑA */}
+            <div className="pt-3 border-t border-white/5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Lock size={16} className="text-[#7C4DFF]" />
+                  <h3 className="text-sm font-bold text-white">Seguridad de la Cuenta</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsChangePasswordOpen((prev) => !prev);
+                    setPasswordError("");
+                  }}
+                  className="text-xs font-semibold text-[#FF5722] hover:underline cursor-pointer"
+                >
+                  {isChangePasswordOpen ? "Ocultar formulario" : "Cambiar Contraseña"}
+                </button>
+              </div>
+
+              {isChangePasswordOpen && (
+                <form onSubmit={handleChangePassword} className="space-y-3 pt-2 animate-in fade-in duration-150">
+                  <div>
+                    <label className="text-xs text-[#8E8E93] mb-1 block font-medium">Contraseña actual</label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Tu contraseña actual"
+                      className="iron-input text-sm"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-xs text-[#8E8E93] mb-1 block font-medium">Nueva contraseña</label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Mínimo 6 caracteres"
+                        className="iron-input text-sm"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-[#8E8E93] mb-1 block font-medium">Confirmar nueva contraseña</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Repetí la contraseña"
+                        className="iron-input text-sm"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {passwordError && (
+                    <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl p-2.5">
+                      {passwordError}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isSavingPassword}
+                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-90 active:scale-[0.99] text-white font-semibold text-sm flex items-center justify-center gap-2 transition select-none disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSavingPassword ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Actualizando contraseña...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={16} />
+                        <span>Actualizar Contraseña</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Modal Footer */}
-        <div className="border-t border-white/10 bg-[#1C1C1E] p-4 sm:p-5 flex items-center justify-between">
-          <div className="text-[11px] text-[#8E8E93]">
-            Podés cambiar tu nivel en cualquier momento según tu evolución física.
-          </div>
+        {/* Modal Footer Fijo */}
+        <div className="border-t border-[#2C2C2E] bg-[#050505] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 flex-shrink-0">
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-2xl border border-white/10 bg-[#121212] hover:bg-white/5 px-4 py-2 text-xs font-semibold text-[#8E8E93] hover:text-white transition"
+            onClick={() => {
+              onClose();
+              if (onRequestLogout) {
+                onRequestLogout();
+              } else {
+                window.dispatchEvent(new CustomEvent("fittracker:requestLogout"));
+              }
+            }}
+            className="inline-flex items-center gap-1.5 rounded-2xl border border-red-500/20 bg-red-500/10 px-3.5 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition cursor-pointer active:scale-95"
+            title="Cerrar sesión"
           >
-            Cerrar
+            <LogOut size={14} />
+            <span className="hidden sm:inline">Cerrar sesión</span>
           </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-2xl border border-[#2C2C2E] bg-[#121212] hover:bg-white/5 px-4 py-2.5 text-xs font-semibold text-[#8E8E93] hover:text-white transition cursor-pointer"
+            >
+              Cerrar
+            </button>
+
+            <button
+              type="submit"
+              form="profile-physical-form"
+              disabled={isSavingPhysical}
+              className="rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-95 active:scale-95 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white transition cursor-pointer disabled:opacity-50 flex items-center gap-2 shadow-none"
+            >
+              {isSavingPhysical ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  <span>Guardando...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={15} />
+                  <span>Guardar Cambios</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
