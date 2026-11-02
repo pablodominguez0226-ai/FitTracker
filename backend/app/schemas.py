@@ -1,6 +1,7 @@
 from __future__ import annotations
 import datetime as dt
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Any
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class MuscleGroupBase(BaseModel):
@@ -19,12 +20,19 @@ class MuscleGroupOut(MuscleGroupBase):
 
 
 class ExerciseBase(BaseModel):
+    slug: str | None = None
     name: str = Field(..., min_length=1, max_length=120)
     muscle_group_id: int
+    muscleGroup: str | None = None
+    subgroup: str | None = None
+    mediaUrl: str | None = None
+    target_muscle: str | None = None
+    category: str | None = None
+    secondary_muscles: str | None = None
     execution_tips: str | None = None
     target_tempo: str | None = None
     primary_muscles: str | None = None
-    equipment_type: str | None = "barra"
+    equipment_type: str | None = None
     mechanics_type: str | None = "compuesto"
     image_url: str | None = None
     key_cue: str | None = None
@@ -36,8 +44,15 @@ class ExerciseCreate(ExerciseBase):
 
 
 class ExerciseUpdate(BaseModel):
+    slug: str | None = None
     name: str | None = None
     muscle_group_id: int | None = None
+    muscleGroup: str | None = None
+    subgroup: str | None = None
+    mediaUrl: str | None = None
+    target_muscle: str | None = None
+    category: str | None = None
+    secondary_muscles: str | None = None
     execution_tips: str | None = None
     target_tempo: str | None = None
     primary_muscles: str | None = None
@@ -52,18 +67,57 @@ class ExerciseUpdate(BaseModel):
 class ExerciseOut(ExerciseBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    slug: str | None = None
     name: str
     muscle_group_id: int
     muscle_group_name: str | None = None
+    muscleGroup: str | None = None
+    subgroup: str | None = None
+    mediaUrl: str | None = None
+    target_muscle: str | None = None
+    category: str | None = None
+    secondary_muscles: str | None = None
     is_active: bool = True
     execution_tips: str | None = None
     target_tempo: str | None = None
     primary_muscles: str | None = None
-    equipment_type: str | None = "barra"
+    equipment_type: str | None = None
     mechanics_type: str | None = "compuesto"
     image_url: str | None = None
     key_cue: str | None = None
     replacement_id: int | None = None
+    usage_count_60d: int = 0
+
+
+class ExerciseLastPerformanceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    exercise_id: int
+    exercise_name: str
+    has_previous: bool = False
+    session_id: int | None = None
+    date: dt.date | None = None
+    sets_count: int = 0
+    reps: int = 0
+    weight: float = 0.0
+    max_weight: float = 0.0
+    max_reps: int = 0
+    total_volume: float = 0.0
+    formatted_summary: str | None = None
+    sets: list[PreviousSessionSetOut] = []
+
+
+class SimilarExerciseItem(BaseModel):
+    id: int
+    slug: str | None = None
+    name: str
+    muscle_group_id: int
+    muscle_group_name: str | None = None
+    muscleGroup: str | None = None
+    subgroup: str | None = None
+    mediaUrl: str | None = None
+    equipment_type: str | None = None
+    mechanics_type: str | None = None
+    similarity_score: float = 0.0
 
 
 class WorkoutSetIn(BaseModel):
@@ -106,6 +160,8 @@ class WorkoutSetOut(BaseModel):
     workout_session_id: int
     exercise_id: int
     exercise_name: str | None = None
+    muscle_group_name: str | None = None
+    subgroup: str | None = None
     set_number: int
     weight: float
     reps: int
@@ -114,6 +170,25 @@ class WorkoutSetOut(BaseModel):
     rir: int | None = None
     set_type: str | None = "normal"
     created_at: dt.datetime | None = None
+
+
+class WorkoutSetPatchItem(BaseModel):
+    id: int | None = None
+    exercise_id: int
+    set_number: int = 1
+    weight: float = 0.0
+    reps: int = 0
+    completed: bool = True
+    rest_effort: str | None = None
+    rir: int | None = None
+    set_type: str | None = "normal"
+
+
+class WorkoutSessionUpdate(BaseModel):
+    date: dt.date | None = None
+    notes: str | None = None
+    muscle_group_id: int | None = None
+    sets: list[WorkoutSetPatchItem] | None = None
 
 
 class WorkoutCreate(BaseModel):
@@ -129,6 +204,8 @@ class WorkoutCreate(BaseModel):
     duration_seconds: int | None = None
     pace_min_per_km: str | None = None
     calories_burned: float | None = None
+    save_as_routine: bool = False
+    routine_name: str | None = None
     sets: list[WorkoutSetIn] = []
 
 
@@ -147,6 +224,9 @@ class WorkoutSessionStart(BaseModel):
 
 
 class WorkoutSessionFinish(BaseModel):
+    workout_id: int | None = None
+    save_as_routine: bool = False
+    routine_name: str | None = None
     date: dt.date | None = None
     notes: str | None = None
     completed_at: dt.datetime | None = None
@@ -191,6 +271,7 @@ class WorkoutSessionOut(BaseModel):
     is_completed: bool = False
     started_at: dt.datetime | None = None
     completed_at: dt.datetime | None = None
+    finished_at: dt.datetime | None = None
     readiness_energy: int | None = None
     readiness_motivation: int | None = None
     mental_effort: int | None = None
@@ -205,6 +286,7 @@ class WorkoutSessionOut(BaseModel):
     calories_burned: float | None = None
     muscle_group_id: int | None = None
     muscle_group_name: str | None = None
+    session_split: str | None = None
     user_id: int | None = None
     routine_id: int | None = None
     routine_name: str | None = None
@@ -212,12 +294,24 @@ class WorkoutSessionOut(BaseModel):
     sets: list[WorkoutSetOut] = []
     previous_history: dict | None = None
     records: list[RecordOut] | None = None
+    date_formatted: str | None = None
+    local_date_str: str | None = None
 
 
 VALID_TRAINING_GOALS = ["hipertrofia", "fuerza", "potencia_rapidez", "definicion_adelgazar", "powerlifting", "alto_rendimiento", "definicion"]
 VALID_TARGET_GOALS = ["powerlifting", "hipertrofia", "alto_rendimiento", "definicion"]
 VALID_EXPERIENCE_LEVELS = ["principiante", "intermedio", "avanzado"]
 VALID_NUTRITION_CONTEXTS = ["superavit_volumen", "mantenimiento", "deficit_definicion", "no_especifica"]
+
+DEFAULT_WEEKLY_PATTERN: dict[str, str] = {
+    "lunes": "entreno",
+    "martes": "entreno",
+    "miercoles": "flexible",
+    "jueves": "entreno",
+    "viernes": "entreno",
+    "sabado": "descanso",
+    "domingo": "descanso",
+}
 
 
 class UserProfileBase(BaseModel):
@@ -234,6 +328,9 @@ class UserProfileBase(BaseModel):
     nutrition_context: str | None = "no_especifica"
     supplements: str | None = None
     health_notes: str | None = None
+    total_workouts: int = 0
+    workout_days_count: int = 0
+    weekly_pattern: Any | None = None
 
 
 class UserProfileUpdate(BaseModel):
@@ -250,6 +347,7 @@ class UserProfileUpdate(BaseModel):
     nutrition_context: str | None = Field(None, description="superavit_volumen, mantenimiento, deficit_definicion, no_especifica")
     supplements: str | None = Field(None, max_length=1000, description="Suplementos habituales")
     health_notes: str | None = Field(None, max_length=5000, description="Notas de salud, lesiones y análisis")
+    weekly_pattern: Any | None = Field(None, description="Patrón de entrenamiento semanal (JSON o diccionario)")
 
 
 class UserProfileOut(UserProfileBase):
@@ -280,6 +378,9 @@ class ProfileOut(BaseModel):
     nutrition_context: str | None = "no_especifica"
     supplements: str | None = None
     health_notes: str | None = None
+    total_workouts: int = 0
+    workout_days_count: int = 0
+    weekly_pattern: Any | None = None
     updated_at: dt.datetime | None = None
 
 
@@ -358,6 +459,9 @@ class UserOut(BaseModel):
     nutrition_context: str | None = "no_especifica"
     supplements: str | None = None
     health_notes: str | None = None
+    total_workouts: int = 0
+    workout_days_count: int = 0
+    weekly_pattern: Any | None = None
     created_at: dt.datetime | None = None
     updated_at: dt.datetime | None = None
 
@@ -541,8 +645,12 @@ class SuggestedGoalOut(BaseModel):
 
 class ExerciseSubstituteOut(BaseModel):
     id: int
+    slug: str | None = None
     name: str
     muscle_group_name: str | None = None
+    muscleGroup: str | None = None
+    subgroup: str | None = None
+    mediaUrl: str | None = None
     equipment_type: str | None = None
     mechanics_type: str | None = None
     key_cue: str | None = None
@@ -552,6 +660,10 @@ class ExerciseSubstituteOut(BaseModel):
 class ExerciseGuidanceOut(BaseModel):
     exercise_id: int
     exercise_name: str
+    slug: str | None = None
+    muscleGroup: str | None = None
+    subgroup: str | None = None
+    mediaUrl: str | None = None
     equipment_type: str | None = None
     mechanics_type: str | None = None
     key_cue: str | None = None
@@ -623,7 +735,7 @@ class RoutineOut(BaseModel):
 class SuggestedRoutineExercise(BaseModel):
     name: str
     muscle: str
-    equipment: str
+    equipment: str | None = None
     suggested_sets: int
     suggested_reps: str
     rest_seconds: int
@@ -667,9 +779,12 @@ class WeeklyConsistencyItem(BaseModel):
     start_date: str
     sessions_count: int
     total_volume: float
+    target_sessions: int | None = 4
+    compliance_rate: float | None = 100.0
+    is_compliant: bool | None = True
 
 
-class MuscleDistributionItem(BaseModel):
+class AnalyticsMuscleDistributionItem(BaseModel):
     muscle_group_id: int | None = None
     name: str
     volume: float
@@ -702,7 +817,7 @@ class AnalyticsDashboardOut(BaseModel):
     willpower_percentage: float
     volume_comparison: VolumeComparison
     weekly_consistency: list[WeeklyConsistencyItem]
-    muscle_distribution: list[MuscleDistributionItem]
+    muscle_distribution: list[AnalyticsMuscleDistributionItem]
     day_of_week_distribution: list[DayOfWeekItem]
     recent_willpower_sessions: list[WillpowerAchievement]
 
@@ -1057,6 +1172,49 @@ class LabAnalysesSummaryOut(BaseModel):
 
 
 # ==========================================
+# 3.1 BLOOD TESTS SCHEMAS (ANALISIS DE SANGRE PDF / MANUAL)
+# ==========================================
+class BloodTestBase(BaseModel):
+    test_date: dt.date
+    entry_date: dt.date | None = None
+    birth_date: dt.date | None = None
+    petition_number: str | None = None
+    data_json: dict[str, Any] | None = None
+    hematocrit: float | None = None
+    hemoglobin: float | None = None
+    glucose: float | None = None
+    creatinine: float | None = None
+    urea: float | None = None
+    got_ast: float | None = None
+    gpt_alt: float | None = None
+    cholesterol_total: float | None = None
+    cholesterol_hdl: float | None = None
+    cholesterol_ldl: float | None = None
+    triglycerides: float | None = None
+    sodium: float | None = None
+    potassium: float | None = None
+    notes: str | None = None
+    pdf_filename: str | None = None
+
+
+class BloodTestCreate(BloodTestBase):
+    pass
+
+
+class BloodTestOut(BloodTestBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
+    created_at: dt.datetime | None = None
+
+    @model_validator(mode="after")
+    def populate_entry_date(self) -> "BloodTestOut":
+        if not self.entry_date and self.test_date:
+            self.entry_date = self.test_date
+        return self
+
+
+# ==========================================
 # 4. CHECK-INS PERIÓDICOS SCHEMAS
 # ==========================================
 class CheckInBase(BaseModel):
@@ -1197,6 +1355,100 @@ class MacroCalculateResult(BaseModel):
     protein_per_kg: float
     fats_per_kg: float
     goal: str
+
+
+# ==========================================
+# 6. ARGENTINE FOODS, RECIPES & LOGS
+# ==========================================
+class FoodItemBase(BaseModel):
+    name: str
+    category: str
+    calories_100g: float
+    protein_100g: float
+    carbs_100g: float
+    fat_100g: float
+    serving_unit: str = "100g"
+    serving_weight_g: float = 100.0
+
+
+class FoodItemCreate(FoodItemBase):
+    pass
+
+
+class FoodItemOut(FoodItemBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: dt.datetime | None = None
+
+
+class RecipeIngredientItem(BaseModel):
+    food_id: int | None = None
+    name: str
+    grams: float
+    calories: float | None = None
+    protein: float | None = None
+    carbs: float | None = None
+    fat: float | None = None
+
+
+class CustomRecipeCreate(BaseModel):
+    name: str
+    total_weight_g: float
+    ingredients: list[RecipeIngredientItem]
+    servings: int = 1
+    calculated_calories: float | None = None
+    calculated_protein: float | None = None
+    calculated_carbs: float | None = None
+    calculated_fat: float | None = None
+
+
+class CustomRecipeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
+    name: str
+    total_weight_g: float
+    ingredients_json: str
+    calculated_calories: float
+    calculated_protein: float
+    calculated_carbs: float
+    calculated_fat: float
+    servings: int = 1
+    created_at: dt.datetime | None = None
+
+
+class FoodLogCreate(BaseModel):
+    food_name: str
+    grams_or_units: str | None = None
+    calories: float
+    protein: float
+    carbs: float
+    fat: float
+    log_date: dt.date | None = None
+    side_dish_name: str | None = None
+    side_dish_grams: float | None = None
+    meal_type: str | None = None
+    recipe_id: int | None = None
+    food_id: int | None = None
+
+
+class DailyFoodLogOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
+    food_name: str
+    grams_or_units: str | None = None
+    calories: float
+    protein: float
+    carbs: float
+    fat: float
+    log_date: dt.date
+    side_dish_name: str | None = None
+    side_dish_grams: float | None = None
+    meal_type: str | None = None
+    recipe_id: int | None = None
+    food_id: int | None = None
+    created_at: dt.datetime | None = None
 
 
 

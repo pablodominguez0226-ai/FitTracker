@@ -15,8 +15,10 @@ __all__ = [
     "update_workout_set",
     "delete_workout_set",
     "finish_workout",
+    "finish_active_workout",
     "create_workout",
     "save_workout_session",
     "get_workout",
+    "update_workout_session",
     "delete_workout",
 ]

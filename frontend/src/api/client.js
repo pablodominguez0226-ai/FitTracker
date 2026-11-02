@@ -5,6 +5,7 @@ import {
   fetchExercisesWithCache,
   findCachedExerciseByName,
   addCustomExerciseToCache,
+  removeExerciseFromCache,
 } from "../services/exerciseCache";
 
 export const API_BASE = import.meta.env.VITE_API_URL || "/api";
@@ -68,18 +69,23 @@ export const deleteMuscleGroup = async (id, force = false) => {
   return res.data;
 };
 
-export const getExercises = async (muscleGroupId = null) => {
-  return await fetchExercisesWithCache(muscleGroupId);
+export const getExercises = async (muscle = null, q = null) => {
+  return await fetchExercisesWithCache(muscle, q);
 };
 
-export const createExercise = async (name, muscleGroupId) => {
+export const createExercise = async (name, muscleGroupId, forceCreateOrLegacy = false, forceCreateArg = false) => {
   const cleanName = (name || "").trim();
   if (!cleanName) throw new Error("El nombre del ejercicio es obligatorio.");
 
+  const forceCreate =
+    typeof forceCreateOrLegacy === "boolean" ? forceCreateOrLegacy : Boolean(forceCreateArg);
+
   // Prevenir duplicados comprobando coincidencia exacta en el catálogo local
-  const existing = findCachedExerciseByName(cleanName);
-  if (existing) {
-    return existing;
+  if (!forceCreate) {
+    const existing = findCachedExerciseByName(cleanName);
+    if (existing) {
+      return existing;
+    }
   }
 
   const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
@@ -145,6 +151,7 @@ export const createExercise = async (name, muscleGroupId) => {
 
 export const deleteExercise = async (id) => {
   const res = await api.delete(`/exercises/${id}`);
+  removeExerciseFromCache(id);
   return res.data;
 };
 
@@ -287,8 +294,19 @@ export const updateWorkoutDate = async (workoutId, date) => {
   return res.data;
 };
 
-export const finishWorkout = async (workoutId, finishData = {}) => {
-  const res = await api.post(`/workouts/${workoutId}/finish`, finishData);
+export const finishWorkout = async (workoutId = null, finishData = {}) => {
+  const endpoint = workoutId ? `/workouts/${workoutId}/finish` : "/workouts/finish";
+  const res = await api.post(endpoint, finishData);
+  return res.data;
+};
+
+export const finishActiveWorkout = async (finishData = {}) => {
+  const res = await api.post("/workouts/finish", finishData);
+  return res.data;
+};
+
+export const getMetricsSummary = async () => {
+  const res = await api.get("/metrics/summary");
   return res.data;
 };
 
@@ -336,8 +354,33 @@ export const getWorkouts = async (status = null) => {
   return res.data;
 };
 
+export const getWorkoutHistory = async (status = null) => {
+  const res = await api.get("/workouts/history", {
+    params: status ? { status } : {},
+  });
+  return res.data;
+};
+
 export const deleteWorkout = async (id) => {
   const res = await api.delete(`/workouts/${id}`);
+  window.dispatchEvent(new CustomEvent("fittracker:workoutDeleted", { detail: { id } }));
+  return res.data;
+};
+
+export const updateWorkoutSession = async (id, payload) => {
+  const res = await api.patch(`/workouts/${id}`, payload);
+  window.dispatchEvent(new CustomEvent("fittracker:workoutUpdated", { detail: res.data }));
+  return res.data;
+};
+
+export const getWeeklyPattern = async () => {
+  const res = await api.get("/profile/weekly-pattern");
+  return res.data;
+};
+
+export const updateWeeklyPattern = async (weeklyPattern) => {
+  const res = await api.put("/profile/weekly-pattern", weeklyPattern);
+  window.dispatchEvent(new CustomEvent("fittracker:weeklyPatternUpdated", { detail: res.data }));
   return res.data;
 };
 
@@ -371,6 +414,40 @@ export const getExercisePreviousSession = async (exerciseId, excludeSessionId = 
     return res.data || null;
   } catch (err) {
     return null;
+  }
+};
+
+export const getExerciseLastPerformance = async (exerciseId, excludeSessionId = null) => {
+  if (!exerciseId || String(exerciseId).startsWith("temp_")) return null;
+  const params = {};
+  if (excludeSessionId) params.exclude_session_id = excludeSessionId;
+  try {
+    const res = await api.get(`/exercises/${exerciseId}/last-performance`, { params });
+    return res.data || null;
+  } catch (err) {
+    return null;
+  }
+};
+
+export const getFrequentExercises = async (days = 60, limit = 15) => {
+  try {
+    const res = await api.get("/exercises/frequent", { params: { days, limit } });
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (err) {
+    return [];
+  }
+};
+
+export const findSimilarExercises = async ({ name, muscle_group_id = null, limit = 5 }) => {
+  const cleanName = (name || "").trim();
+  if (cleanName.length < 2) return [];
+  const params = { name: cleanName, limit };
+  if (muscle_group_id) params.muscle_group_id = Number(muscle_group_id);
+  try {
+    const res = await api.get("/exercises/similar", { params });
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (err) {
+    return [];
   }
 };
 
@@ -727,6 +804,34 @@ export const deleteLabAnalysis = async (id) => {
 };
 
 // ====================================================================
+// ANÁLISIS DE SANGRE (BLOOD TESTS PDF & CRUD)
+// ====================================================================
+
+export const uploadBloodTestPdf = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await api.post("/blood-tests/upload-pdf", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+export const getBloodTests = async () => {
+  const res = await api.get("/blood-tests");
+  return res.data;
+};
+
+export const createBloodTest = async (payload) => {
+  const res = await api.post("/blood-tests", payload);
+  return res.data;
+};
+
+export const deleteBloodTest = async (id) => {
+  const res = await api.delete(`/blood-tests/${id}`);
+  return res.data;
+};
+
+// ====================================================================
 // NUTRICIÓN & MACROS
 // ====================================================================
 
@@ -765,6 +870,47 @@ export const uploadDietPdf = async (file) => {
   const res = await api.post("/nutrition/upload-pdf", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return res.data;
+};
+
+// --- BASE NUTRICIONAL ARGENTINA & COMIDAS CASERAS ---
+export const searchFoods = async (q = null, category = null) => {
+  const params = {};
+  if (q) params.q = q;
+  if (category && category !== "all") params.category = category;
+  const res = await api.get("/nutrition/foods", { params });
+  return res.data;
+};
+
+export const getCustomRecipes = async () => {
+  const res = await api.get("/nutrition/custom-recipes");
+  return res.data;
+};
+
+export const createCustomRecipe = async (payload) => {
+  const res = await api.post("/nutrition/custom-recipe", payload);
+  return res.data;
+};
+
+export const deleteCustomRecipe = async (id) => {
+  const res = await api.delete(`/nutrition/custom-recipes/${id}`);
+  return res.data;
+};
+
+export const logFood = async (payload) => {
+  const res = await api.post("/nutrition/log", payload);
+  return res.data;
+};
+
+export const getFoodLogs = async (dateStr = null) => {
+  const params = {};
+  if (dateStr) params.date_str = dateStr;
+  const res = await api.get("/nutrition/logs", { params });
+  return res.data;
+};
+
+export const deleteFoodLog = async (id) => {
+  const res = await api.delete(`/nutrition/logs/${id}`);
   return res.data;
 };
 

@@ -358,24 +358,24 @@ export default function RestTimerModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-[#000000] flex flex-col justify-between text-white p-4 sm:p-6 overflow-y-auto select-none safe-top safe-bottom animate-fadeIn"
+      className="fixed inset-0 z-[60] bg-[#000000] flex flex-col justify-between text-[#0F172A] p-4 sm:p-6 overflow-y-auto select-none safe-top safe-bottom animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-label="Temporizador de descanso en Focus Mode"
     >
       {/* Header: Exercise & Set Context + Close */}
-      <div className="relative z-10 w-full max-w-lg mx-auto flex items-center justify-between pb-3 border-b border-white/10">
+      <div className="relative z-10 w-full max-w-lg mx-auto flex items-center justify-between pb-3 border-b border-slate-100">
         <div className="flex items-center gap-3 truncate min-w-0">
-          <div className="h-10 w-10 rounded-2xl bg-[#FF5722]/10 border border-[#FF5722]/20 flex items-center justify-center text-[#FF5722] flex-shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 flex-shrink-0">
             <Dumbbell size={20} />
           </div>
           <div className="truncate min-w-0">
-            <h2 className="text-sm sm:text-base font-semibold text-white tracking-tight truncate break-words">
+            <h2 className="text-sm sm:text-base font-semibold text-[#0F172A] tracking-tight truncate break-words">
               {setInfo?.exerciseName || "Descanso entre series"}
             </h2>
-            <div className="flex items-center gap-2 text-xs text-[#8E8E93] truncate">
+            <div className="flex items-center gap-2 text-xs text-[#64748B] truncate">
               {setInfo?.setNumber && (
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-[#0F172A]">
                   Serie {setInfo.setNumber}
                   {setInfo?.totalSets ? ` de ${setInfo.totalSets}` : ""}
                 </span>
@@ -395,7 +395,7 @@ export default function RestTimerModal({
         <button
           type="button"
           onClick={handleClose}
-          className="h-10 w-10 rounded-2xl bg-[#1C1C1E] border border-white/10 flex items-center justify-center text-[#8E8E93] hover:text-white active:scale-95 transition flex-shrink-0 ml-2"
+          className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#64748B] hover:text-[#0F172A] active:scale-95 transition flex-shrink-0 ml-2"
           title="Saltar / Cerrar descanso"
         >
           <X size={20} />
@@ -409,24 +409,24 @@ export default function RestTimerModal({
           <button
             type="button"
             onClick={() => handleSelectEffort("pesado")}
-            className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-2xl border transition-all duration-150 active:scale-95 text-center min-h-[92px] sm:min-h-[100px] ${
+            className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all duration-150 active:scale-95 text-center min-h-[92px] sm:min-h-[100px] ${
               selectedEffort === "pesado"
-                ? "border-orange-500 bg-orange-500/10"
-                : "border-white/5 bg-[#1C1C1E] hover:border-white/20"
+                ? "border-red-400 bg-red-500/10"
+                : "border-slate-100 bg-white hover:border-slate-100"
             }`}
           >
             <div className="flex items-center gap-1">
-              <Flame size={16} className={selectedEffort === "pesado" ? "text-orange-400" : "text-[#8E8E93]"} />
-              <span className="text-xs sm:text-sm font-semibold text-white">🔥 Pesado</span>
+              <Flame size={16} className={selectedEffort === "pesado" ? "text-red-400" : "text-[#64748B]"} />
+              <span className="text-xs sm:text-sm font-semibold text-[#0F172A]">🔥 Pesado</span>
             </div>
             <span
               className={`text-[11px] sm:text-xs font-mono font-semibold px-2 py-0.5 rounded-lg ${
-                selectedEffort === "pesado" ? "bg-orange-500/20 text-orange-400" : "bg-[#121212] text-[#8E8E93]"
+                selectedEffort === "pesado" ? "bg-red-500/10 text-red-400" : "bg-[#F9FAFB] text-[#64748B]"
               }`}
             >
               {selectedEffort === "pesado" && isExtendedHeavy ? "5:00 min" : "3:00 min"}
             </span>
-            <span className="text-[9px] sm:text-[10px] text-[#8E8E93] truncate w-full">
+            <span className="text-[9px] sm:text-[10px] text-[#64748B] truncate w-full">
               {selectedEffort === "pesado"
                 ? isExtendedHeavy
                   ? "⚡ Tocar p/ 3:00"
@@ -439,24 +439,24 @@ export default function RestTimerModal({
           <button
             type="button"
             onClick={() => handleSelectEffort("moderado")}
-            className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-2xl border transition-all duration-150 active:scale-95 text-center min-h-[92px] sm:min-h-[100px] ${
+            className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all duration-150 active:scale-95 text-center min-h-[92px] sm:min-h-[100px] ${
               selectedEffort === "moderado"
-                ? "border-[#FF5722] bg-[#FF5722]/10"
-                : "border-white/5 bg-[#1C1C1E] hover:border-white/20"
+                ? "border-red-500 bg-red-500/10"
+                : "border-slate-100 bg-white hover:border-slate-100"
             }`}
           >
             <div className="flex items-center gap-1">
-              <Zap size={16} className={selectedEffort === "moderado" ? "text-[#FF5722]" : "text-[#8E8E93]"} />
-              <span className="text-xs sm:text-sm font-semibold text-white">⚡ Moderado</span>
+              <Zap size={16} className={selectedEffort === "moderado" ? "text-red-500" : "text-[#64748B]"} />
+              <span className="text-xs sm:text-sm font-semibold text-[#0F172A]">⚡ Moderado</span>
             </div>
             <span
               className={`text-[11px] sm:text-xs font-mono font-semibold px-2 py-0.5 rounded-lg ${
-                selectedEffort === "moderado" ? "bg-[#FF5722]/20 text-[#FF5722]" : "bg-[#121212] text-[#8E8E93]"
+                selectedEffort === "moderado" ? "bg-red-500/20 text-red-500" : "bg-[#F9FAFB] text-[#64748B]"
               }`}
             >
               1:30 min
             </span>
-            <span className="text-[9px] sm:text-[10px] text-[#8E8E93] truncate w-full">
+            <span className="text-[9px] sm:text-[10px] text-[#64748B] truncate w-full">
               Hipertrofia
             </span>
           </button>
@@ -465,24 +465,24 @@ export default function RestTimerModal({
           <button
             type="button"
             onClick={() => handleSelectEffort("liviano")}
-            className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-2xl border transition-all duration-150 active:scale-95 text-center min-h-[92px] sm:min-h-[100px] ${
+            className={`flex flex-col items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all duration-150 active:scale-95 text-center min-h-[92px] sm:min-h-[100px] ${
               selectedEffort === "liviano"
                 ? "border-cyan-500 bg-cyan-500/10"
-                : "border-white/5 bg-[#1C1C1E] hover:border-white/20"
+                : "border-slate-100 bg-white hover:border-slate-100"
             }`}
           >
             <div className="flex items-center gap-1">
-              <Clock size={16} className={selectedEffort === "liviano" ? "text-cyan-400" : "text-[#8E8E93]"} />
-              <span className="text-xs sm:text-sm font-semibold text-white truncate">⏱️ Liviano</span>
+              <Clock size={16} className={selectedEffort === "liviano" ? "text-cyan-400" : "text-[#64748B]"} />
+              <span className="text-xs sm:text-sm font-semibold text-[#0F172A] truncate">⏱️ Liviano</span>
             </div>
             <span
               className={`text-[11px] sm:text-xs font-mono font-semibold px-2 py-0.5 rounded-lg ${
-                selectedEffort === "liviano" ? "bg-cyan-500/20 text-cyan-400" : "bg-[#121212] text-[#8E8E93]"
+                selectedEffort === "liviano" ? "bg-cyan-500/20 text-cyan-400" : "bg-[#F9FAFB] text-[#64748B]"
               }`}
             >
               0:45 min
             </span>
-            <span className="text-[9px] sm:text-[10px] text-[#8E8E93] truncate w-full">
+            <span className="text-[9px] sm:text-[10px] text-[#64748B] truncate w-full">
               Accesorios
             </span>
           </button>
@@ -495,8 +495,8 @@ export default function RestTimerModal({
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 240 240">
             <defs>
               <linearGradient id="modalRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FF5722" />
-                <stop offset="100%" stopColor="#7C4DFF" />
+                <stop offset="0%" stopColor="#EF4444" />
+                <stop offset="100%" stopColor="#EF4444" />
               </linearGradient>
             </defs>
 
@@ -529,25 +529,25 @@ export default function RestTimerModal({
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
             {isCompleted ? (
               <div className="flex flex-col items-center justify-center">
-                <CheckCircle2 size={46} className="text-[#34D399] mb-1" />
-                <span className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+                <CheckCircle2 size={46} className="text-red-500 mb-1" />
+                <span className="text-xl sm:text-2xl font-semibold text-[#0F172A] tracking-tight">
                   ¡Listo!
                 </span>
-                <span className="text-[11px] font-medium text-[#34D399] mt-0.5">
+                <span className="text-[11px] font-medium text-red-500 mt-0.5">
                   Recuperación Óptima
                 </span>
               </div>
             ) : (
               <>
-                <span className="text-5xl sm:text-6xl font-semibold text-white tracking-tight tabular-nums">
+                <span className="text-5xl sm:text-6xl font-semibold text-[#0F172A] tracking-tight tabular-nums">
                   {formattedTime}
                 </span>
 
-                <span className="mt-1.5 text-xs font-semibold uppercase tracking-widest text-[#FF5722]">
+                <span className="mt-1.5 text-xs font-semibold uppercase tracking-widest text-red-500">
                   {!isRunning ? "En Pausa" : "Descanso Activo"}
                 </span>
 
-                <span className="text-[11px] text-[#8E8E93] mt-0.5">
+                <span className="text-[11px] text-[#64748B] mt-0.5">
                   {selectedEffort === "pesado"
                     ? "Máxima fuerza & ATP"
                     : selectedEffort === "liviano"
@@ -564,7 +564,7 @@ export default function RestTimerModal({
           <button
             type="button"
             onClick={handleSub30}
-            className="h-11 px-4 rounded-2xl border border-white/10 bg-[#1C1C1E] text-xs font-semibold text-[#8E8E93] hover:text-white active:scale-90 transition flex items-center gap-1"
+            className="h-11 px-4 rounded-xl border border-slate-100 bg-slate-50 text-xs font-semibold text-[#64748B] hover:text-[#0F172A] active:scale-90 transition flex items-center gap-1"
             title="Restar 30 segundos"
           >
             <Minus size={14} /> 30s
@@ -573,7 +573,7 @@ export default function RestTimerModal({
           <button
             type="button"
             onClick={togglePlayPause}
-            className="h-12 w-12 rounded-2xl border border-white/10 bg-[#1C1C1E] text-white flex items-center justify-center hover:border-[#FF5722] active:scale-90 transition"
+            className="h-11 w-11 rounded-xl border border-slate-100 bg-slate-50 text-[#0F172A] flex items-center justify-center hover:border-red-500 active:scale-90 transition"
             title={isRunning ? "Pausar descanso" : "Continuar descanso"}
           >
             {isRunning ? <Pause size={18} /> : <Play size={18} className="ml-0.5" />}
@@ -582,7 +582,7 @@ export default function RestTimerModal({
           <button
             type="button"
             onClick={handleAdd30}
-            className="h-11 px-4 rounded-2xl border border-white/10 bg-[#1C1C1E] text-xs font-semibold text-white hover:border-[#FF5722] active:scale-90 transition flex items-center gap-1"
+            className="h-11 px-4 rounded-xl border border-slate-100 bg-slate-50 text-xs font-semibold text-[#0F172A] hover:border-red-500 active:scale-90 transition flex items-center gap-1"
             title="Sumar 30 segundos"
           >
             <Plus size={14} /> 30s
@@ -593,17 +593,17 @@ export default function RestTimerModal({
       {/* Bottom Actions: Saltar / Cerrar Descanso */}
       <div className="relative z-10 w-full max-w-lg mx-auto space-y-3 pt-2">
         {isCompleted ? (
-          <div className="p-3.5 rounded-3xl border border-emerald-500/30 bg-emerald-500/10 flex items-center gap-3">
-            <Sparkles size={24} className="text-[#34D399] flex-shrink-0" />
+          <div className="p-3.5 rounded-2xl border border-red-500/30 bg-red-500/10 flex items-center gap-3">
+            <Sparkles size={24} className="text-red-500 flex-shrink-0" />
             <div className="text-left text-xs sm:text-sm">
-              <p className="font-semibold text-white">¡Listo para la siguiente serie!</p>
-              <p className="text-[#8E8E93] text-[11px]">
+              <p className="font-semibold text-[#0F172A]">¡Listo para la siguiente serie!</p>
+              <p className="text-[#64748B] text-[11px]">
                 Nivel de ATP restaurado para máxima tensión mecánica.
               </p>
             </div>
           </div>
         ) : (
-          <p className="text-center text-xs text-[#8E8E93] max-w-xs mx-auto">
+          <p className="text-center text-xs text-[#64748B] max-w-xs mx-auto">
             El descanso adecuado garantiza mantener el volumen efectivo sin degradar la técnica.
           </p>
         )}
@@ -611,20 +611,20 @@ export default function RestTimerModal({
         <button
           type="button"
           onClick={handleClose}
-          className={`w-full min-h-[52px] sm:min-h-[56px] rounded-2xl font-semibold tracking-wide text-base flex items-center justify-center gap-2.5 transition duration-150 active:scale-[0.98] ${
+          className={`w-full h-11 rounded-xl font-semibold tracking-wide text-sm flex items-center justify-center gap-2.5 transition duration-150 active:scale-[0.98] ${
             isCompleted
-              ? "bg-emerald-500 text-white hover:opacity-90"
-              : "bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white hover:opacity-90"
+              ? "bg-red-600 hover:bg-red-700 text-white hover:bg-red-600 hover:bg-red-700"
+              : "bg-red-600 hover:bg-red-700 text-white hover:bg-red-600 hover:bg-red-700"
           }`}
         >
           {isCompleted ? (
             <>
-              <CheckCircle2 size={20} strokeWidth={2.5} />
+              <CheckCircle2 size={18} strokeWidth={2.5} />
               <span>Empezar Siguiente Serie</span>
             </>
           ) : (
             <>
-              <FastForward size={20} />
+              <FastForward size={18} />
               <span>Saltar descanso</span>
             </>
           )}

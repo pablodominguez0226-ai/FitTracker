@@ -10,6 +10,7 @@ import {
   PieChart,
   Scale,
   Search,
+  Settings,
   Sparkles,
   Target,
   TrendingUp,
@@ -17,18 +18,16 @@ import {
   Zap,
 } from "lucide-react";
 import {
+  getMetricsSummary,
   getMuscleDistribution,
-  getProfile,
   getRecords,
-  getUserProfile,
   getWorkouts,
 } from "../api/client";
 import ExerciseProgressCard from "../components/ExerciseProgressCard";
-import HeavyDutyRecoveryBanner from "../components/HeavyDutyRecoveryBanner";
 import Header from "../components/Header";
+import HistoryModal from "../components/HistoryModal";
 import { getLocalDateString, parseDateSafe } from "../utils/dateUtils";
 import { getStrengthRank } from "../utils/strengthRanks";
-import { getHeavyDutyRecoveryStatus } from "../utils/routines";
 
 const MUSCLE_GROUPS = [
   "Todos",
@@ -41,27 +40,35 @@ const MUSCLE_GROUPS = [
   "Core",
 ];
 
-// Paleta degradada sólida oficial para los 7 grupos canónicos
+// Paleta sólida para los 6 grupos canónicos del Radar
 const CANONICAL_CONFIG = [
-  { key: "Pecho", label: "Pecho", color: "#FF5722" },
-  { key: "Espalda", label: "Espalda", color: "#C84218" },
-  { key: "Piernas", label: "Piernas", color: "#9C27B0" },
-  { key: "Hombros", label: "Hombros", color: "#7C4DFF" },
-  { key: "Bíceps", label: "Bíceps", color: "#00BCD4" },
-  { key: "Tríceps", label: "Tríceps", color: "#3F51B5" },
-  { key: "Core", label: "Core", color: "#4CAF50" },
+  { key: "Piernas", label: "Piernas", color: "#06B6D4" },
+  { key: "Espalda", label: "Espalda", color: "#EF4444" },
+  { key: "Pecho", label: "Pecho", color: "#EF4444" },
+  { key: "Hombros", label: "Hombros", color: "#F59E0B" },
+  { key: "Brazos", label: "Brazos", color: "#6366F1" },
+  { key: "Core", label: "Core", color: "#EF4444" },
 ];
 
 function matchMuscle(name = "", muscleGroup = "") {
-  const combined = `${name || ""} ${muscleGroup || ""}`.toLowerCase();
-  if (combined.includes("pecho") || combined.includes("chest") || combined.includes("banca") || combined.includes("pec")) return "Pecho";
-  if (combined.includes("espalda") || combined.includes("back") || combined.includes("remo") || combined.includes("jalón") || combined.includes("jalon") || combined.includes("dominada") || combined.includes("pulldown") || combined.includes("dorsal")) return "Espalda";
-  if (combined.includes("pierna") || combined.includes("leg") || combined.includes("sentadilla") || combined.includes("squat") || combined.includes("prensa") || combined.includes("femoral") || combined.includes("cuádriceps") || combined.includes("cuadriceps") || combined.includes("gemelo") || combined.includes("hack") || combined.includes("hip thrust") || combined.includes("aductor") || combined.includes("abductor")) return "Piernas";
-  if (combined.includes("hombro") || combined.includes("shoulder") || combined.includes("militar") || combined.includes("deltoid") || combined.includes("lateral") || combined.includes("pájaro") || combined.includes("pajaro")) return "Hombros";
-  if (combined.includes("tríceps") || combined.includes("triceps") || combined.includes("francés") || combined.includes("frances") || combined.includes("cuerda") || combined.includes("fondos") || combined.includes("pushdown") || combined.includes("patada")) return "Tríceps";
-  if (combined.includes("bíceps") || combined.includes("biceps") || combined.includes("curl") || combined.includes("martillo") || combined.includes("predicador")) return "Bíceps";
-  if (combined.includes("core") || combined.includes("abs") || combined.includes("abdom") || combined.includes("plancha") || combined.includes("crunch") || combined.includes("lumbar")) return "Core";
-  return "Pecho";
+  const mg = String(muscleGroup || "").trim().toLowerCase();
+  if (mg) {
+    if (mg.includes("pierna") || mg.includes("cuádriceps") || mg.includes("cuadriceps") || mg.includes("femoral") || mg.includes("isquio") || mg.includes("glúteo") || mg.includes("gluteo") || mg.includes("gemelo")) return "Piernas";
+    if (mg.includes("espalda") || mg.includes("dorsal") || mg.includes("trapecio")) return "Espalda";
+    if (mg.includes("pecho") || mg.includes("pectoral")) return "Pecho";
+    if (mg.includes("hombro") || mg.includes("deltoid")) return "Hombros";
+    if (mg.includes("brazo") || mg.includes("bíceps") || mg.includes("biceps") || mg.includes("bicep") || mg.includes("tríceps") || mg.includes("triceps") || mg.includes("tricep")) return "Brazos";
+    if (mg.includes("core") || mg.includes("abdom") || mg.includes("lumbar")) return "Core";
+  }
+  const ex = String(name || "").trim().toLowerCase();
+  if (!ex) return null;
+  if (ex.includes("tríceps") || ex.includes("triceps") || ex.includes("tricep") || ex.includes("francés") || ex.includes("frances") || ex.includes("pushdown") || ex.includes("patada") || ex.includes("katana") || ex.includes("bíceps") || ex.includes("biceps") || ex.includes("bicep") || ex.includes("curl") || ex.includes("martillo") || ex.includes("predicador")) return "Brazos";
+  if (ex.includes("pierna") || ex.includes("leg") || ex.includes("sentadilla") || ex.includes("squat") || ex.includes("prensa") || ex.includes("femoral") || ex.includes("isquio") || ex.includes("cuádriceps") || ex.includes("cuadriceps") || ex.includes("gemelo") || ex.includes("hack") || ex.includes("hip thrust") || ex.includes("aductor") || ex.includes("abductor")) return "Piernas";
+  if (ex.includes("espalda") || ex.includes("back") || ex.includes("remo") || ex.includes("jalón") || ex.includes("jalon") || ex.includes("dominada") || ex.includes("pulldown") || ex.includes("dorsal") || ex.includes("pullover") || ex.includes("pull over")) return "Espalda";
+  if (ex.includes("hombro") || ex.includes("shoulder") || ex.includes("militar") || ex.includes("deltoid") || ex.includes("lateral") || ex.includes("pájaro") || ex.includes("pajaro") || ex.includes("face pull")) return "Hombros";
+  if (ex.includes("core") || ex.includes("abs") || ex.includes("abdom") || ex.includes("plancha") || ex.includes("crunch") || ex.includes("lumbar")) return "Core";
+  if (ex.includes("pecho") || ex.includes("chest") || ex.includes("press banca") || ex.includes("press plano") || ex.includes("press inclinado") || ex.includes("press declinado") || ex.includes("aperturas") || ex.includes("cruces en polea") || ex.includes("pec")) return "Pecho";
+  return null;
 }
 
 export default function Metrics({ currentUser }) {
@@ -74,9 +81,11 @@ export default function Metrics({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [workouts, setWorkouts] = useState([]);
+  const [metricsSummary, setMetricsSummary] = useState(null);
   const [muscleDistApi, setMuscleDistApi] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedMuscle, setSelectedMuscle] = useState("Todos");
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // -------------------------------------------------------------
   // 2. ELEVACIÓN TOTAL DE HOOKS: CALLBACKS (useCallback)
@@ -84,10 +93,11 @@ export default function Metrics({ currentUser }) {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [recs, wList, dist] = await Promise.all([
+      const [recs, wList, dist, summary] = await Promise.all([
         getRecords().catch(() => []),
         getWorkouts().catch(() => []),
         getMuscleDistribution().catch(() => null),
+        getMetricsSummary().catch(() => null),
       ]);
       setRecords(
         Array.isArray(recs)
@@ -106,6 +116,9 @@ export default function Metrics({ currentUser }) {
       if (dist) {
         setMuscleDistApi(dist);
       }
+      if (summary) {
+        setMetricsSummary(summary);
+      }
     } catch (err) {
       console.error("Error cargando métricas:", err);
     } finally {
@@ -116,10 +129,35 @@ export default function Metrics({ currentUser }) {
   // -------------------------------------------------------------
   // 3. ELEVACIÓN TOTAL DE HOOKS: MEMOS (useMemo)
   // -------------------------------------------------------------
-  const heavyDutyRecovery = useMemo(
-    () => getHeavyDutyRecoveryStatus(workouts),
-    [workouts]
-  );
+  const overallTotals = useMemo(() => {
+    let vol = 0;
+    let sets = 0;
+    let reps = 0;
+    (workouts || []).forEach((w) => {
+      (w?.sets || []).forEach((s) => {
+        if (s?.completed !== false && !["warmup", "w"].includes((s?.set_type || "").toLowerCase())) {
+          const wKg = parseFloat(s?.weight) || 0;
+          const r = parseInt(s?.reps, 10) || 0;
+          vol += wKg * r;
+          sets += 1;
+          reps += r;
+        }
+      });
+    });
+
+    const totalVolume = vol > 0 ? Math.round(vol) : Math.round(metricsSummary?.total_volume_kg || 0);
+    const totalSets = sets > 0 ? sets : (metricsSummary?.total_sets || 0);
+    const totalReps = reps > 0 ? reps : (metricsSummary?.total_reps || 0);
+    const totalWorkouts = (workouts || []).length || (metricsSummary?.total_workouts || 0);
+
+    return {
+      totalVolume,
+      totalSets,
+      totalReps,
+      totalWorkouts,
+      hasWorkouts: totalWorkouts > 0 || (records || []).length > 0 || totalSets > 0,
+    };
+  }, [workouts, metricsSummary, records]);
 
   // WIDGET 1: RESUMEN DEL MES
   const monthSummary = useMemo(() => {
@@ -164,7 +202,7 @@ export default function Metrics({ currentUser }) {
     };
   }, [workouts]);
 
-  // WIDGET 2: VOLUMEN SEMANAL (Lunes a Domingo)
+  // WIDGET 2: VOLUMEN SEMANAL (Lunes a Domingo - solo sesiones reales)
   const weeklyVolumeData = useMemo(() => {
     const now = new Date();
     const currentDayIdx = (now.getDay() + 6) % 7; // 0=L, 1=M, ... 6=D
@@ -211,10 +249,13 @@ export default function Metrics({ currentUser }) {
       };
     });
 
+    const totalTrainingsDone = days.filter((d) => d.volume > 0).length;
+
     return {
       days,
       maxVol,
       totalWeeklyVolume: Math.round(totalWeeklyVolume),
+      totalTrainingsDone,
     };
   }, [workouts]);
 
@@ -255,8 +296,8 @@ export default function Metrics({ currentUser }) {
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
-    const counts = { Pecho: 0, Espalda: 0, Piernas: 0, Hombros: 0, Bíceps: 0, Tríceps: 0, Core: 0 };
-    const vols = { Pecho: 0, Espalda: 0, Piernas: 0, Hombros: 0, Bíceps: 0, Tríceps: 0, Core: 0 };
+    const counts = { Piernas: 0, Espalda: 0, Pecho: 0, Hombros: 0, Brazos: 0, Core: 0 };
+    const vols = { Piernas: 0, Espalda: 0, Pecho: 0, Hombros: 0, Brazos: 0, Core: 0 };
 
     (workouts || []).forEach((w) => {
       if (!w?.date) return;
@@ -265,7 +306,8 @@ export default function Metrics({ currentUser }) {
 
       (w.sets || []).forEach((s) => {
         if (s?.completed !== false && !["warmup", "W"].includes(s?.set_type || "normal")) {
-          const group = matchMuscle(s?.exercise_name || "", w?.muscle_group_name || "");
+          const group = matchMuscle(s?.exercise_name || "", s?.muscle_group_name || w?.muscle_group_name || "");
+          if (!group || !(group in counts)) return;
           counts[group] = (counts[group] || 0) + 1;
           const wgt = parseFloat(s?.weight) || 0;
           const rep = parseInt(s?.reps, 10) || 0;
@@ -328,7 +370,7 @@ export default function Metrics({ currentUser }) {
   const muscleVolumeBalance = useMemo(() => {
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
-    const vols = { Pecho: 0, Espalda: 0, Piernas: 0, Hombros: 0, Bíceps: 0, Tríceps: 0, Core: 0 };
+    const vols = { Piernas: 0, Espalda: 0, Pecho: 0, Hombros: 0, Brazos: 0, Core: 0 };
     let totalVol = 0;
 
     (workouts || []).forEach((w) => {
@@ -338,7 +380,8 @@ export default function Metrics({ currentUser }) {
 
       (w.sets || []).forEach((s) => {
         if (s?.completed !== false && !["warmup", "W"].includes(s?.set_type || "normal")) {
-          const group = matchMuscle(s?.exercise_name || "", w?.muscle_group_name || "");
+          const group = matchMuscle(s?.exercise_name || "", s?.muscle_group_name || w?.muscle_group_name || "");
+          if (!group || !(group in vols)) return;
           const wgt = parseFloat(s?.weight) || 0;
           const rep = parseInt(s?.reps, 10) || 0;
           const v = wgt * rep;
@@ -402,6 +445,21 @@ export default function Metrics({ currentUser }) {
   // -------------------------------------------------------------
   useEffect(() => {
     loadData();
+    const handleRefresh = () => {
+      loadData();
+    };
+    window.addEventListener("fittracker:workoutFinished", handleRefresh);
+    window.addEventListener("fittracker:workoutDeleted", handleRefresh);
+    window.addEventListener("fittracker:workoutSaved", handleRefresh);
+    window.addEventListener("fittracker:workoutUpdated", handleRefresh);
+    window.addEventListener("fittracker:refreshMetrics", handleRefresh);
+    return () => {
+      window.removeEventListener("fittracker:workoutFinished", handleRefresh);
+      window.removeEventListener("fittracker:workoutDeleted", handleRefresh);
+      window.removeEventListener("fittracker:workoutSaved", handleRefresh);
+      window.removeEventListener("fittracker:workoutUpdated", handleRefresh);
+      window.removeEventListener("fittracker:refreshMetrics", handleRefresh);
+    };
   }, [loadData]);
 
   // -------------------------------------------------------------
@@ -409,9 +467,9 @@ export default function Metrics({ currentUser }) {
   // -------------------------------------------------------------
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-[#FF5722] select-none">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-red-500 select-none">
         <Loader2 size={36} className="animate-spin" />
-        <p className="text-sm font-semibold tracking-wide text-[#8E8E93]">
+        <p className="text-sm font-semibold tracking-wide text-[#64748B]">
           Cargando tus métricas...
         </p>
       </div>
@@ -419,38 +477,97 @@ export default function Metrics({ currentUser }) {
   }
 
   return (
-    <div className="w-full max-w-md sm:max-w-3xl mx-auto space-y-5 pb-24 select-none px-2 sm:px-0">
+    <div className="w-full space-y-5 pb-36 select-none">
       {/* Header */}
       <Header
         title="Métricas"
         subtitle="Rendimiento, volumen y progreso estilo Hevy"
       />
 
-      {/* Contador de Días de Recuperación / Descanso Sistémico Post-Heavy Duty */}
-      <HeavyDutyRecoveryBanner
-        recoveryStatus={heavyDutyRecovery}
-        onStartRoutine={() => navigate("/routines")}
-      />
+      {/* TARJETAS KPI PRINCIPALES: TONELAJE TOTAL, SERIES/REPS, ENTRENAMIENTOS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-slate-100 bg-white p-4 sm:p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+              Tonelaje Acumulado
+            </span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-red-600 hover:bg-red-700 text-white">
+              <Trophy size={14} />
+            </span>
+          </div>
+          <div className="mt-2">
+            <h3 className="text-xl sm:text-2xl font-black text-[#0F172A]">
+              {overallTotals.totalVolume.toLocaleString("es-ES")} <span className="text-xs font-semibold text-[#64748B]">kg</span>
+            </h3>
+            <p className="text-[11px] text-[#64748B] mt-0.5">
+              Volumen total en entrenamientos
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-4 sm:p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+              Series &amp; Reps
+            </span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-[#0F172A]">
+              <Layers size={14} />
+            </span>
+          </div>
+          <div className="mt-2">
+            <h3 className="text-xl sm:text-2xl font-black text-[#0F172A]">
+              {overallTotals.totalSets} <span className="text-xs font-semibold text-[#64748B]">series</span>
+            </h3>
+            <p className="text-[11px] text-[#64748B] mt-0.5">
+              {overallTotals.totalReps.toLocaleString("es-ES")} repeticiones efectivas
+            </p>
+          </div>
+        </div>
+
+        <div
+          onClick={() => setIsHistoryOpen(true)}
+          className="rounded-2xl border border-slate-100 bg-white p-4 sm:p-5 flex flex-col justify-between hover:border-red-500/50 transition cursor-pointer group"
+          title="Ver historial de sesiones"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] group-hover:text-[#0F172A] transition">
+              Sesiones Registradas
+            </span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-red-500/15 text-red-500 group-hover:scale-110 transition">
+              <Dumbbell size={14} />
+            </span>
+          </div>
+          <div className="mt-2">
+            <h3 className="text-xl sm:text-2xl font-black text-[#0F172A]">
+              {overallTotals.totalWorkouts} <span className="text-xs font-semibold text-[#64748B]">entrenamientos</span>
+            </h3>
+            <p className="text-[11px] text-red-500 mt-0.5 font-medium flex items-center gap-1">
+              <span>Tocar para ver historial</span>
+              <ChevronRight size={12} />
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* WIDGET 1: RESUMEN DEL MES */}
-      <div className="rounded-3xl border border-[#2C2C2E] bg-[#121212] p-5 sm:p-6 space-y-4 shadow-xl">
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white font-bold">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold">
               <Calendar size={18} />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
                 Resumen del Mes
               </span>
-              <h3 className="text-lg sm:text-xl font-bold text-white">
+              <h3 className="text-lg sm:text-xl font-bold text-[#0F172A]">
                 {monthSummary.monthName}
               </h3>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#FF5722]/30 bg-[#FF5722]/10 px-2.5 py-1 text-xs font-bold text-[#FF8A65]">
+            <span className="inline-flex items-center gap-1 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-xs font-bold text-red-500">
               <Flame size={12} />
               <span>{monthSummary.progressPct}% meta</span>
             </span>
@@ -458,23 +575,23 @@ export default function Metrics({ currentUser }) {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
-          <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
+          <div className="rounded-2xl border border-slate-100 bg-white p-3.5 text-center">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block">
               Entrenamientos
             </span>
             <div className="mt-1 flex items-baseline justify-center gap-1">
-              <span className="text-2xl sm:text-3xl font-extrabold text-white">
+              <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A]">
                 {monthSummary.activeDaysCount}
               </span>
-              <span className="text-xs font-semibold text-[#8E8E93]">
+              <span className="text-xs font-semibold text-[#64748B]">
                 / {monthSummary.monthlyTarget}
               </span>
             </div>
-            <span className="text-[10px] text-[#8E8E93] block mt-0.5">días este mes</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">días este mes</span>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
+          <div className="rounded-2xl border border-slate-100 bg-white p-3.5 text-center">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block">
               Volumen Mensual
             </span>
             <div className="mt-1">
@@ -482,32 +599,32 @@ export default function Metrics({ currentUser }) {
                 {monthSummary.monthVolume.toLocaleString("es-ES")}
               </span>
             </div>
-            <span className="text-[10px] text-[#8E8E93] block mt-0.5">kg movidos</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">kg movidos</span>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center col-span-2 sm:col-span-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
+          <div className="rounded-2xl border border-slate-100 bg-white p-3.5 text-center col-span-2 sm:col-span-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] block">
               Series Totales
             </span>
             <div className="mt-1">
-              <span className="text-xl sm:text-2xl font-extrabold text-white">
+              <span className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">
                 {monthSummary.monthSets}
               </span>
             </div>
-            <span className="text-[10px] text-[#8E8E93] block mt-0.5">series registradas</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5">series registradas</span>
           </div>
         </div>
 
         <div className="space-y-1.5 pt-1">
-          <div className="flex items-center justify-between text-xs text-[#8E8E93]">
+          <div className="flex items-center justify-between text-xs text-[#64748B]">
             <span>Progreso hacia tu meta ({monthSummary.monthlyTarget} sesiones)</span>
-            <span className="font-bold text-white">
+            <span className="font-bold text-[#0F172A]">
               {monthSummary.activeDaysCount} de {monthSummary.monthlyTarget} días
             </span>
           </div>
-          <div className="h-2.5 w-full rounded-full bg-[#1C1C1E] border border-white/5 overflow-hidden">
+          <div className="h-2.5 w-full rounded-full bg-slate-50 border border-slate-100 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] transition-all duration-500"
+              className="h-full rounded-full bg-red-600 hover:bg-red-700 transition-all duration-500"
               style={{ width: `${monthSummary.progressPct}%` }}
             />
           </div>
@@ -515,41 +632,60 @@ export default function Metrics({ currentUser }) {
       </div>
 
       {/* WIDGET 2: VOLUMEN SEMANAL */}
-      <div className="rounded-3xl border border-[#2C2C2E] bg-[#121212] p-5 sm:p-6 space-y-4 shadow-xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white font-bold">
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div
+            onClick={() => setIsHistoryOpen(true)}
+            className="flex items-center gap-2.5 cursor-pointer group"
+            title="Tocar para ver historial completo"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold group-hover:scale-105 transition">
               <TrendingUp size={18} />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">
-                Volumen Semanal
-              </span>
-              <h3 className="text-lg sm:text-xl font-bold text-white">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] group-hover:text-[#0F172A] transition">
+                  Volumen Semanal
+                </span>
+                <span className="text-[10px] text-red-500 font-medium hidden sm:inline">• Ver Historial</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-[#0F172A] group-hover:text-red-500 transition">
                 {weeklyVolumeData.totalWeeklyVolume.toLocaleString("es-ES")} kg
               </h3>
             </div>
           </div>
-          <span className="text-xs font-semibold text-[#8E8E93]">
-            Esta semana
-          </span>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsHistoryOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl border border-slate-100 bg-slate-50 text-[#64748B] hover:text-[#0F172A] hover:border-red-500/40 transition active:scale-95 cursor-pointer shadow-sm"
+              title="Abrir historial detallado de sesiones"
+            >
+              <Layers size={13} className="text-red-500" />
+              <span>Historial</span>
+            </button>
+          </div>
         </div>
 
-        <div className="pt-3 pb-1">
+        {/* Gráfico de Barras de sesiones reales */}
+        <div
+          onClick={() => setIsHistoryOpen(true)}
+          className="pt-3 pb-1 cursor-pointer group"
+          title="Tocar para ver historial completo"
+        >
           <div className="grid grid-cols-7 gap-2 items-end h-36 sm:h-40 px-1">
             {(weeklyVolumeData.days || []).map((day) => {
               const heightPct =
                 (day?.volume || 0) > 0
-                  ? Math.max(15, Math.round(((day.volume || 0) / weeklyVolumeData.maxVol) * 100))
-                  : 6;
+                  ? Math.max(16, Math.round(((day.volume || 0) / weeklyVolumeData.maxVol) * 100))
+                  : 8;
 
               return (
-                <div key={day.label} className="flex flex-col items-center justify-end h-full gap-1.5 group">
+                <div key={day.label} className="flex flex-col items-center justify-end h-full gap-1.5">
                   <span
                     className={`text-[9px] sm:text-[10px] font-bold truncate transition-opacity ${
-                      (day?.volume || 0) > 0
-                        ? "text-[#FF8A65]"
-                        : "text-transparent group-hover:text-[#8E8E93]"
+                      (day?.volume || 0) > 0 ? "text-red-500" : "text-[#64748B]"
                     }`}
                   >
                     {(day?.volume || 0) > 999
@@ -563,11 +699,11 @@ export default function Metrics({ currentUser }) {
                     <div
                       className={`w-full rounded-t-xl transition-all duration-300 ${
                         (day?.volume || 0) > 0
-                          ? "bg-gradient-to-t from-[#FF5722] to-[#7C4DFF] shadow-lg shadow-[#FF5722]/15"
-                          : "bg-[#1C1C1E] border-t border-white/5"
+                          ? "bg-red-600 hover:bg-red-700 shadow-[0_0_12px_rgba(204,255,0,0.25)]"
+                          : "bg-slate-50 border-t border-slate-100"
                       }`}
                       style={{ height: `${heightPct}%` }}
-                      title={`${day.fullName}: ${(day?.volume || 0).toLocaleString("es-ES")} kg (${day?.setsCount || 0} series)`}
+                      title={`${day.fullName}: ${(day?.volume || 0).toLocaleString("es-ES")} kg`}
                     />
                   </div>
 
@@ -575,16 +711,16 @@ export default function Metrics({ currentUser }) {
                     <span
                       className={`text-xs font-bold ${
                         day.isToday
-                          ? "text-[#FF5722]"
+                          ? "text-red-500"
                           : (day?.volume || 0) > 0
-                          ? "text-white"
-                          : "text-[#8E8E93]"
+                          ? "text-[#0F172A]"
+                          : "text-[#64748B]"
                       }`}
                     >
                       {day.label}
                     </span>
                     {day.isToday && (
-                      <span className="h-1 w-1 rounded-full bg-[#FF5722]" />
+                      <span className="h-1 w-1 rounded-full bg-red-600 hover:bg-red-700" />
                     )}
                   </div>
                 </div>
@@ -593,30 +729,33 @@ export default function Metrics({ currentUser }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-[#8E8E93] pt-1 border-t border-white/5">
-          <span>Lunes a Domingo</span>
-          <span>Días activos con carga</span>
+        {/* Resumen de sesiones reales en la semana */}
+        <div className="flex items-center justify-between gap-1.5 text-[11px] text-[#64748B] pt-2 border-t border-slate-100">
+          <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A]">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-600 hover:bg-red-700" />
+            Sesiones reales esta semana: {weeklyVolumeData.totalTrainingsDone}
+          </span>
         </div>
       </div>
 
       {/* WIDGET DE BALANCE MUSCULAR (ÚLTIMOS 30 DÍAS) */}
-      <div className="rounded-3xl border border-[#2C2C2E] bg-[#121212] p-5 sm:p-6 space-y-4 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#2C2C2E] pb-3.5">
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white font-bold flex-shrink-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold flex-shrink-0">
               <Scale size={18} />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
                 Balance Muscular (30 días)
               </span>
-              <h3 className="text-lg sm:text-xl font-bold text-white">
+              <h3 className="text-lg sm:text-xl font-bold text-[#0F172A]">
                 Distribución Cuantitativa de Volumen
               </h3>
             </div>
           </div>
 
-          <span className="rounded-full border border-white/10 bg-[#050505] px-3 py-1 text-xs font-mono font-bold text-[#8E8E93] self-start sm:self-auto">
+          <span className="rounded-full border border-slate-100 bg-[#050505] px-3 py-1 text-xs font-mono font-bold text-[#64748B] self-start sm:self-auto">
             {muscleVolumeBalance.totalVolume.toLocaleString("es-ES")} kg totales
           </span>
         </div>
@@ -624,7 +763,7 @@ export default function Metrics({ currentUser }) {
         {/* Indicador conciso: "Grupo líder: [Músculo] (X%) | Rezagado: [Músculo] (Y%)" */}
         <div className="rounded-2xl border border-[#2C2C2E] bg-[#050505] p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           {muscleVolumeBalance.hasData && muscleVolumeBalance.leader ? (
-            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap text-xs sm:text-sm font-bold text-white w-full sm:w-auto">
+            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap text-xs sm:text-sm font-bold text-[#0F172A] w-full sm:w-auto">
               <span>Grupo líder:</span>
               <span
                 className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 border"
@@ -636,8 +775,8 @@ export default function Metrics({ currentUser }) {
               >
                 {muscleVolumeBalance.leader.label} ({muscleVolumeBalance.leader.percentage}%)
               </span>
-              <span className="text-[#8E8E93] mx-1">|</span>
-              <span className="text-[#8E8E93]">Rezagado:</span>
+              <span className="text-[#64748B] mx-1">|</span>
+              <span className="text-[#64748B]">Rezagado:</span>
               <span
                 className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 border"
                 style={{
@@ -650,13 +789,13 @@ export default function Metrics({ currentUser }) {
               </span>
             </div>
           ) : (
-            <div className="text-xs text-[#8E8E93] w-full text-center py-1">
+            <div className="text-xs text-[#64748B] w-full text-center py-1">
               Sin volumen registrado en los últimos 30 días para evaluar el balance muscular.
             </div>
           )}
 
           {muscleVolumeBalance.hasData && (
-            <span className="text-[11px] font-semibold text-[#8E8E93] whitespace-nowrap">
+            <span className="text-[11px] font-semibold text-[#64748B] whitespace-nowrap">
               {muscleVolumeBalance.sorted.filter((g) => g.volume > 0).length} de 6 grupos estimulados
             </span>
           )}
@@ -669,14 +808,14 @@ export default function Metrics({ currentUser }) {
               {muscleVolumeBalance.sorted.map((item) => (
                 <div
                   key={item.key}
-                  className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3 space-y-1.5"
+                  className="rounded-2xl border border-slate-100 bg-white p-3 space-y-1.5"
                 >
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-white flex items-center gap-1.5">
+                    <span className="font-semibold text-[#0F172A] flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
                       <span>{item.label}</span>
                     </span>
-                    <span className="font-mono font-bold text-white">
+                    <span className="font-mono font-bold text-[#0F172A]">
                       {item.percentage}%
                     </span>
                   </div>
@@ -689,14 +828,14 @@ export default function Metrics({ currentUser }) {
                       }}
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-[#8E8E93]">
+                  <div className="flex items-center justify-between text-[10px] text-[#64748B]">
                     <span>{item.volume.toLocaleString("es-ES")} kg</span>
                     {item.key === muscleVolumeBalance.leader?.key && (
-                      <span className="text-[#FF5722] font-bold">Líder</span>
+                      <span className="text-red-500 font-bold">Líder</span>
                     )}
                     {item.key === muscleVolumeBalance.lagging?.key &&
                       item.volume < (muscleVolumeBalance.leader?.volume || 0) && (
-                        <span className="text-amber-400 font-medium">Rezagado</span>
+                        <span className="text-red-400 font-medium">Rezagado</span>
                       )}
                   </div>
                 </div>
@@ -707,23 +846,23 @@ export default function Metrics({ currentUser }) {
       </div>
 
       {/* COMPONENTE: DISTRIBUCIÓN MUSCULAR */}
-      <div className="rounded-3xl border border-[#2C2C2E] bg-[#121212] p-5 sm:p-6 space-y-4 shadow-xl">
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white font-bold">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold">
               <PieChart size={18} />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
                 Distribución Muscular
               </span>
-              <h3 className="text-lg sm:text-xl font-bold text-white">
+              <h3 className="text-lg sm:text-xl font-bold text-[#0F172A]">
                 Series Efectivas (30 días)
               </h3>
             </div>
           </div>
 
-          <span className="rounded-full border border-white/10 bg-[#1C1C1E] px-3 py-1 text-xs font-bold text-[#8E8E93]">
+          <span className="rounded-full border border-slate-100 bg-white px-3 py-1 text-xs font-bold text-[#64748B]">
             {muscleDistributionData.totalSets} series
           </span>
         </div>
@@ -831,21 +970,21 @@ export default function Metrics({ currentUser }) {
         </div>
 
         <div className="space-y-2 pt-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93] block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B] block">
             Leyenda de Grupos Musculares
           </span>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {(muscleDistributionData.sortedItems || []).map((item) => (
               <div
                 key={item.key}
-                className="flex items-center justify-between rounded-2xl border border-white/5 bg-[#1C1C1E] px-3 py-2.5 hover:border-white/10 transition"
+                className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-3 py-2.5 hover:border-slate-100 transition"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span
                     className="h-3 w-3 rounded-full flex-shrink-0 shadow-sm"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-xs font-semibold text-white truncate">
+                  <span className="text-xs font-semibold text-[#0F172A] truncate">
                     {item.label}
                   </span>
                 </div>
@@ -853,7 +992,7 @@ export default function Metrics({ currentUser }) {
                   <span className="text-xs font-bold text-[#FF8A65] block">
                     {item.percentage}%
                   </span>
-                  <span className="text-[10px] text-[#8E8E93] block">
+                  <span className="text-[10px] text-[#64748B] block">
                     {item.setCount} series
                   </span>
                 </div>
@@ -867,31 +1006,31 @@ export default function Metrics({ currentUser }) {
       <ExerciseProgressCard />
 
 
-      {/* SECCIÓN RÉCORDS PERSONALES Y 1RM ESTIMADO */}
-      <div className="rounded-3xl border border-[#2C2C2E] bg-[#121212] p-5 sm:p-6 space-y-4 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#2C2C2E] pb-4">
+      {/* SECCIÓN RÉCORDS PERSONALES */}
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white font-bold">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold">
               <Trophy size={18} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-[#0F172A]">
                 Récords Personales
               </h2>
-              <p className="text-xs text-[#8E8E93] mt-0.5">
-                Mejores marcas y 1RM estimado por ejercicio
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Mejores marcas registradas por ejercicio
               </p>
             </div>
           </div>
 
           <div className="relative w-full sm:w-60">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8E93]" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar ejercicio..."
-              className="w-full min-h-[38px] rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] pl-9 pr-3 text-xs text-white placeholder:text-[#8E8E93] outline-none focus:border-[#FF5722]"
+              className="w-full h-11 rounded-xl border border-slate-100 bg-[#F9FAFB] pl-9 pr-3 text-xs text-[#0F172A] placeholder:text-[#64748B] outline-none focus:border-red-500"
             />
           </div>
         </div>
@@ -902,10 +1041,10 @@ export default function Metrics({ currentUser }) {
               key={mg}
               type="button"
               onClick={() => setSelectedMuscle(mg)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                 selectedMuscle === mg
-                  ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
-                  : "border border-white/5 bg-[#1C1C1E] text-[#8E8E93] hover:text-white"
+                  ? "border border-red-500 bg-red-500/15 text-red-500"
+                  : "border border-slate-100 bg-slate-50 text-[#64748B] hover:text-[#0F172A]"
               }`}
             >
               {mg}
@@ -923,11 +1062,11 @@ export default function Metrics({ currentUser }) {
               return (
                 <div
                   key={ex?.exercise_id || ex?.id || Math.random()}
-                  className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-4 flex items-center justify-between gap-3 hover:border-white/10 transition"
+                  className="rounded-2xl border border-slate-100 bg-white p-4 flex items-center justify-between gap-3 hover:border-slate-100 transition"
                 >
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-white truncate">
+                      <span className="text-sm font-bold text-[#0F172A] truncate">
                         {ex?.exercise_name || "Ejercicio"}
                       </span>
                       {rank && (
@@ -936,14 +1075,14 @@ export default function Metrics({ currentUser }) {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-[#8E8E93]">
+                    <p className="text-xs text-[#64748B]">
                       PR actual:{" "}
                       {hasRecords ? (
-                        <strong className="text-white font-semibold">
+                        <strong className="text-[#0F172A] font-semibold">
                           {ex.pr_weight} kg × {ex?.pr_reps || 0} reps
                         </strong>
                       ) : (
-                        <span className="text-[#8E8E93] font-medium">
+                        <span className="text-[#64748B] font-medium">
                           Sin registros aún (-- kg)
                         </span>
                       )}
@@ -952,23 +1091,30 @@ export default function Metrics({ currentUser }) {
                   </div>
 
                   <div className="text-right flex-shrink-0">
-                    <span className="text-xs text-[#8E8E93] block">1RM Est.</span>
-                    <span className="text-base sm:text-lg font-extrabold text-[#FF8A65]">
-                      {hasRecords && parseFloat(ex?.best_estimated_1rm) > 0
-                        ? `${Math.round(parseFloat(ex.best_estimated_1rm))} kg`
-                        : "-- kg"}
+                    <span className="text-xs text-[#64748B] block">Mejor carga</span>
+                    <span className="text-base sm:text-lg font-extrabold text-red-500">
+                      {hasRecords ? `${ex.pr_weight} kg` : "-- kg"}
                     </span>
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-8 text-center text-xs text-[#8E8E93]">
+            <div className="rounded-2xl border border-slate-100 bg-white p-8 text-center text-xs text-[#64748B]">
               No se encontraron récords registrados para este filtro.
             </div>
           )}
         </div>
       </div>
+
+      {/* Modal de Historial Detallado de Sesiones */}
+      <HistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        initialSessions={workouts}
+        onSessionDeleted={() => loadData()}
+        onSessionUpdated={() => loadData()}
+      />
     </div>
   );
 }

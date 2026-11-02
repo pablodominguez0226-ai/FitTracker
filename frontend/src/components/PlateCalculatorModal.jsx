@@ -5,8 +5,8 @@ import { X, Scale, Plus, Minus, Check, Dumbbell } from "lucide-react";
 const STANDARD_PLATES = [
   { weight: 25, color: "bg-red-600 border-red-400 text-white", label: "25kg", name: "Rojo (25 kg)" },
   { weight: 20, color: "bg-blue-600 border-blue-400 text-white", label: "20kg", name: "Azul (20 kg)" },
-  { weight: 15, color: "bg-yellow-500 border-yellow-300 text-black", label: "15kg", name: "Amarillo (15 kg)" },
-  { weight: 10, color: "bg-emerald-600 border-emerald-400 text-white", label: "10kg", name: "Verde (10 kg)" },
+  { weight: 15, color: "bg-yellow-500 border-red-400 text-black", label: "15kg", name: "Amarillo (15 kg)" },
+  { weight: 10, color: "bg-red-600 border-red-500 text-white", label: "10kg", name: "Verde (10 kg)" },
   { weight: 5, color: "bg-zinc-200 border-white text-zinc-900", label: "5kg", name: "Blanco (5 kg)" },
   { weight: 2.5, color: "bg-zinc-800 border-zinc-600 text-zinc-200", label: "2.5kg", name: "Negro (2.5 kg)" },
   { weight: 1.25, color: "bg-slate-400 border-slate-300 text-slate-900", label: "1.25", name: "Cromo (1.25 kg)" },
@@ -84,16 +84,16 @@ export default function PlateCalculatorModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1C1C1E] p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 space-y-4 shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-slate-100 bg-white p-4 sm:p-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 space-y-4 shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FF5722]/10 text-[#FF5722]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-500/10 text-red-500">
               <Scale size={18} />
             </span>
             <div>
-              <h3 className="text-base font-bold text-white">Calculadora de Discos</h3>
-              <p className="text-[11px] text-[#8E8E93] truncate max-w-[220px]">
+              <h3 className="text-base font-bold text-[#0F172A]">Calculadora de Discos</h3>
+              <p className="text-[11px] text-[#64748B] truncate max-w-[220px]">
                 {exerciseName} • Barra estándar {barWeight} kg
               </p>
             </div>
@@ -102,15 +102,15 @@ export default function PlateCalculatorModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-[#121212] text-[#8E8E93] hover:text-white transition"
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-[#64748B] hover:text-[#0F172A] transition"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Weight Selector with quick chips */}
-        <div className="rounded-2xl border border-white/10 bg-[#121212] p-3 text-center space-y-2.5">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93]">
+        <div className="rounded-xl border border-slate-100 bg-white p-3 text-center space-y-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
             Peso Total Objetivo
           </span>
 
@@ -138,9 +138,9 @@ export default function PlateCalculatorModal({
                 step="any"
                 value={weight}
                 onChange={(e) => setWeight(Math.max(0, parseFloat(e.target.value) || 0))}
-                className="w-24 text-center px-2 py-2 text-2xl font-bold rounded-xl border border-white/10 bg-[#1C1C1E] text-white outline-none focus:border-[#FF5722] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-24 text-center px-2 py-2 text-2xl font-bold rounded-xl border border-slate-100 bg-[#F9FAFB] text-[#0F172A] outline-none focus:border-red-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8E8E93]">
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#64748B]">
                 kg
               </span>
             </div>
@@ -172,8 +172,8 @@ export default function PlateCalculatorModal({
                 onClick={() => setWeight(w)}
                 className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition active:scale-95 ${
                   weight === w
-                    ? "border border-[#FF5722] bg-[#FF5722]/10 text-[#FF5722]"
-                    : "border border-white/10 bg-[#1C1C1E] text-[#8E8E93] hover:border-white/20 hover:text-white"
+                    ? "border border-red-500 bg-red-500/15 text-red-500"
+                    : "border border-slate-100 bg-slate-50 text-[#64748B] hover:border-slate-100 hover:text-[#0F172A]"
                 }`}
               >
                 {w}kg
@@ -183,17 +183,17 @@ export default function PlateCalculatorModal({
         </div>
 
         {/* Calculation Summary */}
-        <div className="rounded-2xl border border-white/10 bg-[#121212] p-3 space-y-2.5">
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 space-y-2.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-medium text-[#8E8E93]">Por cada lado:</span>
-            <span className="text-base font-bold text-white">
+            <span className="font-medium text-[#64748B]">Por cada lado:</span>
+            <span className="text-base font-bold text-[#0F172A]">
               {calculation.perSideWeight} kg
             </span>
           </div>
 
           {/* Graphical Barbell Sleeve Representation */}
           <div className="py-2">
-            <div className="flex items-center justify-center gap-1 bg-[#1C1C1E] p-3 rounded-xl border border-white/5 min-h-[70px] overflow-x-auto no-scrollbar">
+            <div className="flex items-center justify-center gap-1 bg-white p-3 rounded-xl border border-slate-100 min-h-[70px] overflow-x-auto no-scrollbar">
               {/* Bar collar */}
               <div className="h-10 w-3 rounded-l bg-zinc-600 border-r border-zinc-400 flex-shrink-0" title="Collar" />
               {/* Bar shaft */}
@@ -201,7 +201,7 @@ export default function PlateCalculatorModal({
 
               {/* Plates stack */}
               {calculation.plates.length === 0 ? (
-                <div className="text-xs font-medium text-[#8E8E93] italic px-4">
+                <div className="text-xs font-medium text-[#64748B] italic px-4">
                   {calculation.isBarOnly
                     ? "Barra sola (sin discos)"
                     : calculation.isUnderBar
@@ -229,21 +229,21 @@ export default function PlateCalculatorModal({
 
           {/* Plates Text List */}
           <div className="space-y-1 text-xs">
-            <span className="text-[11px] font-semibold text-[#8E8E93]">Discos necesarios por lado:</span>
+            <span className="text-[11px] font-semibold text-[#64748B]">Discos necesarios por lado:</span>
             {calculation.plates.length > 0 ? (
               <div className="flex flex-wrap gap-1.5 pt-0.5">
                 {calculation.plates.map((p) => (
                   <span
                     key={p.weight}
-                    className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-[#1C1C1E] px-2.5 py-1 font-semibold text-white text-xs"
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-100 bg-white px-2.5 py-1 font-semibold text-[#0F172A] text-xs"
                   >
-                    <span className="text-[#FF5722] font-bold">{p.count}×</span>
+                    <span className="text-red-500 font-bold">{p.count}×</span>
                     <span>{p.weight} kg</span>
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-[#8E8E93] italic">
+              <p className="text-xs text-[#64748B] italic">
                 {calculation.isBarOnly
                   ? "Cargar únicamente la barra olímpica de 20 kg."
                   : "No se requieren discos."}
@@ -258,7 +258,7 @@ export default function PlateCalculatorModal({
             <button
               type="button"
               onClick={handleApply}
-              className="flex-1 min-h-[46px] rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-90 active:scale-95 transition text-white font-semibold text-xs flex items-center justify-center gap-2 select-none"
+              className="flex-1 h-11 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 transition text-white font-semibold text-xs flex items-center justify-center gap-2 select-none"
             >
               <Check size={16} />
               <span>Cargar {weight} kg en la serie</span>
@@ -268,7 +268,7 @@ export default function PlateCalculatorModal({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[46px] px-4 rounded-2xl border border-white/10 bg-[#121212] hover:bg-white/5 text-[#8E8E93] hover:text-white transition text-xs font-semibold"
+            className="h-11 px-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-[#26262B] text-[#64748B] hover:text-[#0F172A] transition text-xs font-semibold"
           >
             Cerrar
           </button>

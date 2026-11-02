@@ -1,4 +1,3 @@
-import datetime as dt
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -12,32 +11,32 @@ EXPERIENCE_TIPS = {
         schemas.ContextualTipOut(
             id="exp_principiante_tecnica",
             category="technique",
-            title="Técnica: Control Excéntrico",
-            message="El estímulo muscular óptimo se logra controlando la bajada (2 a 3 segundos), no balanceando pesos excesivos con mala postura.",
+            title="Control Excéntrico",
+            message="Controlá la bajada en 2 segundos sin balancear el cuerpo.",
             icon="shield",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_principiante_series_reps",
             category="concept",
-            title="Concepto: Series y Repeticiones",
-            message="Una repetición es el movimiento completo; una serie es el bloque de reps antes de pausar. Buscá 8 a 12 reps controladas.",
+            title="Series y Repeticiones",
+            message="Realizá 3 a 4 series de 8 a 12 repeticiones controladas.",
             icon="repeat",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_principiante_volumen",
             category="volume",
-            title="Concepto: Volumen de Entrenamiento",
-            message="El volumen es Series × Reps × Peso. Como principiante, 6 a 10 series semanales bien ejecutadas por grupo muscular son ideales.",
+            title="Volumen Semanal",
+            message="Completá 6 a 10 series semanales por grupo muscular con buena técnica.",
             icon="layers",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_principiante_pr",
             category="records",
-            title="Concepto: Récords Personales (PR)",
-            message="Tu PR es tu mejor marca histórica. No lo busques en cada serie: progresará naturalmente a medida que consolides tu técnica.",
+            title="Récords Personales (PR)",
+            message="Priorizá sumar repeticiones limpias antes de subir el peso.",
             icon="trophy",
             priority=2,
         ),
@@ -45,7 +44,7 @@ EXPERIENCE_TIPS = {
             id="exp_principiante_descanso",
             category="recovery",
             title="Descanso entre Series",
-            message="Descansá entre 90 y 120 segundos entre series para reponer energía y mantener la intensidad técnica en cada repetición.",
+            message="Descansá 90 a 120 segundos entre series para rendir mejor.",
             icon="shield",
             priority=3,
         ),
@@ -54,32 +53,32 @@ EXPERIENCE_TIPS = {
         schemas.ContextualTipOut(
             id="exp_intermedio_progresion",
             category="overload",
-            title="Sobrecarga Progresiva Sistemática",
-            message="Si completás todas tus series en el rango alto de repeticiones, es momento de sumar 1 repetición o subir 1.25kg a 2.5kg.",
+            title="Sobrecarga Progresiva",
+            message="Si completás el tope de repeticiones en tus series, subí 1.25 kg a 2.5 kg.",
             icon="trending-up",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_intermedio_volumen",
             category="volume",
-            title="Volumen Óptimo de Hipertrofia",
-            message="Apuntá a 10-16 series efectivas semanales por grupo muscular, distribuidas preferentemente en frecuencia 2.",
+            title="Volumen Óptimo",
+            message="Apuntá a 10-16 series efectivas semanales por grupo muscular.",
             icon="bar-chart-2",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_intermedio_cargas",
             category="loads",
-            title="Manejo de Cargas & Micro-Incrementos",
-            message="Usá micro-cargas de 1.25kg en básicos para afianzar cada escalón de fuerza sin comprometer tu proximidad al fallo (RIR 1-2).",
+            title="Micro-Incrementos",
+            message="Usá aumentos de 1.25 kg en básicos manteniendo 1-2 reps en reserva.",
             icon="dumbbell",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_intermedio_consistencia",
             category="consistency",
-            title="Consistencia & Disciplina",
-            message="La adherencia semanal vence a los picos de intensidad desmedidos. En días de baja energía, cumplí el volumen sin forzar récords.",
+            title="Consistencia",
+            message="En días de baja energía, cumplí las series sin forzar récords.",
             icon="flame",
             priority=2,
         ),
@@ -88,46 +87,45 @@ EXPERIENCE_TIPS = {
         schemas.ContextualTipOut(
             id="exp_avanzado_rendimiento",
             category="performance",
-            title="Análisis de Rendimiento & SNC",
-            message="Monitoreá la velocidad de ejecución y tu RPE. Si la primera serie se percibe a RPE 9, autorregulá el volumen para cuidar tu SNC.",
+            title="Control de Fatiga",
+            message="Si la primera serie pesa demasiado, dejá 2 reps en reserva hoy.",
             icon="activity",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_avanzado_volumen_mrv",
             category="volume",
-            title="Gestión de MEV, MAV y MRV",
-            message="Alterná semanas de acumulación acercándote a tu MRV con semanas de descarga activa (-40% volumen) para disipar fatiga profunda.",
+            title="Gestión de Volumen",
+            message="Alterná bloques intensos con 1 semana de descarga (-40% series).",
             icon="layers",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_avanzado_pr_peaking",
             category="records",
-            title="Estrategia de PRs & Peaking",
-            message="Los PRs absolutos requieren semanas previas de potenciación neuromuscular y peaking, no intentos fortuitos en fatiga.",
+            title="Nuevos Récords",
+            message="Buscá récords tras días de buen descanso, no con fatiga acumulada.",
             icon="trophy",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_avanzado_estancamientos",
             category="plateaus",
-            title="Ruptura de Estancamientos",
-            message="Ante mesetas de 4+ semanas, introducí pausas isométricas de 2s en sticking points o rotá variantes de implemento por 1 mesociclo.",
+            title="Romper Mesetas",
+            message="Usá pausas de 2 segundos o cambiá a mancuernas por 3 semanas.",
             icon="zap",
             priority=2,
         ),
         schemas.ContextualTipOut(
             id="exp_avanzado_tecnica",
             category="technique",
-            title="Técnica Biomecánica de Precisión",
-            message="Alineá perfiles de resistencia con las palancas articulares y minimizá la fatiga axial para optimizar el estímulo hipertrófico.",
+            title="Precisión Técnica",
+            message="Mantené recorrido completo y velocidad constante en cada serie.",
             icon="target",
             priority=2,
         ),
     ],
 }
-
 
 
 @router.get("/contextual", response_model=list[schemas.ContextualTipOut])
@@ -140,7 +138,6 @@ def get_contextual_tips(
 ):
     tips: list[schemas.ContextualTipOut] = []
 
-    # 1. Fetch user experience level
     profile = db.get(models.UserProfile, 1)
     exp_level = (
         profile.experience_level.strip().lower()
@@ -148,15 +145,14 @@ def get_contextual_tips(
         else "intermedio"
     )
 
-    # 2. Heurística de Voluntad y Estado del Día (Readiness)
     if readiness_energy is not None:
         if readiness_energy <= 2:
             tips.append(
                 schemas.ContextualTipOut(
                     id="wp_low_energy",
                     category="willpower",
-                    title="Disciplina sobre Motivación",
-                    message="Entrenando con energía baja. Hoy tu mayor mérito es cumplir: tomá descansos generosos (2-3 min) y enfocate en series de calidad técnica.",
+                    title="Energía Baja",
+                    message="Descansá 2-3 minutos entre series y cumplí el volumen sin ir al fallo.",
                     icon="brain",
                     priority=1,
                 )
@@ -166,8 +162,8 @@ def get_contextual_tips(
                 schemas.ContextualTipOut(
                     id="wp_max_energy",
                     category="overload",
-                    title="Energía al 100% · Día de Ataque",
-                    message="Excelente recuperación. Si las series de aproximación se sienten livianas, hoy es el día propicio para intentar sobrecarga progresiva (+1 rep o +1.25kg).",
+                    title="Energía al 100%",
+                    message="Buen día para buscar +1 repetición o sumar 2.5 kg en tu serie principal.",
                     icon="zap",
                     priority=1,
                 )
@@ -182,14 +178,13 @@ def get_contextual_tips(
             schemas.ContextualTipOut(
                 id="wp_low_motivation",
                 category="willpower",
-                title="La Inercia del Movimiento",
-                message="Tu combustible físico está listo aunque la mente dude. Tras las primeras 2 series, el cuerpo entrará en sintonía con el esfuerzo.",
+                title="Enfoque Directo",
+                message="Completá las primeras 2 series de calentamiento para entrar en ritmo.",
                 icon="flame",
                 priority=1,
             )
         )
 
-    # 3. Heurística de Ejercicio Específico (Sobrecarga Progresiva / Consolidación / Recuperación)
     if exercise_id:
         ex = db.get(models.Exercise, exercise_id)
         if ex:
@@ -227,20 +222,18 @@ def get_contextual_tips(
                         if prev_sets:
                             prev_top = max(prev_sets, key=lambda s: s.weight or 0.0)
 
-                            # Carga consolidada
                             if top_weight == prev_top.weight and top_reps >= prev_top.reps:
                                 tips.append(
                                     schemas.ContextualTipOut(
                                         id=f"overload_consolidated_{exercise_id}",
                                         category="overload",
-                                        title=f"Carga Consolidada en {ex.name}",
-                                        message=f"Mantuviste {top_weight}kg × {top_reps} reps en tus últimas sesiones. En tu 1ª serie de hoy, intentá buscar 1 rep extra o sumar 1.25kg.",
+                                        title=f"Progreso en {ex.name}",
+                                        message=f"Mantuviste {top_weight} kg × {top_reps} reps. Hoy buscá +1 rep o sumá 1.25 kg.",
                                         icon="trending-up",
                                         priority=1,
                                     )
                                 )
 
-                            # Caída de volumen / recuperación
                             prev_vol = sum((st.weight or 0.0) * (st.reps or 0) for st in prev_sets)
                             last_vol = sum((st.weight or 0.0) * (st.reps or 0) for st in last_sets)
                             if prev_vol > 0 and (last_vol / prev_vol) < 0.75:
@@ -248,19 +241,17 @@ def get_contextual_tips(
                                     schemas.ContextualTipOut(
                                         id=f"recovery_drop_{exercise_id}",
                                         category="recovery",
-                                        title=f"Ajuste de Recuperación en {ex.name}",
-                                        message=f"Notamos una reducción de volumen en la última sesión de {ex.name}. Asegurá buena hidratación y priorizá técnica sólida sin forzar límites hoy.",
+                                        title=f"Ajuste en {ex.name}",
+                                        message=f"Bajó el volumen en la última sesión de {ex.name}. Priorizá técnica controlada hoy.",
                                         icon="shield",
                                         priority=2,
                                     )
                                 )
 
-    # 4. Complementar con tips según nivel de experiencia del atleta
     exp_pool = EXPERIENCE_TIPS.get(exp_level, EXPERIENCE_TIPS["intermedio"])
     for tip in exp_pool:
         if not any(t.id == tip.id for t in tips):
             tips.append(tip)
 
-    # Sort by priority
     tips.sort(key=lambda t: t.priority)
     return tips

@@ -11,28 +11,167 @@ import {
   Zap,
 } from "lucide-react";
 import { formatDateLong } from "../utils/dateUtils";
+import { getCachedExercises, getCachedMuscleGroups } from "../services/exerciseCache";
 
-// 7 Grupos musculares canónicos estilo Hevy
+// 6 Grupos musculares mapeados en el Radar
 const CANONICAL_MUSCLES = [
-  { key: "Pecho", label: "Pecho" },
-  { key: "Espalda", label: "Espalda" },
   { key: "Piernas", label: "Piernas" },
+  { key: "Espalda", label: "Espalda" },
+  { key: "Pecho", label: "Pecho" },
   { key: "Hombros", label: "Hombros" },
-  { key: "Bíceps", label: "Bíceps" },
-  { key: "Tríceps", label: "Tríceps" },
+  { key: "Brazos", label: "Brazos" },
   { key: "Core", label: "Core" },
 ];
 
-function matchMuscle(name = "") {
-  const n = (name || "").toLowerCase();
-  if (n.includes("pecho") || n.includes("chest") || n.includes("banca") || n.includes("pec")) return "Pecho";
-  if (n.includes("espalda") || n.includes("back") || n.includes("remo") || n.includes("jalón") || n.includes("jalon") || n.includes("dominada") || n.includes("pulldown")) return "Espalda";
-  if (n.includes("pierna") || n.includes("leg") || n.includes("sentadilla") || n.includes("squat") || n.includes("prensa") || n.includes("femoral") || n.includes("cuádriceps") || n.includes("cuadriceps") || n.includes("gemelo") || n.includes("hack") || n.includes("hip thrust")) return "Piernas";
-  if (n.includes("hombro") || n.includes("shoulder") || n.includes("militar") || n.includes("deltoid") || n.includes("lateral") || n.includes("pájaro") || n.includes("pajaro") || n.includes("press militar")) return "Hombros";
-  if (n.includes("tríceps") || n.includes("triceps") || n.includes("francés") || n.includes("frances") || n.includes("cuerda") || n.includes("fondos") || n.includes("pushdown") || n.includes("patada")) return "Tríceps";
-  if (n.includes("bíceps") || n.includes("biceps") || n.includes("curl") || n.includes("martillo") || n.includes("predicador")) return "Bíceps";
-  if (n.includes("core") || n.includes("abs") || n.includes("abdom") || n.includes("plancha") || n.includes("crunch")) return "Core";
-  return "Pecho";
+const MUSCLE_ID_TO_RADAR = {
+  1: "Pecho",
+  2: "Espalda",
+  3: "Piernas",
+  4: "Hombros",
+  6: "Core",
+  7: "Brazos", // Bíceps -> 100% Brazos
+  8: "Brazos", // Tríceps -> 100% Brazos
+};
+
+function mapMuscleGroupNameToRadar(mgName = "") {
+  const mg = String(mgName || "").trim().toLowerCase();
+  if (!mg) return null;
+  if (
+    mg.includes("pierna") ||
+    mg.includes("cuádriceps") ||
+    mg.includes("cuadriceps") ||
+    mg.includes("femoral") ||
+    mg.includes("isquio") ||
+    mg.includes("glúteo") ||
+    mg.includes("gluteo") ||
+    mg.includes("gemelo") ||
+    mg.includes("abductor") ||
+    mg.includes("aductor")
+  ) {
+    return "Piernas";
+  }
+  if (mg.includes("espalda") || mg.includes("dorsal") || mg.includes("trapecio")) {
+    return "Espalda";
+  }
+  if (mg.includes("pecho") || mg.includes("pectoral")) {
+    return "Pecho";
+  }
+  if (mg.includes("hombro") || mg.includes("deltoid")) {
+    return "Hombros";
+  }
+  if (
+    mg.includes("brazo") ||
+    mg.includes("bíceps") ||
+    mg.includes("biceps") ||
+    mg.includes("bicep") ||
+    mg.includes("tríceps") ||
+    mg.includes("triceps") ||
+    mg.includes("tricep") ||
+    mg.includes("antebrazo")
+  ) {
+    return "Brazos";
+  }
+  if (mg.includes("core") || mg.includes("abdom") || mg.includes("lumbar") || mg.includes("oblicuo")) {
+    return "Core";
+  }
+  return null;
+}
+
+function matchMuscleFallbackByName(name = "") {
+  const n = String(name || "").trim().toLowerCase();
+  if (!n) return null;
+  if (
+    n.includes("tríceps") ||
+    n.includes("triceps") ||
+    n.includes("tricep") ||
+    n.includes("francés") ||
+    n.includes("frances") ||
+    n.includes("pushdown") ||
+    n.includes("patada") ||
+    n.includes("katana") ||
+    n.includes("bíceps") ||
+    n.includes("biceps") ||
+    n.includes("bicep") ||
+    n.includes("curl") ||
+    n.includes("martillo") ||
+    n.includes("predicador") ||
+    n.includes("zottman")
+  ) {
+    return "Brazos";
+  }
+  if (
+    n.includes("pierna") ||
+    n.includes("leg") ||
+    n.includes("sentadilla") ||
+    n.includes("squat") ||
+    n.includes("prensa") ||
+    n.includes("femoral") ||
+    n.includes("isquio") ||
+    n.includes("cuádriceps") ||
+    n.includes("cuadriceps") ||
+    n.includes("gemelo") ||
+    n.includes("hack") ||
+    n.includes("hip thrust") ||
+    n.includes("aductor") ||
+    n.includes("abductor") ||
+    n.includes("búlgara") ||
+    n.includes("bulgara")
+  ) {
+    return "Piernas";
+  }
+  if (
+    n.includes("espalda") ||
+    n.includes("back") ||
+    n.includes("remo") ||
+    n.includes("jalón") ||
+    n.includes("jalon") ||
+    n.includes("dominada") ||
+    n.includes("pulldown") ||
+    n.includes("dorsal") ||
+    n.includes("pullover") ||
+    n.includes("pull over")
+  ) {
+    return "Espalda";
+  }
+  if (
+    n.includes("hombro") ||
+    n.includes("shoulder") ||
+    n.includes("militar") ||
+    n.includes("deltoid") ||
+    n.includes("vuelo lateral") ||
+    n.includes("elevaciones laterales") ||
+    n.includes("pájaro") ||
+    n.includes("pajaro") ||
+    n.includes("face pull")
+  ) {
+    return "Hombros";
+  }
+  if (
+    n.includes("core") ||
+    n.includes("abs") ||
+    n.includes("abdom") ||
+    n.includes("plancha") ||
+    n.includes("crunch") ||
+    n.includes("lumbar") ||
+    n.includes("leñador") ||
+    n.includes("pallof")
+  ) {
+    return "Core";
+  }
+  if (
+    n.includes("pecho") ||
+    n.includes("chest") ||
+    n.includes("press banca") ||
+    n.includes("press plano") ||
+    n.includes("press inclinado") ||
+    n.includes("press declinado") ||
+    n.includes("aperturas") ||
+    n.includes("cruces en polea") ||
+    n.includes("pec")
+  ) {
+    return "Pecho";
+  }
+  return null;
 }
 
 function formatDurationHevy(seconds) {
@@ -64,31 +203,81 @@ export default function WorkoutSummaryModal({
   const prCount = summary?.pr_count ?? prsBroken.length;
   const activeExercises = summary?.activeExercises ?? summary?.exercises ?? [];
 
-  // Calcular distribución muscular de la sesión de hoy
+  // Calcular distribución muscular real de la sesión de hoy según el muscle_group de la tabla exercises
   const muscleDistribution = useMemo(() => {
     const counts = {
-      Pecho: 0,
-      Espalda: 0,
       Piernas: 0,
+      Espalda: 0,
+      Pecho: 0,
       Hombros: 0,
-      Bíceps: 0,
-      Tríceps: 0,
+      Brazos: 0,
       Core: 0,
     };
     const volumes = {
-      Pecho: 0,
-      Espalda: 0,
       Piernas: 0,
+      Espalda: 0,
+      Pecho: 0,
       Hombros: 0,
-      Bíceps: 0,
-      Tríceps: 0,
+      Brazos: 0,
       Core: 0,
+    };
+
+    const cachedCatalog = getCachedExercises() || [];
+    const catalogById = {};
+    const catalogByName = {};
+    cachedCatalog.forEach((cEx) => {
+      if (cEx?.id) catalogById[cEx.id] = cEx;
+      if (cEx?.name) catalogByName[String(cEx.name).trim().toLowerCase()] = cEx;
+    });
+
+    const cachedGroups = getCachedMuscleGroups() || [];
+    const groupNameById = {};
+    cachedGroups.forEach((g) => {
+      if (g?.id && g?.name) groupNameById[g.id] = g.name;
+    });
+
+    const resolveExerciseRadarGroup = (ex) => {
+      if (!ex) return null;
+      const exId = ex.exerciseId ?? ex.exercise_id ?? ex.id;
+      const exName = String(ex.exerciseName || ex.exercise_name || ex.name || "").trim();
+      const catEx =
+        (exId && catalogById[exId]) ||
+        (exName && catalogByName[exName.toLowerCase()]) ||
+        null;
+
+      const mgId =
+        ex.muscleGroupId ??
+        ex.muscle_group_id ??
+        catEx?.muscle_group_id ??
+        null;
+
+      const mgName =
+        ex.muscleGroupName ||
+        ex.muscle_group_name ||
+        ex.muscle_group ||
+        catEx?.muscle_group_name ||
+        (mgId ? groupNameById[Number(mgId)] : "") ||
+        "";
+
+      // 1. Estrictamente por el nombre del muscle_group real de exercises
+      const byMgName = mapMuscleGroupNameToRadar(mgName);
+      if (byMgName) return byMgName;
+
+      // 2. Por ID del muscle_group real de exercises
+      if (mgId && MUSCLE_ID_TO_RADAR[Number(mgId)]) {
+        return MUSCLE_ID_TO_RADAR[Number(mgId)];
+      }
+
+      // 3. Fallback por nombre de ejercicio (sin default a Pecho)
+      return matchMuscleFallbackByName(exName);
     };
 
     const exList = Array.isArray(activeExercises) ? activeExercises : [];
     exList.forEach((ex) => {
       if (!ex) return;
-      const muscleKey = matchMuscle(ex?.exerciseName || ex?.name || ex?.muscle_group_name || "");
+      const muscleKey = resolveExerciseRadarGroup(ex);
+      if (!muscleKey || !(muscleKey in counts)) return;
+
       const sets = Array.isArray(ex.sets) ? ex.sets : [];
       sets.forEach((s) => {
         if (s && s.completed !== false && !["warmup", "W"].includes(s.set_type || "normal")) {
@@ -101,11 +290,22 @@ export default function WorkoutSummaryModal({
     });
 
     const totalSetsCount = Object.values(counts).reduce((a, b) => a + b, 0);
+    const totalVol = Object.values(volumes).reduce((a, b) => a + b, 0);
+    const allTrainedHaveVolume =
+      totalVol > 0 &&
+      Object.keys(counts).every((k) => counts[k] === 0 || volumes[k] > 0);
 
     const items = CANONICAL_MUSCLES.map(({ key, label }) => {
       const setCount = counts[key] || 0;
-      const vol = volumes[key] || 0;
-      const pct = totalSetsCount > 0 ? Math.round((setCount / totalSetsCount) * 100) : 0;
+      const vol = setCount > 0 ? volumes[key] || 0 : 0;
+      let pct = 0;
+      if (setCount === 0) {
+        pct = 0;
+      } else if (allTrainedHaveVolume && totalVol > 0) {
+        pct = Math.round((vol / totalVol) * 100);
+      } else if (totalSetsCount > 0) {
+        pct = Math.round((setCount / totalSetsCount) * 100);
+      }
       return {
         key,
         label,
@@ -116,7 +316,9 @@ export default function WorkoutSummaryModal({
     });
 
     // Músculo más entrenado
-    const topMuscle = [...items].sort((a, b) => b.setCount - a.setCount)[0];
+    const topMuscle = [...items].sort(
+      (a, b) => b.percentage - a.percentage || b.volume - a.volume || b.setCount - a.setCount
+    )[0];
 
     return {
       items,
@@ -131,7 +333,7 @@ export default function WorkoutSummaryModal({
     const cx = size / 2;
     const cy = size / 2;
     const radius = 80;
-    const totalAxes = 6;
+    const totalAxes = CANONICAL_MUSCLES.length; // 6 ejes: [Piernas, Espalda, Pecho, Hombros, Brazos, Core]
 
     // Calcular coordenadas de un eje i (0 a 5) dado un radio r
     const getPoint = (i, r) => {
@@ -166,11 +368,10 @@ export default function WorkoutSummaryModal({
       });
     }
 
-    // Polígono de datos del usuario
+    // Polígono de datos del usuario: si percentage === 0, el vértice queda estrictamente en 0 (centro)
     const maxPct = Math.max(...muscleDistribution.items.map((m) => m.percentage), 1);
     const dataPoints = muscleDistribution.items.map((m, i) => {
-      // Normalizar: mínimo 12% de radio para visualización si es > 0
-      const norm = m.percentage > 0 ? Math.max(0.2, m.percentage / maxPct) : 0.05;
+      const norm = m.percentage > 0 ? Math.max(0.2, m.percentage / maxPct) : 0;
       const pt = getPoint(i, radius * norm);
       return {
         ...pt,
@@ -197,27 +398,27 @@ export default function WorkoutSummaryModal({
   if (!isOpen || !summary) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-[#2C2C2E] bg-[#121212] flex flex-col max-h-[88dvh] overflow-hidden shadow-2xl shadow-black/80 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200 select-none">
+      <div className="w-full max-w-md sm:max-w-lg bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] overflow-hidden shadow-2xl shadow-black/80 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
         
         {/* Capa 1 - CABECERA FESTIVA FIJA */}
-        <div className="p-4 border-b border-[#2C2C2E] bg-[#121212] text-center space-y-1.5 flex-shrink-0">
+        <div className="p-4 border-b border-slate-100 bg-white text-center space-y-1.5 flex-shrink-0">
           {/* Badge Festivo Hevy */}
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#FF5722]/30 bg-gradient-to-r from-[#FF5722]/15 to-[#7C4DFF]/15 px-3 py-1 text-xs font-bold text-[#FF8A65] tracking-wide">
-            <Sparkles size={13} className="text-[#FF5722]" />
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-500 tracking-wide">
+            <Sparkles size={13} className="text-red-500" />
             <span>¡Bien hecho!</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-[#0F172A] tracking-tight">
             Entrenamiento completado
           </h2>
 
-          <p className="text-xs text-[#8E8E93] capitalize font-medium">
+          <p className="text-xs text-[#64748B] capitalize font-medium">
             {formattedDate}
           </p>
 
           {isOfflineSaved && (
-            <div className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl py-1 px-3 mt-1">
+            <div className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-red-400 bg-red-500/10 border border-red-400/20 rounded-xl py-1 px-3 mt-1">
               <CloudOff size={12} />
               <span>Guardado localmente. Se sincronizará al conectar.</span>
             </div>
@@ -227,56 +428,56 @@ export default function WorkoutSummaryModal({
         {/* Capa 2 - CUERPO SCROLLEABLE */}
         <div className="p-4 space-y-4 overflow-y-auto overscroll-contain flex-1">
           {/* 2. TARJETA DE MÉTRICAS CLAVE (3 COLUMNAS DESTACADAS) */}
-        <div className="grid grid-cols-3 gap-2 rounded-2xl border border-[#2C2C2E] bg-[#1C1C1E] p-3 sm:p-4 text-center">
+        <div className="grid grid-cols-3 gap-2 rounded-xl border border-slate-100 bg-[#F9FAFB] p-3 sm:p-4 text-center">
           {/* Columna 1: Duración */}
           <div className="flex flex-col items-center justify-center space-y-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-[#FF5722]">
+            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-50 text-red-500">
               <Clock size={15} />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
               Duración
             </span>
-            <span className="text-sm sm:text-base font-bold text-white tracking-tight">
+            <span className="text-sm sm:text-base font-bold text-[#0F172A] tracking-tight">
               {formatDurationHevy(durationSeconds)}
             </span>
           </div>
 
           {/* Columna 2: Volumen */}
-          <div className="flex flex-col items-center justify-center space-y-1 border-x border-white/5 px-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-[#FF8A65]">
+          <div className="flex flex-col items-center justify-center space-y-1 border-x border-slate-100 px-1">
+            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-50 text-red-500">
               <Dumbbell size={15} />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
               Volumen
             </span>
-            <span className="text-sm sm:text-base font-bold text-white tracking-tight truncate w-full">
+            <span className="text-sm sm:text-base font-bold text-[#0F172A] tracking-tight truncate w-full">
               {Math.round(totalVolumeKg).toLocaleString("es-ES")} kg
             </span>
           </div>
 
           {/* Columna 3: Récords */}
           <div className="flex flex-col items-center justify-center space-y-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-amber-400">
+            <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-slate-50 text-red-500">
               <Trophy size={15} />
             </div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">
               Récords
             </span>
-            <span className="text-sm sm:text-base font-bold text-amber-400 tracking-tight flex items-center justify-center gap-0.5">
+            <span className="text-sm sm:text-base font-bold text-red-500 tracking-tight flex items-center justify-center gap-0.5">
               <span>{prCount}</span>
               <span>🏅</span>
             </span>
           </div>
         </div>
 
-        {/* 3. GRÁFICO DE DISTRIBUCIÓN MUSCULAR DE HOY (RADAR SVG HEVY) */}
-        <div className="rounded-2xl border border-[#2C2C2E] bg-[#1C1C1E] p-4 space-y-3">
+        {/* 3. GRÁFICO DE DISTRIBUCIÓN MUSCULAR DE HOY (RADAR SVG) */}
+        <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#8E8E93]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
               Distribución Muscular
             </span>
             {muscleDistribution.topMuscle && (
-              <span className="text-[11px] font-semibold text-[#FF5722] bg-[#FF5722]/10 border border-[#FF5722]/20 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-semibold text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
                 {muscleDistribution.topMuscle.label} ({muscleDistribution.topMuscle.percentage}%)
               </span>
             )}
@@ -289,14 +490,9 @@ export default function WorkoutSummaryModal({
               className="w-full max-w-[240px] h-auto overflow-visible"
             >
               <defs>
-                {/* Degradado mate #FF5722 a #7C4DFF */}
                 <linearGradient id="hevyRadarFill" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FF5722" stopOpacity="0.45" />
-                  <stop offset="100%" stopColor="#7C4DFF" stopOpacity="0.45" />
-                </linearGradient>
-                <linearGradient id="hevyRadarStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FF5722" />
-                  <stop offset="100%" stopColor="#7C4DFF" />
+                  <stop offset="0%" stopColor="#EF4444" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#EF4444" stopOpacity="0.15" />
                 </linearGradient>
               </defs>
 
@@ -306,7 +502,7 @@ export default function WorkoutSummaryModal({
                   key={`ring-${idx}`}
                   points={ringPoints}
                   fill="none"
-                  stroke="#2C2C2E"
+                  stroke="#26262B"
                   strokeWidth="1"
                   strokeDasharray={idx < 3 ? "2 2" : "none"}
                 />
@@ -320,7 +516,7 @@ export default function WorkoutSummaryModal({
                   y1={axis.y1}
                   x2={axis.x2}
                   y2={axis.y2}
-                  stroke="#2C2C2E"
+                  stroke="#26262B"
                   strokeWidth="1"
                 />
               ))}
@@ -330,8 +526,8 @@ export default function WorkoutSummaryModal({
                 <polygon
                   points={radarGeometry.dataPolygonPoints}
                   fill="url(#hevyRadarFill)"
-                  stroke="url(#hevyRadarStroke)"
-                  strokeWidth="2.5"
+                  stroke="#EF4444"
+                  strokeWidth="2"
                   strokeLinejoin="round"
                 />
               )}
@@ -343,13 +539,13 @@ export default function WorkoutSummaryModal({
                   cx={pt.x}
                   cy={pt.y}
                   r={pt.isActive ? 4 : 2}
-                  fill={pt.isActive ? "#FF5722" : "#8E8E93"}
-                  stroke="#121212"
+                  fill={pt.isActive ? "#EF4444" : "#8E8E93"}
+                  stroke="#0B0B0E"
                   strokeWidth="1.5"
                 />
               ))}
 
-              {/* Etiquetas de los 6 grupos musculares en el borde */}
+              {/* Etiquetas de los grupos musculares en el borde */}
               {radarGeometry.labelPoints.map((lbl, idx) => {
                 const item = muscleDistribution.items.find((m) => m.key === lbl.key);
                 const isTrained = (item?.setCount || 0) > 0;
@@ -378,8 +574,8 @@ export default function WorkoutSummaryModal({
                 key={m.key}
                 className={`rounded-xl border p-2 text-center transition-all ${
                   m.percentage > 0
-                    ? "border-[#FF5722]/30 bg-[#FF5722]/5 text-white"
-                    : "border-white/5 bg-[#121212] text-[#8E8E93]"
+                    ? "border-red-500/30 bg-red-500/10 text-[#0F172A]"
+                    : "border-slate-100 bg-white text-[#64748B]"
                 }`}
               >
                 <span className="text-[10px] font-semibold block truncate">
@@ -387,7 +583,7 @@ export default function WorkoutSummaryModal({
                 </span>
                 <span
                   className={`text-xs font-bold ${
-                    m.percentage > 0 ? "text-[#FF5722]" : "text-[#8E8E93]"
+                    m.percentage > 0 ? "text-red-500" : "text-[#64748B]"
                   }`}
                 >
                   {m.percentage}%
@@ -399,19 +595,19 @@ export default function WorkoutSummaryModal({
 
         {/* 4. RÉCORDS ROTOS HOY (SI HUBO PRs) */}
         {prsBroken && prsBroken.length > 0 && (
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3.5 space-y-2">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-400">
+          <div className="rounded-xl border border-red-400/20 bg-red-500/10 p-3.5 space-y-2">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-400">
               <Medal size={14} />
               <span>Nuevos Récords Personales</span>
             </div>
-            <div className="space-y-1.5 text-xs font-medium text-white">
+            <div className="space-y-1.5 text-xs font-medium text-[#0F172A]">
               {prsBroken.map((pr, idx) => {
                 const prText = typeof pr === "string" ? pr : pr.text || `${pr.exercise_name || "Ejercicio"}: ${pr.weight} kg × ${pr.reps} reps`;
                 return (
                   <div key={`pr-${idx}`} className="flex items-start gap-2">
-                    <span className="text-amber-400">🏅</span>
+                    <span className="text-red-400">🏅</span>
                     <span className="leading-snug">
-                      <strong className="text-white font-semibold">{prText}</strong>
+                      <strong className="text-[#0F172A] font-semibold">{prText}</strong>
                     </span>
                   </div>
                 );
@@ -422,13 +618,13 @@ export default function WorkoutSummaryModal({
         </div>
 
         {/* Capa 3 - Pie de Acción Fijo / Anclado */}
-        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-[#2C2C2E] bg-[#121212] flex-shrink-0">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-100 bg-white flex-shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="w-full min-h-[52px] rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white font-bold text-sm sm:text-base tracking-wide hover:opacity-95 active:scale-[0.98] transition flex items-center justify-center gap-2 select-none shadow-none cursor-pointer"
+            className="w-full bg-red-600 hover:bg-red-700 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl tracking-wide active:scale-[0.98] transition flex items-center justify-center gap-2 select-none shadow-md shadow-red-500/20 cursor-pointer text-sm"
           >
-            <Check size={20} strokeWidth={2.5} />
+            <Check size={18} strokeWidth={2.5} />
             <span>Listo / Guardar</span>
           </button>
         </div>

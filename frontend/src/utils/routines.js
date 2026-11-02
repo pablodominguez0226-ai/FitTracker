@@ -27,362 +27,7 @@ export const MENTZER_TECHNIQUES = [
   },
 ];
 
-export const PREDEFINED_ROUTINES = [
-  {
-    id: "heavy-duty-day-1",
-    title: "Heavy Duty - Día 1 (Lunes): Pecho & Espalda",
-    category: "Pecho & Espalda",
-    system: "heavy_duty",
-    is_heavy_duty: true,
-    day_name: "Lunes",
-    target_muscles: ["Pecho", "Espalda"],
-    tag: "Pecho • Espalda • Pre-agotamiento",
-    summary:
-      "Aperturas Peck Deck (1x 6-10), Press inclinado (1x 4-8), Pullover (1x 6-10), Jalón supino (1x 6-10), Remo con barra (1x 6-8).",
-    cadence: "4-2-4",
-    cadence_desc: "4s excéntrica | 2s pausa isométrica | 4s concéntrica",
-    suggested_sets: 1,
-    suggested_reps: "6-10 al fallo",
-    rest_seconds: 180,
-    rest_display: "3-5 min descanso (SNC)",
-    exercises: [
-      {
-        name: "Aperturas en máquina Peck Deck",
-        searchTerms: [
-          "aperturas en máquina peck deck",
-          "peck deck",
-          "aperturas con mancuernas",
-          "aperturas en banco plano",
-          "aperturas",
-        ],
-        muscle: "Pecho",
-        equipment: "Máquina",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-        tag: "Pre-agotamiento",
-      },
-      {
-        name: "Press inclinado con barra",
-        searchTerms: [
-          "press inclinado con barra",
-          "press inclinado",
-          "inclinado con barra",
-          "press inclinado en máquina",
-        ],
-        muscle: "Pecho",
-        equipment: "Barra",
-        target_sets: 1,
-        target_reps: "4-8",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Pullover en polea alta",
-        searchTerms: [
-          "pullover en polea alta",
-          "pullover en polea",
-          "pullover con mancuerna",
-          "pullover",
-        ],
-        muscle: "Espalda",
-        equipment: "Polea",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-        tag: "Pre-agotamiento",
-      },
-      {
-        name: "Jalón al pecho agarre neutro/estrecho",
-        searchTerms: [
-          "jalón al pecho agarre neutro/estrecho",
-          "jalón al pecho agarre cerrado supino",
-          "jalón al pecho",
-          "jalon al pecho",
-          "jalón supino",
-        ],
-        muscle: "Espalda",
-        equipment: "Polea",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Remo con barra (prono/supino)",
-        searchTerms: [
-          "remo con barra (prono/supino)",
-          "remo con barra",
-          "remo con máquina",
-          "remo barra",
-        ],
-        muscle: "Espalda",
-        equipment: "Barra",
-        target_sets: 1,
-        target_reps: "6-8",
-        cadence: "4-2-4",
-      },
-    ],
-  },
-  {
-    id: "heavy-duty-day-2",
-    title: "Heavy Duty - Día 2 (Martes): Piernas & Core",
-    category: "Piernas & Core",
-    system: "heavy_duty",
-    is_heavy_duty: true,
-    day_name: "Martes",
-    target_muscles: ["Piernas", "Core"],
-    tag: "Cuádriceps • Femoral • Gemelos • Core",
-    summary:
-      "Extensión cuádriceps (1x 8-12), Prensa inclinada / Sentadilla (1x 6-10), Curl femoral (1x 6-10), Gemelos (1x 12-15), Crunch polea (1x 10-15).",
-    cadence: "4-2-4",
-    cadence_desc: "4s excéntrica | 2s pausa isométrica | 4s concéntrica",
-    suggested_sets: 1,
-    suggested_reps: "6-10 al fallo",
-    rest_seconds: 180,
-    rest_display: "3-5 min descanso (SNC)",
-    exercises: [
-      {
-        name: "Extensión de cuádriceps en máquina",
-        searchTerms: [
-          "extensión de cuádriceps en máquina",
-          "extensión de cuádriceps",
-          "extensiones de cuádriceps",
-          "cuádriceps",
-        ],
-        muscle: "Piernas",
-        equipment: "Máquina",
-        target_sets: 1,
-        target_reps: "8-12",
-        cadence: "4-2-4",
-        tag: "Pre-agotamiento",
-      },
-      {
-        name: "Prensa inclinada con discos",
-        searchTerms: [
-          "prensa inclinada con discos",
-          "prensa inclinada de piernas",
-          "sentadilla trasera con barra",
-          "prensa de piernas",
-          "prensa",
-        ],
-        muscle: "Piernas",
-        equipment: "Máquina",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Curl femoral acostado en máquina",
-        searchTerms: [
-          "curl femoral acostado en máquina",
-          "curl femoral",
-          "curl femoral sentado",
-          "femoral",
-        ],
-        muscle: "Piernas",
-        equipment: "Máquina",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Elevación de talones de pie en máquina",
-        searchTerms: [
-          "elevación de talones de pie en máquina",
-          "elevación de talones",
-          "pantorrillas",
-          "gemelos",
-        ],
-        muscle: "Piernas",
-        equipment: "Máquina",
-        target_sets: 1,
-        target_reps: "12-15",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Crunch en polea alta de rodillas",
-        searchTerms: [
-          "crunch en polea alta de rodillas",
-          "crunch abdominal con resistencia",
-          "crunch en polea",
-          "crunch",
-        ],
-        muscle: "Core",
-        equipment: "Polea",
-        target_sets: 1,
-        target_reps: "10-15",
-        cadence: "4-2-4",
-      },
-    ],
-  },
-  {
-    id: "heavy-duty-day-3",
-    title: "Heavy Duty - Día 3 (Jueves): Hombros & Brazos",
-    category: "Hombros & Brazos",
-    system: "heavy_duty",
-    is_heavy_duty: true,
-    day_name: "Jueves",
-    target_muscles: ["Hombros", "Tríceps", "Bíceps"],
-    tag: "Deltoides • Tríceps • Bíceps",
-    summary:
-      "Elevaciones laterales (1x 6-10), Press militar (1x 4-8), Pájaros (1x 6-10), Ext. tríceps barra (1x 6-10), Fondos lastrados (1x 4-8), Curl barra Z (1x 6-10).",
-    cadence: "4-2-4",
-    cadence_desc: "4s excéntrica | 2s pausa isométrica | 4s concéntrica",
-    suggested_sets: 1,
-    suggested_reps: "6-10 al fallo",
-    rest_seconds: 180,
-    rest_display: "3-5 min descanso (SNC)",
-    exercises: [
-      {
-        name: "Elevaciones laterales con mancuernas",
-        searchTerms: [
-          "elevaciones laterales con mancuernas",
-          "elevaciones laterales en polea",
-          "elevaciones laterales",
-          "laterales",
-        ],
-        muscle: "Hombros",
-        equipment: "Mancuerna",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-        tag: "Pre-agotamiento",
-      },
-      {
-        name: "Press militar de pie con barra",
-        searchTerms: [
-          "press militar de pie con barra",
-          "press militar en máquina",
-          "press militar",
-          "militar",
-        ],
-        muscle: "Hombros",
-        equipment: "Barra",
-        target_sets: 1,
-        target_reps: "4-8",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Pájaros para deltoides posterior con mancuernas",
-        searchTerms: [
-          "pájaros para deltoides posterior con mancuernas",
-          "pájaros para deltoides posterior",
-          "pájaros",
-          "deltoides posterior",
-        ],
-        muscle: "Hombros",
-        equipment: "Mancuerna",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Extensión en polea con barra (pushdown)",
-        searchTerms: [
-          "extensión en polea con barra (pushdown)",
-          "extensiones de tríceps en polea con barra",
-          "extensión en polea con barra",
-          "pushdown",
-        ],
-        muscle: "Tríceps",
-        equipment: "Polea",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-        tag: "Pre-agotamiento",
-      },
-      {
-        name: "Fondos en paralelas lastrados",
-        searchTerms: [
-          "fondos en paralelas lastrados",
-          "fondos en paralelas",
-          "fondos lastrados",
-          "fondos",
-        ],
-        muscle: "Tríceps",
-        equipment: "Corporal",
-        target_sets: 1,
-        target_reps: "4-8",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Curl con barra Z",
-        searchTerms: [
-          "curl con barra z",
-          "curl de bíceps con barra z",
-          "curl barra z",
-          "barra z",
-        ],
-        muscle: "Bíceps",
-        equipment: "Barra",
-        target_sets: 1,
-        target_reps: "6-10",
-        cadence: "4-2-4",
-      },
-    ],
-  },
-  {
-    id: "heavy-duty-day-4",
-    title: "Heavy Duty - Día 4 (Viernes): Espalda Baja & Consolidación",
-    category: "Espalda Baja & Consolidación",
-    system: "heavy_duty",
-    is_heavy_duty: true,
-    day_name: "Viernes",
-    target_muscles: ["Espalda", "Hombros", "Core"],
-    tag: "Peso Muerto • Trapecio • Core",
-    summary:
-      "Peso muerto convencional (1x 5-8), Encogimientos mancuernas (1x 8-12), Rueda abdominal (1x 10-15). Consolidación sistémica.",
-    cadence: "4-2-4",
-    cadence_desc: "4s excéntrica | 2s pausa isométrica | 4s concéntrica",
-    suggested_sets: 1,
-    suggested_reps: "5-8 al fallo",
-    rest_seconds: 180,
-    rest_display: "3-5 min descanso (SNC)",
-    exercises: [
-      {
-        name: "Peso muerto convencional con barra",
-        searchTerms: [
-          "peso muerto convencional con barra",
-          "peso muerto convencional",
-          "peso muerto con barra",
-          "peso muerto",
-        ],
-        muscle: "Espalda",
-        equipment: "Barra",
-        target_sets: 1,
-        target_reps: "5-8",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Encogimientos con mancuernas",
-        searchTerms: [
-          "encogimientos con mancuernas",
-          "encogimientos de hombros con mancuernas",
-          "encogimientos",
-          "trapecio",
-        ],
-        muscle: "Hombros",
-        equipment: "Mancuerna",
-        target_sets: 1,
-        target_reps: "8-12",
-        cadence: "4-2-4",
-      },
-      {
-        name: "Rueda abdominal (Ab Wheel rollout)",
-        searchTerms: [
-          "rueda abdominal (ab wheel rollout)",
-          "rueda abdominal",
-          "ab wheel",
-          "elevación de piernas",
-        ],
-        muscle: "Core",
-        equipment: "Corporal",
-        target_sets: 1,
-        target_reps: "10-15",
-        cadence: "4-2-4",
-      },
-    ],
-  },
-];
+export const PREDEFINED_ROUTINES = [];
 
 /**
  * Calcula el estado de recuperación sistémica del Sistema Nervioso Central (SNC)
@@ -407,7 +52,7 @@ export function getHeavyDutyRecoveryStatus(workouts = []) {
       hoursCompleted: null,
       status: "ready",
       statusLabel: "Listo para iniciar el ciclo",
-      badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      badgeClass: "bg-red-500/10 text-red-500 border-red-500/20",
       suggestion:
         "Iniciá tu ciclo Heavy Duty con el Día 1. Tras completarlo, programá de 72h a 120h (3 a 5 días) de descanso sistémico antes de la siguiente sesión.",
     };
@@ -441,7 +86,7 @@ export function getHeavyDutyRecoveryStatus(workouts = []) {
       hoursCompleted: null,
       status: "ready",
       statusLabel: "Listo para iniciar el ciclo",
-      badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      badgeClass: "bg-red-500/10 text-red-500 border-red-500/20",
       suggestion:
         "Iniciá tu ciclo Heavy Duty con el Día 1. Tras completarlo, programá de 72h a 120h (3 a 5 días) de descanso sistémico antes de la siguiente sesión.",
     };
@@ -470,7 +115,7 @@ export function getHeavyDutyRecoveryStatus(workouts = []) {
   if (daysCompleted < 3) {
     status = "resting";
     statusLabel = "Recuperación en progreso (SNC)";
-    badgeClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    badgeClass = "bg-red-500/10 text-red-400 border-red-400/20";
     const remaining = 3 - daysCompleted;
     suggestion = `Descanso post-Heavy Duty: ${daysCompleted} ${
       daysCompleted === 1 ? "día completado" : "días completados"
@@ -480,7 +125,7 @@ export function getHeavyDutyRecoveryStatus(workouts = []) {
   } else if (daysCompleted <= 5) {
     status = "optimal";
     statusLabel = "Ventana de supercompensación óptima (72h-120h)";
-    badgeClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    badgeClass = "bg-red-500/10 text-red-500 border-red-500/20";
     suggestion = `Descanso post-Heavy Duty: ${daysCompleted} días completados. Tu Sistema Nervioso Central y depósitos de glucógeno están regenerados al 100%. Momento ideal para ejecutar la siguiente sesión al fallo absoluto.`;
   } else {
     status = "ready";
@@ -638,7 +283,7 @@ export function getMuscleRecoveryTracker({
   }
 
   const alertMessage = isUnderRecovery
-    ? "🛡️ Aviso Mentzer: Músculo en fase de reparación. El crecimiento ocurre durante el descanso"
+    ? "🛡️ Músculo en recuperación: menos de 48h desde el último estímulo."
     : null;
 
   return {
@@ -655,7 +300,6 @@ export function getMuscleRecoveryTracker({
 
 /**
  * Adapta dinámicamente las rutinas predefinidas al perfil del usuario
- * Preserva intacta la lógica de 1 serie al fallo (Cadencia 4-2-4) de las rutinas Heavy Duty.
  */
 export function getProfileAdaptedRoutines(
   routines = PREDEFINED_ROUTINES,
@@ -678,20 +322,19 @@ export function getProfileAdaptedRoutines(
 
       return {
         ...r,
-        is_heavy_duty: true,
+        is_heavy_duty: false,
         is_recommended: true,
-        recommended_badge: "🔥 Protocolo Oficial Heavy Duty (Mike Mentzer)",
-        suggested_sets: 1,
-        suggested_reps: r.suggested_reps || "6-10 al fallo",
-        rest_seconds: 180,
-        rest_display: "3-5 min descanso (SNC)",
+        recommended_badge: "🔥 Rutina Oficial",
+        suggested_sets: r.suggested_sets || 3,
+        suggested_reps: r.suggested_reps || "8-12 reps",
+        rest_seconds: 90,
+        rest_display: "90s descanso",
         exercises: rExercises.map((ex) => ({
           ...ex,
-          is_heavy_duty: true,
-          cadence: "4-2-4",
-          suggested_sets: ex?.target_sets || 1,
-          suggested_reps: ex?.target_reps || "6-10",
-          rest_seconds: 180,
+          is_heavy_duty: false,
+          suggested_sets: ex?.target_sets || 3,
+          suggested_reps: ex?.target_reps || "8-12",
+          rest_seconds: 90,
         })),
       };
     })

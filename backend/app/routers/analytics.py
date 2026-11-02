@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 from collections import defaultdict
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, joinedload
@@ -28,11 +29,26 @@ def get_analytics_dashboard(
         )
         .filter(
             models.WorkoutSession.user_id == current_user.id,
-            models.WorkoutSession.status == "completed",
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
         )
         .order_by(models.WorkoutSession.date.desc(), models.WorkoutSession.id.desc())
         .all()
     )
+
+    if not sessions:
+        fallback_sessions = (
+            db.query(models.WorkoutSession)
+            .options(
+                joinedload(models.WorkoutSession.muscle_group),
+                joinedload(models.WorkoutSession.sets)
+                .joinedload(models.WorkoutSet.exercise)
+                .joinedload(models.Exercise.muscle_group),
+            )
+            .filter(models.WorkoutSession.user_id == current_user.id)
+            .order_by(models.WorkoutSession.date.desc(), models.WorkoutSession.id.desc())
+            .all()
+        )
+        sessions = [s for s in fallback_sessions if any(getattr(st, "completed", True) for st in s.sets)]
 
     total_workouts = len(sessions)
     total_sets = 0
@@ -108,6 +124,19 @@ def get_analytics_dashboard(
         retention_percentage=retention_pct,
     )
 
+    # Parse user weekly pattern to contrast against planned training days
+    pattern = schemas.DEFAULT_WEEKLY_PATTERN.copy()
+    if current_user.weekly_pattern:
+        try:
+            p_data = json.loads(current_user.weekly_pattern) if isinstance(current_user.weekly_pattern, str) else current_user.weekly_pattern
+            if isinstance(p_data, dict):
+                pattern.update(p_data)
+        except Exception:
+            pass
+    target_sessions = sum(1 for status in pattern.values() if str(status).lower() in ("entreno", "workout", "on", "true"))
+    if target_sessions == 0:
+        target_sessions = 4  # Default sensible target if none configured
+
     # Weekly consistency (last 8 calendar weeks)
     ref_today = today or dt.date.today()
     current_monday = ref_today - dt.timedelta(days=ref_today.weekday())
@@ -126,12 +155,19 @@ def get_analytics_dashboard(
         m_name = spanish_months[week_monday.month - 1]
         label = f"{week_monday.day} {m_name}"
 
+        sessions_count = len(week_sessions)
+        compliance_rate = round(min(100.0, (sessions_count / target_sessions) * 100), 1) if target_sessions > 0 else 100.0
+        is_compliant = sessions_count >= target_sessions
+
         weekly_items.append(
             schemas.WeeklyConsistencyItem(
                 week_label=label,
                 start_date=week_monday.isoformat(),
-                sessions_count=len(week_sessions),
+                sessions_count=sessions_count,
                 total_volume=round(week_vol, 1),
+                target_sessions=target_sessions,
+                compliance_rate=compliance_rate,
+                is_compliant=is_compliant,
             )
         )
 
@@ -140,7 +176,7 @@ def get_analytics_dashboard(
     for mg_id, data in muscle_vols.items():
         pct = round(data["volume"] / total_volume_kg * 100, 1) if total_volume_kg > 0 else 0.0
         muscle_distribution.append(
-            schemas.MuscleDistributionItem(
+            schemas.AnalyticsMuscleDistributionItem(
                 muscle_group_id=mg_id,
                 name=data["name"],
                 volume=round(data["volume"], 1),

@@ -9,11 +9,8 @@ from .catalog import MASTER_EXERCISES_CATALOG
 DEFAULT_MUSCLE_GROUPS = [
     "Pecho",
     "Espalda",
+    "Brazos",
     "Piernas",
-    "Hombros",
-    "Bíceps",
-    "Tríceps",
-    "Core",
 ]
 
 OFFICIAL_EXERCISES_CATALOG: dict[str, list[str]] = {
@@ -131,30 +128,77 @@ OFFICIAL_EXERCISES_CATALOG: dict[str, list[str]] = {
 
 # Aliases to map existing DB exercises to official names to prevent duplicates
 ALIASES_MAP = {
-    "cruces en polea alta": "Cruces en polea alta (haz inferior)",
-    "cruces en polea baja": "Cruces en polea baja (haz superior)",
-    "jalón al pecho en polea alta (prono)": "Jalón al pecho prono en polea alta",
-    "jalón al pecho agarre neutro": "Jalón al pecho agarre neutro/estrecho",
-    "remo con barra inclinado": "Remo con barra (prono/supino)",
-    "remo en máquina t": "Remo en T con apoyo en pecho",
-    "sentadilla trasera con barra": "Sentadilla trasera con barra (Back squat)",
-    "prensa de piernas inclinada 45°": "Prensa inclinada con discos",
-    "curl femoral tumbado en máquina": "Curl femoral acostado en máquina",
-    "press con mancuernas sentado": "Press de hombros sentado con mancuernas",
-    "pájaros con mancuernas posterior": "Pájaros para deltoides posterior con mancuernas",
-    "face pull en polea alta con cuerda": "Face pulls en polea alta con cuerda",
-    "curl de bíceps con barra z": "Curl con barra Z",
-    "curl alterno con mancuernas inclinado": "Curl inclinado con mancuernas",
-    "extensión de tríceps en polea con cuerda": "Extensiones en polea alta con cuerda",
-    "fondos de tríceps en banco/paralelas": "Fondos entre bancos / máquina",
-    "aperturas con mancuernas en banco plano": "Aperturas en banco con mancuernas",
-    "aperturas planas con mancuernas": "Aperturas en banco con mancuernas",
-    "fondos en paralelas": "Fondos en paralelas para pecho",
-    "elevaciones laterales en polea": "Elevaciones laterales en polea baja",
-    "curl predicador barra z": "Curl predicador con barra Z",
-    "zancadas con mancuernas": "Zancadas caminando con mancuernas",
-    "remo en polea baja sentado": "Remo sentado en polea baja",
-    "remo con mancuerna a una mano": "Remo a una mano con mancuerna",
+    "press banca plano con barra": "Press de Banca Plano con Barra",
+    "press plano con mancuernas": "Press de Banca Plano con Mancuernas",
+    "press de pecho en máquina convergente": "Press de Pecho en Máquina",
+    "press de pecho en máquina smith": "Press en Smith Plano",
+    "press inclinado en máquina smith": "Press en Smith Inclinado",
+    "press inclinado en máquina convergente": "Press de Pecho en Máquina",
+    "fondos en paralelas para pecho": "Fondos en Paralelas (Pecho)",
+    "fondos en paralelas": "Fondos en Paralelas (Pecho)",
+    "aperturas en banco plano con mancuernas": "Aperturas Planas con Mancuernas",
+    "aperturas en banco con mancuernas": "Aperturas Planas con Mancuernas",
+    "aperturas con mancuernas en banco plano": "Aperturas Planas con Mancuernas",
+    "cruces en polea alta (haz inferior)": "Cruces en Polea Alta",
+    "cruces en polea baja (haz superior)": "Cruces en Polea Baja",
+    "aperturas en máquina peck deck": "Pec Deck / Contractor",
+    "flexiones de brazos lastradas": "Flexiones de Brazos (Push-Ups)",
+    "dominadas": "Dominadas Prono",
+    "jalón al pecho prono en polea alta": "Jalón al Pecho en Polea",
+    "jalón al pecho en polea alta (prono)": "Jalón al Pecho en Polea",
+    "jalón al pecho agarre neutro/estrecho": "Jalón al Pecho Agarre Neutro",
+    "remo con barra (prono/supino)": "Remo Inclinado con Barra",
+    "remo con barra inclinado": "Remo Inclinado con Barra",
+    "remo pendlay con barra": "Remo Pendlay",
+    "remo en t con apoyo en pecho": "Remo con Barra T",
+    "remo en máquina t": "Remo con Barra T",
+    "remo a una mano con mancuerna": "Remo Unilateral con Mancuerna",
+    "remo con mancuerna a una mano": "Remo Unilateral con Mancuerna",
+    "remo sentado en polea baja": "Remo en Polea Baja (Gironda)",
+    "remo en polea baja sentado": "Remo en Polea Baja (Gironda)",
+    "remo en máquina convergente": "Remo en Máquina",
+    "peso muerto convencional con barra": "Peso Muerto Convencional",
+    "hiperextensiones lumbares en banco": "Hiperextensiones Lumbar",
+    "encogimientos con barra": "Encogimientos de Hombros con Barra",
+    "press de hombros sentado con mancuernas": "Press de Hombros con Mancuernas",
+    "press con mancuernas sentado": "Press de Hombros con Mancuernas",
+    "elevaciones laterales en polea baja": "Elevaciones Laterales en Polea",
+    "pájaros para deltoides posterior con mancuernas": "Pájaros con Mancuernas",
+    "pájaros con mancuernas posterior": "Pájaros con Mancuernas",
+    "face pulls en polea alta con cuerda": "Face Pull en Polea",
+    "face pull en polea alta con cuerda": "Face Pull en Polea",
+    "curl de bíceps con barra z": "Curl con Barra Z",
+    "curl alterno con mancuernas": "Curl Alterno con Mancuernas",
+    "curl alterno con mancuernas inclinado": "Curl en Banco Inclinado",
+    "curl inclinado con mancuernas": "Curl en Banco Inclinado",
+    "curl predicador con barra z": "Curl Predicador (Banco Scott)",
+    "curl predicador barra z": "Curl Predicador (Banco Scott)",
+    "curl predicador en máquina": "Curl Predicador (Banco Scott)",
+    "curl concentrado con mancuerna": "Curl Concentrado",
+    "extensiones en polea alta con cuerda": "Extensión de Tríceps con Cuerda",
+    "extensión de tríceps en polea con cuerda": "Extensión de Tríceps con Cuerda",
+    "extensión en polea con barra (pushdown)": "Extensión de Tríceps con Barra",
+    "extensiones sobre la cabeza en polea (overhead)": "Extensión Trasnuca con Mancuerna",
+    "fondos entre bancos / máquina": "Fondos en Paralelas (Tríceps)",
+    "fondos de tríceps en banco/paralelas": "Fondos en Paralelas (Tríceps)",
+    "patada de tríceps en polea": "Patada de Tríceps",
+    "patada de tríceps con mancuerna": "Patada de Tríceps",
+    "sentadilla trasera con barra (back squat)": "Sentadilla Trasera con Barra",
+    "sentadilla trasera con barra": "Sentadilla Trasera con Barra",
+    "prensa inclinada con discos": "Prensa de Piernas 45°",
+    "prensa de piernas inclinada 45°": "Prensa de Piernas 45°",
+    "prensa de piernas en máquina": "Prensa de Piernas 45°",
+    "sentadilla hack en máquina": "Sentadilla Hack",
+    "sentadilla hack con barra": "Sentadilla Hack",
+    "zancadas caminando con mancuernas": "Zancadas / Estocadas con Mancuernas",
+    "zancadas con mancuernas": "Zancadas / Estocadas con Mancuernas",
+    "curl femoral acostado en máquina": "Curl Femoral Tumbado",
+    "curl femoral tumbado en máquina": "Curl Femoral Tumbado",
+    "curl femoral sentado en máquina": "Curl Femoral Sentado",
+    "máquina de abductores": "Abducción de Cadera en Máquina",
+    "máquina de aductores": "Aducción de Cadera en Máquina",
+    "elevación de talones de pie en máquina": "Elevación de Gemelos de Pie",
+    "elevación de talones sentado en máquina": "Elevación de Gemelos Sentado",
 }
 
 
@@ -435,13 +479,7 @@ def get_default_image_for_exercise(name: str, muscle_group_name: str | None = No
 
 
 def seed_initial_data(db: Session) -> None:
-    # 0. Eliminar de forma segura cualquier grupo obsoleto Brazos / Brazo
-    db.query(models.MuscleGroup).filter(
-        func.lower(models.MuscleGroup.name).in_(["brazo", "brazos"])
-    ).delete(synchronize_session=False)
-    db.flush()
-
-    # 1. Asegurar la existencia de los grupos musculares oficiales
+    # 1. Asegurar la existencia de los 4 grupos musculares maestros: Pecho, Espalda, Brazos, Piernas
     group_map: dict[str, models.MuscleGroup] = {}
     for group_name in DEFAULT_MUSCLE_GROUPS:
         variations = [group_name.lower(), group_name.lower().rstrip("s"), group_name.lower() + "s"]
@@ -463,6 +501,7 @@ def seed_initial_data(db: Session) -> None:
 
     # 2. Precargar o actualizar catálogo maestro de ejercicios de forma estrictamente idempotente
     official_names_set = set()
+    official_slugs_set = set()
 
     for item in MASTER_EXERCISES_CATALOG:
         group_name = item["muscle_group"]
@@ -470,13 +509,20 @@ def seed_initial_data(db: Session) -> None:
         if not group:
             continue
 
+        slug = item["slug"]
         name = item["name"]
+        subgroup = item["subgroup"]
+        media_url = item["media_url"]
         official_names_set.add(name.strip().lower())
+        official_slugs_set.add(slug.strip().lower())
 
-        # 2.1 Buscar coincidencia por nombre canónico
+        # 2.1 Buscar coincidencia por slug o nombre canónico
         canonical_ex = (
             db.query(models.Exercise)
-            .filter(func.lower(models.Exercise.name) == name.strip().lower())
+            .filter(
+                (func.lower(models.Exercise.slug) == slug.strip().lower())
+                | (func.lower(models.Exercise.name) == name.strip().lower())
+            )
             .first()
         )
 
@@ -501,6 +547,9 @@ def seed_initial_data(db: Session) -> None:
                 db.query(models.WorkoutSet).filter(models.WorkoutSet.exercise_id == canonical_ex.id).update(
                     {"exercise_id": alias_ex.id}
                 )
+                db.query(models.RoutineExercise).filter(models.RoutineExercise.exercise_id == canonical_ex.id).update(
+                    {"exercise_id": alias_ex.id}
+                )
                 db.delete(canonical_ex)
                 db.flush()
                 alias_ex.name = name
@@ -511,12 +560,16 @@ def seed_initial_data(db: Session) -> None:
                 db.query(models.WorkoutSet).filter(models.WorkoutSet.exercise_id == alias_ex.id).update(
                     {"exercise_id": canonical_ex.id}
                 )
+                db.query(models.RoutineExercise).filter(models.RoutineExercise.exercise_id == alias_ex.id).update(
+                    {"exercise_id": canonical_ex.id}
+                )
                 db.delete(alias_ex)
                 db.flush()
                 canonical_ex.muscle_group_id = group.id
                 canonical_ex.is_active = True
                 existing = canonical_ex
         elif canonical_ex:
+            canonical_ex.name = name
             canonical_ex.muscle_group_id = group.id
             canonical_ex.is_active = True
             existing = canonical_ex
@@ -528,31 +581,32 @@ def seed_initial_data(db: Session) -> None:
         else:
             existing = None
 
-        target_img = get_default_image_for_exercise(name, group_name)
-
         if existing:
-            existing.equipment_type = item["equipment_type"]
-            existing.mechanics_type = item["mechanics_type"]
+            existing.slug = slug
+            existing.subgroup = subgroup
+            existing.equipment_type = None
+            existing.mechanics_type = item.get("mechanics_type", "compuesto")
             existing.key_cue = item["key_cue"]
             existing.target_tempo = item["target_tempo"]
-            existing.primary_muscles = item["primary_muscles"]
+            existing.primary_muscles = subgroup
             existing.execution_tips = item["execution_tips"]
             existing.muscle_group_id = group.id
+            existing.image_url = media_url
             existing.is_active = True
-            if not existing.image_url or not existing.image_url.strip() or "example.com" in existing.image_url or existing.image_url.startswith("/diagrams/"):
-                existing.image_url = target_img
         else:
             new_ex = models.Exercise(
+                slug=slug,
                 name=name,
+                subgroup=subgroup,
                 muscle_group_id=group.id,
                 is_active=True,
-                equipment_type=item["equipment_type"],
-                mechanics_type=item["mechanics_type"],
+                equipment_type=None,
+                mechanics_type=item.get("mechanics_type", "compuesto"),
                 key_cue=item["key_cue"],
                 target_tempo=item["target_tempo"],
-                primary_muscles=item["primary_muscles"],
+                primary_muscles=subgroup,
                 execution_tips=item["execution_tips"],
-                image_url=target_img,
+                image_url=media_url,
             )
             db.add(new_ex)
 
@@ -587,227 +641,592 @@ def seed_initial_data(db: Session) -> None:
             if partner:
                 ex.replacement_id = partner.id
 
-    # 4.1 Asegurar que todo ejercicio existente en la base de datos tenga su ruta de imagen estable
-    for ex in db.query(models.Exercise).options(joinedload(models.Exercise.muscle_group)).all():
-        if not ex.image_url or not ex.image_url.strip() or "example.com" in ex.image_url:
-            mg_name = ex.muscle_group.name if ex.muscle_group else ""
-            ex.image_url = get_default_image_for_exercise(ex.name, mg_name)
-
     db.flush()
 
-
-    # 5. Solo desactivar ejercicios que no pertenezcan al catálogo Y no tengan series registradas
-    used_exercise_ids = {
-        uid[0]
-        for uid in db.query(models.WorkoutSet.exercise_id).distinct().all()
-    }
+    # 5. Desactivar ejercicios antiguos que no pertenezcan al catálogo maestro unificado
+    # (se preservan en DB si tienen series registradas para no romper el historial)
     all_exercises = db.query(models.Exercise).all()
     for ex in all_exercises:
-        if ex.name.strip().lower() not in official_names_set:
-            if ex.id not in used_exercise_ids:
-                ex.is_active = False
+        ex_name_low = (ex.name or "").strip().lower()
+        ex_slug_low = (ex.slug or "").strip().lower()
+        if ex_name_low not in official_names_set and ex_slug_low not in official_slugs_set:
+            ex.is_active = False
 
     db.commit()
 
-    seed_preset_routines(db)
-    seed_community_activity(db)
+    cleanup_preset_routines(db)
+    # Desactivado definitivamente: nunca insertar sesiones ni series ficticias
+    # seed_community_activity(db)
+    seed_food_items(db)
 
 
-SYSTEM_PRESET_ROUTINES = [
-    {
-        "name": "Heavy Duty - Día 1 (Lunes): Pecho & Espalda",
-        "description": "Sistema Mike Mentzer (4 Días): Pre-agotamiento y fallo absoluto (1 serie efectiva). Cadencia 4-2-4.",
-        "exercises": [
-            ("Aperturas en máquina Peck Deck", 1, "6-10"),
-            ("Press inclinado con barra", 1, "4-8"),
-            ("Pullover en polea alta", 1, "6-10"),
-            ("Jalón al pecho agarre neutro/estrecho", 1, "6-10"),
-            ("Remo con barra (prono/supino)", 1, "6-8"),
-        ],
-    },
-    {
-        "name": "Heavy Duty - Día 2 (Martes): Piernas & Core",
-        "description": "Sistema Mike Mentzer (4 Días): Pre-agotamiento cuádriceps, cadena posterior y core pesado. Cadencia 4-2-4.",
-        "exercises": [
-            ("Extensión de cuádriceps en máquina", 1, "8-12"),
-            ("Prensa inclinada con discos", 1, "6-10"),
-            ("Curl femoral acostado en máquina", 1, "6-10"),
-            ("Elevación de talones de pie en máquina", 1, "12-15"),
-            ("Crunch en polea alta de rodillas", 1, "10-15"),
-        ],
-    },
-    {
-        "name": "Heavy Duty - Día 3 (Jueves): Hombros & Brazos",
-        "description": "Sistema Mike Mentzer (4 Días): Deltoides y brazos con técnica estricta al fallo muscular total. Cadencia 4-2-4.",
-        "exercises": [
-            ("Elevaciones laterales con mancuernas", 1, "6-10"),
-            ("Press militar de pie con barra", 1, "4-8"),
-            ("Pájaros para deltoides posterior con mancuernas", 1, "6-10"),
-            ("Extensión en polea con barra (pushdown)", 1, "6-10"),
-            ("Fondos en paralelas lastrados", 1, "4-8"),
-            ("Curl con barra Z", 1, "6-10"),
-        ],
-    },
-    {
-        "name": "Heavy Duty - Día 4 (Viernes): Espalda Baja & Consolidación",
-        "description": "Sistema Mike Mentzer (4 Días): Estímulo sistémico consolidado del SNC, trapecio y core. Cadencia 4-2-4.",
-        "exercises": [
-            ("Peso muerto convencional con barra", 1, "5-8"),
-            ("Encogimientos con mancuernas", 1, "8-12"),
-            ("Rueda abdominal (Ab Wheel rollout)", 1, "10-15"),
-        ],
-    },
-]
-
-
-def seed_preset_routines(db: Session) -> None:
-    # Eliminar presets anteriores para dejar ÚNICAMENTE las 4 rutinas oficiales Heavy Duty
+def cleanup_preset_routines(db: Session) -> None:
+    """
+    Limpia de forma definitiva cualquier rutina preset o de Heavy Duty / Torso A / Pierna A.
+    Garantiza que la tabla routines y routine_exercises quede limpia sin recreaciones automáticas.
+    """
     old_presets = db.query(models.Routine).filter(models.Routine.is_preset == True).all()
     for old_r in old_presets:
         db.query(models.RoutineExercise).filter(models.RoutineExercise.routine_id == old_r.id).delete()
         db.delete(old_r)
-    db.flush()
 
-    exercises = db.query(models.Exercise).filter(models.Exercise.is_active == True).all()
-    ex_by_name = {e.name.lower().strip(): e for e in exercises}
-
-    for preset_data in SYSTEM_PRESET_ROUTINES:
-        routine = models.Routine(
-            user_id=None,
-            name=preset_data["name"],
-            description=preset_data["description"],
-            is_preset=True,
-        )
-        db.add(routine)
-        db.flush()
-
-        for idx, (ex_name, sets, reps) in enumerate(preset_data["exercises"]):
-            matched_ex = ex_by_name.get(ex_name.lower().strip())
-            if not matched_ex:
-                for name_key, ex_obj in ex_by_name.items():
-                    if ex_name.lower().strip() in name_key or name_key in ex_name.lower().strip():
-                        matched_ex = ex_obj
-                        break
-
-            if matched_ex:
-                re_entry = models.RoutineExercise(
-                    routine_id=routine.id,
-                    exercise_id=matched_ex.id,
-                    order_index=idx,
-                    target_sets=sets,
-                    target_reps=reps,
-                )
-                db.add(re_entry)
+    residual_routines = db.query(models.Routine).filter(
+        (models.Routine.name.ilike("%Heavy Duty%")) |
+        (models.Routine.name.ilike("%Torso A%")) |
+        (models.Routine.name.ilike("%Pierna A%"))
+    ).all()
+    for r in residual_routines:
+        db.query(models.RoutineExercise).filter(models.RoutineExercise.routine_id == r.id).delete()
+        db.delete(r)
 
     db.commit()
 
 
 def seed_community_activity(db: Session) -> None:
     """
-    Puebla sesiones históricas del mes en curso para los usuarios de la comunidad,
-    garantizando un ranking de constancia y fuerza relativa realista:
-    1° Lautaro: 18 días
-    2° Pablo: 16 días
-    3° Néstor: 14 días
-    4° Lucía: 12 días
-    5° Mariano: 10 días
+    Desactivado definitivamente: nunca inyectar sesiones o series mock en workout_sessions ni workout_sets.
     """
-    today = dt.date.today()
-    current_year = today.year
-    current_month = today.month
+    return
 
-    # Asegurar ejercicios base para sets de entrenamiento
-    bench = db.query(models.Exercise).filter(func.lower(models.Exercise.name).contains("press banca plano con barra")).first()
-    squat = db.query(models.Exercise).filter(func.lower(models.Exercise.name).contains("sentadilla trasera")).first()
-    row = db.query(models.Exercise).filter(func.lower(models.Exercise.name).contains("remo con barra")).first()
-    ohp = db.query(models.Exercise).filter(func.lower(models.Exercise.name).contains("press militar")).first()
 
-    default_ex = bench or db.query(models.Exercise).first()
-    if not default_ex:
-        return
+ARGENTINE_FOOD_CATALOG = [
+    # Carnes Vaca
+    {
+        "name": "Carne picada especial",
+        "category": "carnes_vaca",
+        "calories_100g": 170.0,
+        "protein_100g": 22.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 9.0,
+        "serving_unit": "porción (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Bola de lomo / Nalga",
+        "category": "carnes_vaca",
+        "calories_100g": 135.0,
+        "protein_100g": 24.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 4.0,
+        "serving_unit": "bife (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Bife de cuadril",
+        "category": "carnes_vaca",
+        "calories_100g": 150.0,
+        "protein_100g": 23.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 6.0,
+        "serving_unit": "bife (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Vacío",
+        "category": "carnes_vaca",
+        "calories_100g": 210.0,
+        "protein_100g": 20.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 14.0,
+        "serving_unit": "porción (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Asado de tira",
+        "category": "carnes_vaca",
+        "calories_100g": 250.0,
+        "protein_100g": 19.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 19.0,
+        "serving_unit": "tira (~250g)",
+        "serving_weight_g": 250.0,
+    },
+    {
+        "name": "Peceto",
+        "category": "carnes_vaca",
+        "calories_100g": 120.0,
+        "protein_100g": 23.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 3.0,
+        "serving_unit": "fetas (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    # Pollo
+    {
+        "name": "Pechuga de pollo",
+        "category": "carnes_pollo",
+        "calories_100g": 120.0,
+        "protein_100g": 26.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 1.8,
+        "serving_unit": "filete (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Pata muslo sin piel",
+        "category": "carnes_pollo",
+        "calories_100g": 160.0,
+        "protein_100g": 22.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 8.0,
+        "serving_unit": "unidad (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Pata muslo con piel",
+        "category": "carnes_pollo",
+        "calories_100g": 215.0,
+        "protein_100g": 18.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 15.0,
+        "serving_unit": "unidad (~220g)",
+        "serving_weight_g": 220.0,
+    },
+    {
+        "name": "Suprema rebozada",
+        "category": "carnes_pollo",
+        "calories_100g": 195.0,
+        "protein_100g": 20.0,
+        "carbs_100g": 11.0,
+        "fat_100g": 7.0,
+        "serving_unit": "unidad (~180g)",
+        "serving_weight_g": 180.0,
+    },
+    # Cerdo
+    {
+        "name": "Solomillo de cerdo magro",
+        "category": "carnes_cerdo",
+        "calories_100g": 140.0,
+        "protein_100g": 24.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 4.5,
+        "serving_unit": "medallón (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Carré de cerdo",
+        "category": "carnes_cerdo",
+        "calories_100g": 180.0,
+        "protein_100g": 21.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 10.0,
+        "serving_unit": "chuleta (~180g)",
+        "serving_weight_g": 180.0,
+    },
+    {
+        "name": "Bondiola de cerdo",
+        "category": "carnes_cerdo",
+        "calories_100g": 230.0,
+        "protein_100g": 18.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 17.0,
+        "serving_unit": "bife (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Pechito de cerdo",
+        "category": "carnes_cerdo",
+        "calories_100g": 260.0,
+        "protein_100g": 17.0,
+        "carbs_100g": 0.0,
+        "fat_100g": 21.0,
+        "serving_unit": "porción (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    # Verduras (Puras en crudo sin métodos de cocción)
+    {
+        "name": "Zapallo coreano",
+        "category": "verduras",
+        "calories_100g": 32.0,
+        "protein_100g": 1.0,
+        "carbs_100g": 7.0,
+        "fat_100g": 0.2,
+        "serving_unit": "rodaja (~100g)",
+        "serving_weight_g": 100.0,
+    },
+    {
+        "name": "Zanahoria",
+        "category": "verduras",
+        "calories_100g": 35.0,
+        "protein_100g": 0.8,
+        "carbs_100g": 8.0,
+        "fat_100g": 0.2,
+        "serving_unit": "unidad chica (~80g)",
+        "serving_weight_g": 80.0,
+    },
+    {
+        "name": "Papa",
+        "category": "verduras",
+        "calories_100g": 77.0,
+        "protein_100g": 2.0,
+        "carbs_100g": 17.0,
+        "fat_100g": 0.1,
+        "serving_unit": "unidad mediana (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Batata",
+        "category": "verduras",
+        "calories_100g": 86.0,
+        "protein_100g": 1.6,
+        "carbs_100g": 20.0,
+        "fat_100g": 0.1,
+        "serving_unit": "unidad (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Espinaca",
+        "category": "verduras",
+        "calories_100g": 23.0,
+        "protein_100g": 2.9,
+        "carbs_100g": 3.6,
+        "fat_100g": 0.4,
+        "serving_unit": "taza (~100g)",
+        "serving_weight_g": 100.0,
+    },
+    {
+        "name": "Tomate redondo",
+        "category": "verduras",
+        "calories_100g": 18.0,
+        "protein_100g": 0.9,
+        "carbs_100g": 3.9,
+        "fat_100g": 0.2,
+        "serving_unit": "unidad (~120g)",
+        "serving_weight_g": 120.0,
+    },
+    {
+        "name": "Morrón rojo",
+        "category": "verduras",
+        "calories_100g": 26.0,
+        "protein_100g": 1.0,
+        "carbs_100g": 6.0,
+        "fat_100g": 0.3,
+        "serving_unit": "unidad (~100g)",
+        "serving_weight_g": 100.0,
+    },
+    {
+        "name": "Cebolla",
+        "category": "verduras",
+        "calories_100g": 40.0,
+        "protein_100g": 1.1,
+        "carbs_100g": 9.3,
+        "fat_100g": 0.1,
+        "serving_unit": "unidad (~100g)",
+        "serving_weight_g": 100.0,
+    },
+    {
+        "name": "Brócoli",
+        "category": "verduras",
+        "calories_100g": 34.0,
+        "protein_100g": 2.8,
+        "carbs_100g": 6.6,
+        "fat_100g": 0.4,
+        "serving_unit": "taza (~100g)",
+        "serving_weight_g": 100.0,
+    },
+    {
+        "name": "Calabaza",
+        "category": "verduras",
+        "calories_100g": 26.0,
+        "protein_100g": 1.0,
+        "carbs_100g": 6.5,
+        "fat_100g": 0.1,
+        "serving_unit": "porción (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Lechuga",
+        "category": "verduras",
+        "calories_100g": 15.0,
+        "protein_100g": 1.4,
+        "carbs_100g": 2.9,
+        "fat_100g": 0.2,
+        "serving_unit": "planta chica (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Zapallito",
+        "category": "verduras",
+        "calories_100g": 17.0,
+        "protein_100g": 1.2,
+        "carbs_100g": 3.1,
+        "fat_100g": 0.2,
+        "serving_unit": "unidad (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    # Frutas
+    {
+        "name": "Banana",
+        "category": "frutas",
+        "calories_100g": 89.0,
+        "protein_100g": 1.1,
+        "carbs_100g": 23.0,
+        "fat_100g": 0.3,
+        "serving_unit": "unidad (~120g)",
+        "serving_weight_g": 120.0,
+    },
+    {
+        "name": "Manzana",
+        "category": "frutas",
+        "calories_100g": 52.0,
+        "protein_100g": 0.3,
+        "carbs_100g": 14.0,
+        "fat_100g": 0.2,
+        "serving_unit": "unidad (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Naranja",
+        "category": "frutas",
+        "calories_100g": 47.0,
+        "protein_100g": 0.9,
+        "carbs_100g": 12.0,
+        "fat_100g": 0.1,
+        "serving_unit": "unidad (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Frutillas",
+        "category": "frutas",
+        "calories_100g": 32.0,
+        "protein_100g": 0.7,
+        "carbs_100g": 7.7,
+        "fat_100g": 0.3,
+        "serving_unit": "taza (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    # Legumbres
+    {
+        "name": "Lentejas cocidas",
+        "category": "legumbres",
+        "calories_100g": 116.0,
+        "protein_100g": 9.0,
+        "carbs_100g": 20.0,
+        "fat_100g": 0.4,
+        "serving_unit": "plato hondo (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Garbanzos cocidos",
+        "category": "legumbres",
+        "calories_100g": 164.0,
+        "protein_100g": 8.9,
+        "carbs_100g": 27.0,
+        "fat_100g": 2.6,
+        "serving_unit": "porción (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    # Cereales y Pastas
+    {
+        "name": "Arroz blanco cocido",
+        "category": "cereales_pastas",
+        "calories_100g": 130.0,
+        "protein_100g": 2.7,
+        "carbs_100g": 28.0,
+        "fat_100g": 0.3,
+        "serving_unit": "taza (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Arroz integral cocido",
+        "category": "cereales_pastas",
+        "calories_100g": 111.0,
+        "protein_100g": 2.6,
+        "carbs_100g": 23.0,
+        "fat_100g": 0.9,
+        "serving_unit": "taza (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Fideos guiseros/tallarines cocidos",
+        "category": "cereales_pastas",
+        "calories_100g": 140.0,
+        "protein_100g": 5.0,
+        "carbs_100g": 28.0,
+        "fat_100g": 1.0,
+        "serving_unit": "plato (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Polenta cocida",
+        "category": "cereales_pastas",
+        "calories_100g": 75.0,
+        "protein_100g": 1.8,
+        "carbs_100g": 16.0,
+        "fat_100g": 0.4,
+        "serving_unit": "plato (~250g)",
+        "serving_weight_g": 250.0,
+    },
+    {
+        "name": "Avena tradicional",
+        "category": "cereales_pastas",
+        "calories_100g": 370.0,
+        "protein_100g": 14.0,
+        "carbs_100g": 60.0,
+        "fat_100g": 7.0,
+        "serving_unit": "porción (~40g)",
+        "serving_weight_g": 40.0,
+    },
+    # Clásicos & Variaciones
+    {
+        "name": "Puré de papa con agua",
+        "category": "platos_clasicos",
+        "calories_100g": 75.0,
+        "protein_100g": 1.5,
+        "carbs_100g": 17.0,
+        "fat_100g": 0.2,
+        "serving_unit": "porción (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Puré de papa con leche y manteca",
+        "category": "platos_clasicos",
+        "calories_100g": 125.0,
+        "protein_100g": 2.0,
+        "carbs_100g": 18.0,
+        "fat_100g": 5.0,
+        "serving_unit": "porción (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Puré de calabaza",
+        "category": "platos_clasicos",
+        "calories_100g": 45.0,
+        "protein_100g": 1.2,
+        "carbs_100g": 9.5,
+        "fat_100g": 0.3,
+        "serving_unit": "porción (~200g)",
+        "serving_weight_g": 200.0,
+    },
+    {
+        "name": "Milanesa de carne al horno",
+        "category": "platos_clasicos",
+        "calories_100g": 215.0,
+        "protein_100g": 22.0,
+        "carbs_100g": 14.0,
+        "fat_100g": 7.5,
+        "serving_unit": "unidad (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Milanesa de pollo al horno",
+        "category": "platos_clasicos",
+        "calories_100g": 195.0,
+        "protein_100g": 24.0,
+        "carbs_100g": 12.0,
+        "fat_100g": 5.5,
+        "serving_unit": "unidad (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Pastel de papa casero",
+        "category": "platos_clasicos",
+        "calories_100g": 150.0,
+        "protein_100g": 10.0,
+        "carbs_100g": 13.0,
+        "fat_100g": 6.5,
+        "serving_unit": "porción (~300g)",
+        "serving_weight_g": 300.0,
+    },
+    {
+        "name": "Ensalada mixta (lechuga, tomate, cebolla)",
+        "category": "platos_clasicos",
+        "calories_100g": 25.0,
+        "protein_100g": 1.2,
+        "carbs_100g": 4.5,
+        "fat_100g": 0.2,
+        "serving_unit": "plato (~150g)",
+        "serving_weight_g": 150.0,
+    },
+    {
+        "name": "Huevo duro / a la plancha",
+        "category": "platos_clasicos",
+        "calories_100g": 143.0,
+        "protein_100g": 12.6,
+        "carbs_100g": 0.7,
+        "fat_100g": 9.5,
+        "serving_unit": "unidad (~50g)",
+        "serving_weight_g": 50.0,
+    },
+]
 
-    exercises_pool = [e for e in [bench, squat, row, ohp] if e is not None]
-    if not exercises_pool:
-        exercises_pool = [default_ex]
 
-    community_targets = [
-        {"username": "lautaro", "target_days": 18, "weight_base": 78.0, "lift_base": 85.0},
-        {"username": "pablo", "target_days": 16, "weight_base": 85.0, "lift_base": 80.0},
-        {"username": "nestor", "target_days": 14, "weight_base": 102.0, "lift_base": 95.0},
-        {"username": "lucia", "target_days": 12, "weight_base": 64.0, "lift_base": 55.0},
-        {"username": "mariano", "target_days": 10, "weight_base": 67.0, "lift_base": 60.0},
-        {"username": "germanison", "target_days": 8, "weight_base": 76.0, "lift_base": 65.0},
-        {"username": "bonacua", "target_days": 6, "weight_base": 82.0, "lift_base": 70.0},
-    ]
+def seed_food_items(db: Session) -> None:
+    """
+    Precarga de forma estrictamente idempotente el catálogo de alimentos e
+    ingredientes argentinos base en food_items.
+    Garantiza catálogo puro sin métodos de cocción fijos en verduras y frutas.
+    """
+    # 1. Renombrar y actualizar alimentos legacy con nombres de cocción a alimentos puros en crudo
+    legacy_renames = {
+        "zapallo coreano / anco cocido": "Zapallo coreano",
+        "papa cocida": "Papa",
+        "batata al horno": "Batata",
+        "espinaca cocida": "Espinaca",
+        "brócoli al vapor": "Brócoli",
+        "calabaza asada": "Calabaza",
+        "pechuga de pollo a la plancha": "Pechuga de pollo",
+        "picada especial": "Carne picada especial",
+    }
 
-    for item in community_targets:
-        user = db.query(models.User).filter(func.lower(models.User.username) == item["username"].lower()).first()
-        if not user:
-            user = models.User(
-                username=item["username"],
-                role="user",
-                is_admin=False,
-                is_active=True,
-                bodyweight=item["weight_base"],
+    for old_name, new_name in legacy_renames.items():
+        existing = db.query(models.FoodItem).filter(func.lower(models.FoodItem.name) == old_name).first()
+        target = db.query(models.FoodItem).filter(func.lower(models.FoodItem.name) == new_name.lower()).first()
+        if existing and not target:
+            existing.name = new_name
+            db.commit()
+        elif existing and target and existing.id != target.id:
+            db.query(models.DailyFoodLog).filter(models.DailyFoodLog.food_id == existing.id).update(
+                {models.DailyFoodLog.food_id: target.id}
             )
-            db.add(user)
-            db.flush()
-        elif user.bodyweight is None or user.bodyweight <= 0:
-            user.bodyweight = item["weight_base"]
-            db.flush()
+            db.delete(existing)
+            db.commit()
 
-        # Contar días activos en el mes corriente
-        user_sessions = (
-            db.query(models.WorkoutSession)
-            .filter(
-                models.WorkoutSession.user_id == user.id,
-                models.WorkoutSession.date >= dt.date(current_year, current_month, 1),
-                models.WorkoutSession.date <= today,
+    # 2. Eliminar cualquier plato con cocción prefabricada dentro de verduras o ensaladas
+    forbidden_terms = ["al horno", "al vapor", "cocid", "asada", "asado", "al aceite", "frit", "saltead"]
+    items_to_clean = db.query(models.FoodItem).filter(
+        (models.FoodItem.category == "verduras") | (models.FoodItem.category == "ensaladas")
+    ).all()
+    for item in items_to_clean:
+        name_lower = item.name.lower()
+        if item.category == "ensaladas" or any(term in name_lower for term in forbidden_terms):
+            db.query(models.DailyFoodLog).filter(models.DailyFoodLog.food_id == item.id).update(
+                {models.DailyFoodLog.food_id: None}
             )
-            .all()
-        )
-        existing_dates = {s.date for s in user_sessions}
+            db.delete(item)
+    db.commit()
 
-        needed_days = item["target_days"] - len(existing_dates)
-        if needed_days <= 0:
-            continue
+    # 3. Precarga y actualización idempotente de alimentos oficiales
+    existing_foods = {
+        f.name.strip().lower(): f
+        for f in db.query(models.FoodItem).all()
+    }
 
-        # Generar días en el mes que no estén ya ocupados
-        candidate_days = []
-        for day_num in range(1, min(today.day + 1, 29)):
-            d = dt.date(current_year, current_month, day_num)
-            if d not in existing_dates:
-                candidate_days.append(d)
+    for item in ARGENTINE_FOOD_CATALOG:
+        canonical_key = item["name"].strip().lower()
+        food = existing_foods.get(canonical_key)
 
-        # Tomar los necesarios
-        days_to_add = candidate_days[:needed_days]
-        for day_d in days_to_add:
-            session = models.WorkoutSession(
-                user_id=user.id,
-                date=day_d,
-                status="completed",
-                duration_seconds=3600,
-                duration_minutes=60.0,
-                sport_type="strength",
+        if food:
+            food.category = item["category"]
+            food.calories_100g = item["calories_100g"]
+            food.protein_100g = item["protein_100g"]
+            food.carbs_100g = item["carbs_100g"]
+            food.fat_100g = item["fat_100g"]
+            food.serving_unit = item["serving_unit"]
+            food.serving_weight_g = item["serving_weight_g"]
+        else:
+            new_food = models.FoodItem(
+                name=item["name"],
+                category=item["category"],
+                calories_100g=item["calories_100g"],
+                protein_100g=item["protein_100g"],
+                carbs_100g=item["carbs_100g"],
+                fat_100g=item["fat_100g"],
+                serving_unit=item["serving_unit"],
+                serving_weight_g=item["serving_weight_g"],
+                created_at=dt.datetime.now(dt.timezone.utc),
             )
-            db.add(session)
-            db.flush()
-
-            # Agregar 3 series efectivas
-            ex_choice = exercises_pool[day_d.day % len(exercises_pool)]
-            w_lift = round(item["lift_base"] + (day_d.day % 5) * 2.5, 1)
-
-            for s_num in range(1, 4):
-                st = models.WorkoutSet(
-                    workout_session_id=session.id,
-                    exercise_id=ex_choice.id,
-                    set_number=s_num,
-                    weight=w_lift,
-                    reps=10,
-                    completed=True,
-                    set_type="normal",
-                )
-                db.add(st)
+            db.add(new_food)
 
     db.commit()
 

@@ -1,0 +1,407 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 1. Paleta de Colores (Modo Claro: Clean Bento - Rojo Deportivo #EF4444 / #DC2626) */
+  --color-primary: #EF4444;
+  --color-primary-alt: #DC2626;
+  --color-primary-hover: #DC2626;
+  --color-primary-active: #B91C1C;
+  --color-primary-50: #FEF2F2;
+  --color-primary-100: #FEE2E2;
+
+  /* Canvas & Superficies (Light) */
+  --color-bg-canvas: #F8FAFC;
+  --color-bg-canvas-alt: #F9FAFB;
+  --color-bg-card: #FFFFFF;
+
+  /* Tipografía (Light) */
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #64748B;
+
+  /* Delineados Ultra Limpios (Light) */
+  --color-border: #F1F5F9;
+
+  /* 2. Dimensiones y Curvaturas (Bento System) */
+  --radius-card: 24px;
+  --radius-pill: 9999px;
+  --radius-input: 1rem;
+  --radius-icon: 1rem;
+
+  /* 3. Elevaciones y Sombras */
+  --shadow-bento: 0 4px 24px -2px rgba(15, 23, 42, 0.04);
+  --shadow-bento-hover: 0 8px 30px -4px rgba(15, 23, 42, 0.07);
+  --shadow-primary: 0 8px 20px -4px rgba(220, 38, 38, 0.25);
+
+  /* Gradiente Radial Sutil en Esquinas Superiores */
+  --bg-canvas-gradient:
+    radial-gradient(circle at 0% 0%, rgba(239, 68, 68, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 100% 0%, rgba(15, 23, 42, 0.04) 0%, transparent 45%);
+
+  /* Layout Mobile-First */
+  --bottom-nav-height: 3.5rem;
+
+  color-scheme: light;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-canvas);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dark {
+  /* 1. Paleta de Colores (Modo Oscuro: OLED Deep Black - Ultra Clean) */
+  --color-primary: #EF4444;
+  --color-primary-alt: #DC2626;
+  --color-primary-hover: #DC2626;
+  --color-primary-active: #B91C1C;
+  --color-primary-50: rgba(69, 10, 10, 0.4);
+  --color-primary-100: rgba(127, 29, 29, 0.45);
+
+  /* Canvas & Superficies (OLED Deep Black) */
+  --color-bg-canvas: #05070B;
+  --color-bg-canvas-alt: #080A0F;
+  --color-bg-card: #0E131F;
+
+  /* Tipografía (Dark) */
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #94A3B8;
+
+  /* Delineados Sutiles (Dark OLED) */
+  --color-border: rgba(255, 255, 255, 0.07);
+
+  /* Elevaciones y Sombras (Dark) */
+  --shadow-bento: 0 4px 24px -2px rgba(0, 0, 0, 0.55);
+  --shadow-bento-hover: 0 8px 30px -4px rgba(0, 0, 0, 0.7);
+  --shadow-primary: 0 8px 20px -4px rgba(220, 38, 38, 0.35);
+
+  --bg-canvas-gradient:
+    radial-gradient(circle at 0% 0%, rgba(239, 68, 68, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 100% 0%, rgba(14, 19, 31, 0.35) 0%, transparent 45%);
+
+  color-scheme: dark;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-canvas);
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    background-color: var(--color-bg-canvas);
+    background-image: var(--bg-canvas-gradient);
+    background-attachment: fixed;
+    color: var(--color-text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-overflow-scrolling: touch;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    background-color: transparent;
+    color: var(--color-text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h1,
+  h2,
+  h3,
+  .heading-bento {
+    color: var(--color-text-primary);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+}
+
+/* Custom scrollbars minimalistas */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+::selection {
+  background: var(--color-primary-100);
+  color: var(--color-primary);
+}
+
+/* Safe areas for notched phones and iOS devices */
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+
+.safe-top-focus {
+  padding-top: max(env(safe-area-inset-top, 16px), 1rem);
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+.bottom-nav-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Floating Active Workout Banner */
+.active-workout-banner {
+  bottom: calc(var(--bottom-nav-height, 3.5rem) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 640px) {
+  .active-workout-banner {
+    bottom: 0px;
+  }
+}
+
+.pb-safe {
+  padding-bottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));
+}
+
+.bg-signature-gradient {
+  background-color: #DC2626;
+  color: #FFFFFF;
+}
+
+/* Horizontal & Vertical smooth scrollbars hidden */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@layer components {
+  /* ==========================================================================
+     BENTO MINIMALIST SYSTEM (DUAL THEME: CLEAN LIGHT / DEEP MINIMAL DARK)
+     ========================================================================== */
+
+  /* Cards Principales: rounded-3xl con padding generoso y bordes sutiles */
+  .bento-card,
+  .iron-card,
+  .oled-card {
+    @apply rounded-3xl border border-[#F1F5F9] bg-[#FFFFFF] dark:bg-[#0E131F] dark:border-white/[0.07] p-5 sm:p-6 transition-all duration-200;
+    box-shadow: var(--shadow-bento);
+  }
+
+  .bento-card-interactive,
+  .iron-card-interactive,
+  .oled-card-interactive {
+    @apply rounded-3xl border border-[#F1F5F9] bg-[#FFFFFF] dark:bg-[#0E131F] dark:border-white/[0.07] p-5 sm:p-6 transition-all duration-200 hover:border-[#FEE2E2] dark:hover:border-red-500/40 cursor-pointer active:scale-[0.98];
+    box-shadow: var(--shadow-bento);
+  }
+  .bento-card-interactive:hover,
+  .iron-card-interactive:hover,
+  .oled-card-interactive:hover {
+    box-shadow: var(--shadow-bento-hover);
+  }
+
+  .bento-card-active,
+  .iron-card-active,
+  .oled-card-active {
+    @apply rounded-3xl border border-[#FEE2E2] dark:border-red-500/40 bg-[#FFFFFF] dark:bg-[#0E131F] p-5 sm:p-6 ring-2 ring-red-500/15 transition-all duration-200;
+    box-shadow: var(--shadow-bento);
+  }
+
+  /* Icon Wrappers: w-10 h-10 rounded-2xl con fondo tonal suave */
+  .bento-icon-wrapper {
+    @apply w-10 h-10 rounded-2xl flex items-center justify-center bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 flex-shrink-0 transition-colors;
+  }
+
+  /* Inputs y Selectores: rounded-2xl */
+  .bento-input,
+  .iron-input,
+  .oled-input {
+    @apply w-full h-11 rounded-2xl border border-[#F1F5F9] dark:border-white/[0.07] bg-[#F8FAFC] dark:bg-[#05070B] px-4 py-2 text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC] outline-none transition placeholder:text-[#64748B] dark:placeholder:text-[#94A3B8] focus:bg-[#FFFFFF] dark:focus:bg-[#0E131F] focus:border-[#EF4444] focus:ring-2 focus:ring-[#FEE2E2] dark:focus:ring-red-950/40;
+  }
+
+  .bento-number-input,
+  .iron-number-input,
+  .oled-number-input {
+    @apply w-16 h-11 text-center rounded-2xl border border-[#F1F5F9] dark:border-white/[0.07] bg-[#F8FAFC] dark:bg-[#05070B] py-2 px-1 text-xl font-extrabold tracking-tight text-[#0F172A] dark:text-[#F8FAFC] outline-none transition focus:bg-[#FFFFFF] dark:focus:bg-[#0E131F] focus:border-[#EF4444] focus:ring-2 focus:ring-[#FEE2E2] dark:focus:ring-red-950/40 sm:w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none;
+  }
+
+  /* Botones Primarios: Pill shape total (rounded-full) en Rojo Deportivo Unificado */
+  .bento-btn-primary,
+  .iron-btn-primary,
+  .oled-btn-primary {
+    @apply inline-flex h-11 px-6 text-sm font-bold rounded-full w-full sm:w-auto items-center justify-center gap-2 bg-red-600 text-white transition duration-150 hover:bg-red-700 active:bg-[#B91C1C] active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+    box-shadow: var(--shadow-primary);
+  }
+
+  /* Botón Signature Registrar Serie (Pill Shape) */
+  .bento-btn-register,
+  .iron-btn-register,
+  .oled-btn-register {
+    @apply inline-flex h-11 px-6 text-sm font-bold rounded-full w-full items-center justify-center gap-2 bg-red-600 text-white transition duration-150 hover:bg-red-700 active:bg-[#B91C1C] active:scale-[0.98] select-none;
+    box-shadow: var(--shadow-primary);
+  }
+
+  /* Botones Secundarios: Pill shape total (rounded-full) */
+  .bento-btn-secondary,
+  .iron-btn-secondary,
+  .oled-btn-secondary {
+    @apply inline-flex h-11 px-6 text-sm font-semibold rounded-full w-full sm:w-auto items-center justify-center gap-2 border border-[#F1F5F9] dark:border-white/[0.07] bg-[#FFFFFF] dark:bg-[#0E131F] text-[#0F172A] dark:text-[#F8FAFC] transition hover:bg-[#FEF2F2] dark:hover:bg-red-950/40 hover:text-[#DC2626] dark:hover:text-red-400 hover:border-[#FEE2E2] dark:hover:border-red-500/30 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+    box-shadow: var(--shadow-bento);
+  }
+
+  .bento-btn-ghost,
+  .iron-btn-ghost,
+  .oled-btn-ghost {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] transition hover:bg-[#FEF2F2] dark:hover:bg-red-950/40 hover:text-[#DC2626] dark:hover:text-red-400 active:scale-[0.98];
+  }
+
+  .bento-btn-danger,
+  .iron-btn-danger,
+  .oled-btn-danger {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#FEE2E2] dark:border-red-900/50 bg-[#FEF2F2] dark:bg-red-950/40 px-4 py-2 text-xs font-semibold text-[#DC2626] dark:text-red-400 transition hover:bg-[#FEE2E2] dark:hover:bg-red-950/70 active:bg-[#B91C1C] active:text-white active:scale-[0.98];
+  }
+
+  /* Check/Listo Button */
+  .bento-check-btn,
+  .iron-check-btn,
+  .oled-check-btn {
+    @apply h-10 w-10 rounded-2xl flex items-center justify-center font-semibold transition-all duration-150 active:scale-90 flex-shrink-0 cursor-pointer select-none;
+  }
+
+  .bento-check-btn-pending,
+  .iron-check-btn-pending,
+  .oled-check-btn-pending {
+    @apply border border-[#F1F5F9] dark:border-white/[0.07] bg-[#F8FAFC] dark:bg-[#05070B] text-[#64748B] dark:text-[#94A3B8] hover:border-[#FEE2E2] dark:hover:border-red-500/40 hover:bg-[#FEF2F2] dark:hover:bg-red-950/40 hover:text-[#DC2626] dark:hover:text-red-400;
+  }
+
+  .bento-check-btn-done,
+  .iron-check-btn-done,
+  .oled-check-btn-done {
+    @apply border border-red-600 bg-red-600 text-white font-bold;
+    box-shadow: var(--shadow-primary);
+  }
+
+  /* Stepper Quick-Tap Buttons */
+  .bento-stepper-btn,
+  .oled-stepper-btn {
+    @apply h-11 w-10 flex items-center justify-center rounded-2xl border border-[#F1F5F9] dark:border-white/[0.07] bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] hover:border-[#FEE2E2] dark:hover:border-red-500/40 hover:bg-[#FEF2F2] dark:hover:bg-red-950/40 hover:text-[#DC2626] dark:hover:text-red-400 active:scale-90 transition select-none flex-shrink-0 text-sm font-bold;
+  }
+
+  /* Badges y Chips Activos (Tinted Red-50 / Red-950) */
+  .bento-badge-active,
+  .iron-pr-badge,
+  .oled-pr-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-[#FEE2E2] dark:border-red-900/30 bg-[#FEF2F2] dark:bg-red-950/40 px-2.5 py-0.5 text-[11px] font-semibold text-[#DC2626] dark:text-red-400;
+  }
+
+  .bento-badge,
+  .iron-badge,
+  .oled-badge {
+    @apply inline-flex items-center gap-1 rounded-full border border-[#F1F5F9] dark:border-white/[0.07] bg-[#F8FAFC] dark:bg-[#05070B] px-2.5 py-0.5 text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8];
+  }
+}
+
+/* ==========================================================================
+   ADAPTACIÓN SEMÁNTICA DUAL PARA VISTAS Y MODALES SECUNDARIOS EN MODO OSCURO
+   Garantiza que cualquier superficie/borde/texto herede OLED Deep Black
+   ========================================================================== */
+html.dark .bg-white {
+  background-color: #0E131F;
+}
+
+html.dark .bg-white\/95 {
+  background-color: rgba(14, 19, 31, 0.92);
+}
+
+html.dark .bg-white\/90 {
+  background-color: rgba(14, 19, 31, 0.9);
+}
+
+html.dark .bg-white\/80,
+html.dark .bg-white\/60,
+html.dark .bg-white\/50,
+html.dark .bg-white\/40 {
+  background-color: rgba(14, 19, 31, 0.7);
+}
+
+html.dark .bg-\[\#FFFFFF\] {
+  background-color: #0E131F;
+}
+
+html.dark .bg-\[\#F8FAFC\],
+html.dark .bg-\[\#F9FAFB\],
+html.dark .bg-slate-50 {
+  background-color: #05070B;
+}
+
+html.dark .bg-slate-100 {
+  background-color: #161B26;
+}
+
+html.dark .dark\:bg-\[\#121824\] {
+  background-color: #0E131F;
+}
+
+html.dark .dark\:bg-\[\#0B0F17\],
+html.dark .dark\:bg-\[\#090D14\] {
+  background-color: #05070B;
+}
+
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-\[\#F1F5F9\],
+html.dark .border-\[\#2C2C2E\],
+html.dark .dark\:border-slate-800,
+html.dark .dark\:border-\[\#1E293B\]\/60 {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+html.dark .text-\[\#0F172A\],
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+  color: #F8FAFC;
+}
+
+html.dark .text-\[\#64748B\],
+html.dark .text-slate-500,
+html.dark .text-slate-600 {
+  color: #94A3B8;
+}
+
+html.dark .bg-red-50 {
+  background-color: rgba(69, 10, 10, 0.4);
+}
+
+html.dark .border-red-100,
+html.dark .border-red-100\/60 {
+  border-color: rgba(127, 29, 29, 0.45);
+}

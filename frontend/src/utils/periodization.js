@@ -14,7 +14,7 @@ export const PERIODIZATION_LABELS = {
     name: "Fase de Sobrecarga",
     shortName: "Sobrecarga",
     icon: "⚡",
-    color: "#FF5722",
+    color: "#EF4444",
   },
   deload: {
     id: "deload",
@@ -108,7 +108,7 @@ export function getSmartPeriodizationSuggestion({
     incrementKg: increment,
     badgeText: "Objetivo: romper récord o +1 rep",
     targetText: `+${increment} kg • RIR 1-2`,
-    color: "#FF5722",
+    color: "#EF4444",
   };
 }
 

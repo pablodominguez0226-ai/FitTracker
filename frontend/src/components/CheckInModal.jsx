@@ -150,18 +150,18 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto select-none animate-in fade-in duration-150">
-      <div className="w-full max-w-2xl rounded-3xl border border-[#2C2C2E] bg-[#121212] p-6 space-y-6 shadow-2xl my-8">
+      <div className="w-full max-w-2xl rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 space-y-5 shadow-2xl my-8">
         {/* HEADER MODAL OLED */}
-        <div className="flex items-start justify-between gap-4 border-b border-[#2C2C2E] pb-4">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white shadow-lg shadow-[#FF5722]/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 hover:bg-red-700 text-white flex-shrink-0">
               <Scale size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-black tracking-tight text-white">
+              <h2 className="text-xl font-black tracking-tight text-[#0F172A]">
                 Sistema de Check-Ins Periódicos
               </h2>
-              <p className="text-xs text-[#8E8E93]">
+              <p className="text-xs text-[#64748B]">
                 Control biométrico, cintura, brazo y sensación de fuerza
               </p>
             </div>
@@ -170,18 +170,18 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
           <button
             type="button"
             onClick={onClose}
-            className="text-[#8E8E93] hover:text-white p-1 rounded-lg hover:bg-white/5"
+            className="text-[#64748B] hover:text-[#0F172A] p-1 rounded-lg hover:bg-slate-50 cursor-pointer"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* 1. SELECTOR DE FRECUENCIA OLED: [ Semanal | Quincenal | Mensual ] */}
-        <div className="rounded-2xl bg-[#1C1C1E] p-4 border border-[#2C2C2E] space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-[#8E8E93] mb-1">
+        <div className="rounded-xl bg-[#F9FAFB] p-4 border border-slate-100 space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-[#64748B] mb-1">
             <span>Frecuencia Programada de Control:</span>
             {statusInfo?.is_due && (
-              <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10px]">
+              <span className="flex items-center gap-1 text-red-500 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full text-[10px]">
                 <Clock size={12} /> ¡Toca Check-In Hoy!
               </span>
             )}
@@ -199,10 +199,10 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                   key={f.id}
                   type="button"
                   onClick={() => handleFrequencyChange(f.id)}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition active:scale-95 ${
+                  className={`py-2 px-3 rounded-xl text-xs font-semibold transition active:scale-95 cursor-pointer ${
                     isSelected
-                      ? "bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white shadow-md shadow-[#FF5722]/20"
-                      : "bg-[#121212] text-[#8E8E93] border border-[#2C2C2E] hover:text-white"
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-slate-50 text-[#64748B] border border-slate-100 hover:text-[#0F172A]"
                   }`}
                 >
                   {f.label}
@@ -212,8 +212,8 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
           </div>
 
           {statusInfo?.next_due_date && (
-            <p className="text-[11px] text-[#8E8E93] pt-1">
-              Próximo control previsto: <b className="text-white">{formatDateSafe(statusInfo.next_due_date)}</b>
+            <p className="text-[11px] text-[#64748B] pt-1">
+              Próximo control previsto: <b className="text-[#0F172A]">{formatDateSafe(statusInfo.next_due_date)}</b>
               {statusInfo.days_since_last !== null && (
                 <span> (Último registro hace {statusInfo.days_since_last} días)</span>
               )}
@@ -222,17 +222,17 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
         </div>
 
         {/* 2. FORMULARIO RÁPIDO DE CONTROL */}
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="rounded-xl border border-slate-100 bg-white p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-wider text-[#FF5722]">
+            <h3 className="text-xs font-black uppercase tracking-wider text-red-500">
               Nuevo Registro de Control
             </h3>
-            <span className="text-[11px] text-[#8E8E93]">Fecha: {form.date}</span>
+            <span className="text-[11px] text-[#64748B]">Fecha: {form.date}</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <label className="block text-[#8E8E93] font-semibold mb-1">
+              <label className="block text-[#64748B] font-semibold mb-1">
                 Peso corporal (kg) *
               </label>
               <input
@@ -241,13 +241,13 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                 value={form.weight}
                 onChange={(e) => setForm({ ...form, weight: e.target.value })}
                 placeholder="Ej: 80.5"
-                className="w-full rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] px-3 py-2 text-white font-bold focus:border-[#FF5722] focus:outline-none"
+                className="w-full rounded-xl border border-slate-100 bg-[#F9FAFB] px-3 py-2 text-[#0F172A] font-bold focus:border-red-500 focus:outline-none"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[#8E8E93] font-semibold mb-1">
+              <label className="block text-[#64748B] font-semibold mb-1">
                 Cintura (cm)
               </label>
               <input
@@ -256,12 +256,12 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                 value={form.waist}
                 onChange={(e) => setForm({ ...form, waist: e.target.value })}
                 placeholder="Ej: 82.0"
-                className="w-full rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] px-3 py-2 text-white font-bold focus:border-[#FF5722] focus:outline-none"
+                className="w-full rounded-xl border border-slate-100 bg-[#F9FAFB] px-3 py-2 text-[#0F172A] font-bold focus:border-red-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-[#8E8E93] font-semibold mb-1">
+              <label className="block text-[#64748B] font-semibold mb-1">
                 Brazo (cm)
               </label>
               <input
@@ -270,18 +270,18 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                 value={form.arm}
                 onChange={(e) => setForm({ ...form, arm: e.target.value })}
                 placeholder="Ej: 39.5"
-                className="w-full rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] px-3 py-2 text-white font-bold focus:border-[#FF5722] focus:outline-none"
+                className="w-full rounded-xl border border-slate-100 bg-[#F9FAFB] px-3 py-2 text-[#0F172A] font-bold focus:border-red-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-[#8E8E93] font-semibold mb-1">
+              <label className="block text-[#64748B] font-semibold mb-1">
                 Sensación de Fuerza
               </label>
               <select
                 value={form.strength_feeling}
                 onChange={(e) => setForm({ ...form, strength_feeling: e.target.value })}
-                className="w-full rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] px-2 py-2 text-white font-semibold focus:border-[#FF5722] focus:outline-none text-xs"
+                className="w-full rounded-xl border border-slate-100 bg-[#F9FAFB] px-2 py-2 text-[#0F172A] font-semibold focus:border-red-500 focus:outline-none text-xs"
               >
                 <option value="10/10 Excelente (Récord)">⚡ 10/10 Excelente</option>
                 <option value="8/10 Fuerte (En progreso)">💪 8/10 Fuerte</option>
@@ -297,15 +297,15 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               placeholder="Notas opcionales (recuperación, sensaciones, descanso...)"
-              className="flex-1 w-full rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] px-3 py-2 text-xs text-white focus:border-[#FF5722] focus:outline-none"
+              className="flex-1 w-full h-11 rounded-xl border border-slate-100 bg-[#F9FAFB] px-3 text-xs text-[#0F172A] placeholder-[#8E8E93] focus:border-red-500 focus:outline-none"
             />
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] px-5 py-2 text-xs font-bold text-white shadow-md shadow-[#FF5722]/20 hover:opacity-95 transition active:scale-95 cursor-pointer whitespace-nowrap"
+              className="w-full sm:w-auto h-11 px-5 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-50"
             >
-              <Check size={15} />
+              <Check size={16} />
               <span>{isSubmitting ? "Guardando..." : "Registrar Check-In"}</span>
             </button>
           </div>
@@ -314,22 +314,22 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
         {/* 3. HISTORIAL TABULAR CON VARIACIÓN NETA (+/- kg y +/- cm) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-wider text-white">
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#0F172A]">
               Historial de Variación Biométrica
             </h3>
-            <span className="text-[11px] text-[#8E8E93]">
+            <span className="text-[11px] text-[#64748B]">
               {history.length} registros computados
             </span>
           </div>
 
           {history.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[#2C2C2E] bg-[#1C1C1E]/40 p-6 text-center text-xs text-[#8E8E93]">
+            <div className="rounded-xl border border-dashed border-slate-100 bg-slate-50/40 p-6 text-center text-xs text-[#64748B]">
               No hay registros de control previos. Registra tu primer check-in arriba.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-[#2C2C2E] bg-[#121212]">
+            <div className="overflow-x-auto rounded-xl border border-slate-100 bg-[#F9FAFB]">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-[#2C2C2E] bg-[#1C1C1E]/80 text-[#8E8E93] font-bold">
+                <thead className="border-b border-[#2C2C2E] bg-white/80 text-[#64748B] font-bold">
                   <tr>
                     <th className="px-3.5 py-2.5">Fecha</th>
                     <th className="px-3.5 py-2.5">Peso (kg)</th>
@@ -339,7 +339,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                     <th className="px-3.5 py-2.5 text-right"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#2C2C2E] text-white">
+                <tbody className="divide-y divide-[#2C2C2E] text-[#0F172A]">
                   {history.map((item) => (
                     <tr key={item.id} className="hover:bg-white/[0.02] transition">
                       <td className="px-3.5 py-2.5 whitespace-nowrap font-semibold">
@@ -353,10 +353,10 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                           <span
                             className={`ml-2 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
                               item.weight_diff > 0
-                                ? "text-emerald-400 bg-emerald-500/10"
+                                ? "text-red-500 bg-red-500/10"
                                 : item.weight_diff < 0
-                                ? "text-amber-400 bg-amber-500/10"
-                                : "text-[#8E8E93] bg-white/5"
+                                ? "text-red-400 bg-red-500/10"
+                                : "text-[#64748B] bg-slate-50"
                             }`}
                           >
                             {item.weight_diff > 0 ? `+${item.weight_diff}` : item.weight_diff} kg
@@ -373,10 +373,10 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                               <span
                                 className={`ml-2 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
                                   item.waist_diff < 0
-                                    ? "text-emerald-400 bg-emerald-500/10"
+                                    ? "text-red-500 bg-red-500/10"
                                     : item.waist_diff > 0
-                                    ? "text-amber-400 bg-amber-500/10"
-                                    : "text-[#8E8E93] bg-white/5"
+                                    ? "text-red-400 bg-red-500/10"
+                                    : "text-[#64748B] bg-slate-50"
                                 }`}
                               >
                                 {item.waist_diff > 0 ? `+${item.waist_diff}` : item.waist_diff} cm
@@ -384,7 +384,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                             )}
                           </>
                         ) : (
-                          <span className="text-[#8E8E93]">-</span>
+                          <span className="text-[#64748B]">-</span>
                         )}
                       </td>
 
@@ -397,10 +397,10 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                               <span
                                 className={`ml-2 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
                                   item.arm_diff > 0
-                                    ? "text-emerald-400 bg-emerald-500/10"
+                                    ? "text-red-500 bg-red-500/10"
                                     : item.arm_diff < 0
-                                    ? "text-amber-400 bg-amber-500/10"
-                                    : "text-[#8E8E93] bg-white/5"
+                                    ? "text-red-400 bg-red-500/10"
+                                    : "text-[#64748B] bg-slate-50"
                                 }`}
                               >
                                 {item.arm_diff > 0 ? `+${item.arm_diff}` : item.arm_diff} cm
@@ -408,12 +408,12 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                             )}
                           </>
                         ) : (
-                          <span className="text-[#8E8E93]">-</span>
+                          <span className="text-[#64748B]">-</span>
                         )}
                       </td>
 
                       {/* Sensación de Fuerza */}
-                      <td className="px-3.5 py-2.5 whitespace-nowrap text-[11px] text-[#8E8E93]">
+                      <td className="px-3.5 py-2.5 whitespace-nowrap text-[11px] text-[#64748B]">
                         {item.strength_feeling || "-"}
                       </td>
 
@@ -422,7 +422,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id)}
-                          className="p-1 text-[#8E8E93] hover:text-red-400 rounded transition"
+                          className="p-1 text-[#64748B] hover:text-red-400 rounded transition"
                           title="Eliminar"
                         >
                           <Trash2 size={13} />
@@ -441,7 +441,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-[#2C2C2E] bg-[#1C1C1E] px-5 py-2 text-xs font-semibold text-[#8E8E93] hover:text-white"
+            className="rounded-xl border border-[#2C2C2E] bg-white px-5 py-2 text-xs font-semibold text-[#64748B] hover:text-[#0F172A]"
           >
             Cerrar
           </button>

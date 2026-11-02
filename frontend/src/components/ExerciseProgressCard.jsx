@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
-  ArrowUpRight,
   ChevronDown,
-  Dumbbell,
   Loader2,
   Search,
-  Sparkles,
   TrendingUp,
 } from "lucide-react";
 import { getExerciseHistory, getExercises, getRecords } from "../api/client";
@@ -32,7 +29,6 @@ export default function ExerciseProgressCard({ defaultExerciseId = null, onSelec
 
         if (!mounted) return;
 
-        // Combinar ejercicios priorizando aquellos con récord / uso
         const safeRecs = Array.isArray(recs)
           ? recs
           : recs && typeof recs === "object"
@@ -74,7 +70,7 @@ export default function ExerciseProgressCard({ defaultExerciseId = null, onSelec
           }
         }
       } catch (err) {
-        console.error("Error cargando ejercicios para curva de fuerza:", err);
+        console.error("Error cargando ejercicios para comparativa de fuerza:", err);
       } finally {
         if (mounted) setLoadingList(false);
       }
@@ -128,129 +124,59 @@ export default function ExerciseProgressCard({ defaultExerciseId = null, onSelec
     );
   }, [exercises, searchFilter]);
 
-  // Preparar puntos del gráfico SVG con las últimas 6 sesiones
-  const chartPointsData = useMemo(() => {
-    const rawSessions = historyData?.history || [];
-    // Tomar las últimas 6 sesiones para claridad visual en mobile
-    const sessions = rawSessions.slice(-6);
-
+  // Comparativa directa de las últimas 2 sesiones (sin gráficos complejos ni 1RM teórico)
+  const comparisonData = useMemo(() => {
+    const sessions = historyData?.history || [];
     if (sessions.length === 0) {
-      return {
-        hasData: false,
-        sessions: [],
-        svgPoints: [],
-        pathD: "",
-        areaD: "",
-        minW: 0,
-        maxW: 0,
-      };
+      return { hasData: false };
     }
 
-    const weights = sessions.map((s) => s.max_weight);
-    const minW = Math.max(0, Math.min(...weights) - 5);
-    const maxW = Math.max(...weights) + 5;
-    const range = maxW - minW || 1;
+    const lastSession = sessions[sessions.length - 1];
+    const prevSession = sessions.length >= 2 ? sessions[sessions.length - 2] : null;
 
-    const width = 320;
-    const height = 120;
-    const paddingTop = 20;
-    const paddingBottom = 26;
-    const usableHeight = height - paddingTop - paddingBottom;
+    const lastWeight = Number(lastSession?.max_weight ?? historyData?.current_max_weight ?? 0);
+    const prevWeight = prevSession ? Number(prevSession.max_weight ?? 0) : lastWeight;
+    const diff = Math.round((lastWeight - prevWeight) * 10) / 10;
 
-    const svgPoints = sessions.map((s, idx) => {
-      const x =
-        sessions.length === 1
-          ? width / 2
-          : (idx / (sessions.length - 1)) * (width - 36) + 18;
-      const y = height - paddingBottom - ((s.max_weight - minW) / range) * usableHeight;
-      return {
-        x,
-        y,
-        weight: s.max_weight,
-        dateLabel: s.date_label,
-        estimated1rm: s.estimated_1rm,
-        reps: s.max_reps,
-      };
-    });
+    let statusMessage = "⚪ Carga constante: Levantaste lo mismo que la sesión anterior.";
+    let badgeClass = "border-slate-100 bg-slate-50 text-[#0F172A]";
 
-    let pathD = "";
-    if (svgPoints.length === 1) {
-      pathD = `M ${svgPoints[0].x - 25} ${svgPoints[0].y} L ${svgPoints[0].x + 25} ${svgPoints[0].y}`;
-    } else {
-      pathD = svgPoints.reduce(
-        (acc, p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`),
-        ""
-      );
+    if (sessions.length >= 2) {
+      if (diff > 0) {
+        statusMessage = `🟢 Hubo crecimiento: +${diff} kg respecto a la semana pasada (o último mes).`;
+        badgeClass = "border-red-500/30 bg-red-500/10 text-red-500";
+      } else if (diff < 0) {
+        statusMessage = `🔴 Bajó ${Math.abs(diff)} kg respecto a la anterior.`;
+        badgeClass = "border-rose-500/30 bg-rose-500/10 text-rose-400";
+      } else {
+        statusMessage = "⚪ Carga constante: Levantaste lo mismo que la sesión anterior.";
+        badgeClass = "border-slate-100 bg-slate-50 text-[#0F172A]";
+      }
     }
-
-    const areaD =
-      svgPoints.length > 1
-        ? `${pathD} L ${svgPoints[svgPoints.length - 1].x} ${height - paddingBottom} L ${svgPoints[0].x} ${height - paddingBottom} Z`
-        : "";
 
     return {
       hasData: true,
-      sessions,
-      svgPoints,
-      pathD,
-      areaD,
-      minW,
-      maxW,
-      width,
-      height,
+      lastWeight,
+      prevWeight,
+      hasPrevious: Boolean(prevSession),
+      statusMessage,
+      badgeClass,
     };
   }, [historyData]);
 
-  // Cálculos de progreso neto vs primera sesión registrada
-  const progressBadge = useMemo(() => {
-    if (!historyData || !historyData.history || historyData.history.length === 0) {
-      return null;
-    }
-    const diffKg = historyData.net_progress_kg;
-    const diffPct = historyData.net_progress_pct;
-
-    if (historyData.history.length === 1) {
-      return {
-        text: `✨ Primera sesión registrada: ${historyData.current_max_weight} kg`,
-        isPositive: true,
-        className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-      };
-    }
-
-    if (diffKg > 0) {
-      return {
-        text: `📈 Progreso neto: +${diffKg} kg (+${diffPct}%) vs primera sesión registrada`,
-        isPositive: true,
-        className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-      };
-    } else if (diffKg < 0) {
-      return {
-        text: `📉 Progreso neto: ${diffKg} kg (${diffPct}%) vs primera sesión registrada`,
-        isPositive: false,
-        className: "border-[#FF5722]/30 bg-[#FF5722]/10 text-[#FF8A65]",
-      };
-    } else {
-      return {
-        text: `⚖️ Progreso neto: 0.0 kg (0.0%) vs primera sesión registrada`,
-        isPositive: true,
-        className: "border-white/10 bg-[#1C1C1E] text-[#8E8E93]",
-      };
-    }
-  }, [historyData]);
-
   return (
-    <div className="rounded-3xl border border-[#2C2C2E] bg-[#121212] p-5 sm:p-6 space-y-4 shadow-xl select-none">
-      {/* Cabecera */}
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 sm:p-5 space-y-4 select-none">
+      {/* Cabecera y Selector Desplegable */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white font-bold flex-shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold flex-shrink-0">
             <TrendingUp size={18} />
           </div>
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">
-              Curva de Superación
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+              Comparativa Directa
             </span>
-            <h3 className="text-lg sm:text-xl font-bold text-white">
+            <h3 className="text-lg sm:text-xl font-bold text-[#0F172A]">
               Evolución de Fuerza
             </h3>
           </div>
@@ -261,28 +187,27 @@ export default function ExerciseProgressCard({ defaultExerciseId = null, onSelec
           <button
             type="button"
             onClick={() => setIsOpenSelect((prev) => !prev)}
-            className="w-full min-h-[42px] px-3.5 py-2 rounded-2xl border border-[#2C2C2E] bg-[#1C1C1E] text-left text-xs font-semibold text-white flex items-center justify-between gap-2 hover:border-[#FF5722]/50 active:scale-[0.99] transition cursor-pointer"
+            className="w-full h-11 px-3.5 py-2 rounded-xl border border-slate-100 bg-slate-50 text-left text-xs font-semibold text-[#0F172A] flex items-center justify-between gap-2 hover:border-red-500/50 active:scale-[0.99] transition cursor-pointer"
           >
             <span className="truncate">
-              {selectedExercise ? (selectedExercise?.name || "Ejercicio") : "Seleccionar ejercicio..."}
+              {selectedExercise ? (selectedExercise?.name || "Press banca") : "Seleccionar ejercicio..."}
             </span>
             <ChevronDown
               size={15}
-              className={`text-[#8E8E93] transition-transform ${isOpenSelect ? "rotate-180" : ""}`}
+              className={`text-[#64748B] transition-transform ${isOpenSelect ? "rotate-180" : ""}`}
             />
           </button>
 
-          {/* Menú Flotante de Búsqueda y Selección */}
           {isOpenSelect && (
-            <div className="absolute left-0 right-0 top-full mt-2 z-30 rounded-2xl border border-[#2C2C2E] bg-[#161618] p-2 shadow-2xl space-y-2">
+            <div className="absolute left-0 right-0 top-full mt-2 z-30 rounded-xl border border-slate-100 bg-white p-2 shadow-2xl space-y-2">
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8E93]" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
                 <input
                   type="text"
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   placeholder="Buscar ejercicio..."
-                  className="w-full min-h-[36px] rounded-xl border border-white/10 bg-[#121212] pl-8 pr-3 text-xs text-white placeholder:text-[#8E8E93] outline-none focus:border-[#FF5722]"
+                  className="w-full h-10 rounded-xl border border-slate-100 bg-[#F9FAFB] pl-8 pr-3 text-xs text-[#0F172A] placeholder:text-[#64748B] outline-none focus:border-red-500"
                   autoFocus
                 />
               </div>
@@ -301,20 +226,20 @@ export default function ExerciseProgressCard({ defaultExerciseId = null, onSelec
                       }}
                       className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition cursor-pointer flex items-center justify-between gap-2 ${
                         ex.id === selectedExerciseId
-                          ? "bg-[#FF5722]/15 text-[#FF8A65] font-bold border border-[#FF5722]/30"
-                          : "text-white/80 hover:bg-[#1C1C1E] hover:text-white"
+                          ? "bg-red-500/15 text-red-500 font-bold border border-red-500/30"
+                          : "text-[#0F172A]/80 hover:bg-slate-50 hover:text-[#0F172A]"
                       }`}
                     >
                       <span className="truncate">{ex?.name || "Ejercicio"}</span>
                       {ex.muscle_group_name && (
-                        <span className="text-[10px] text-[#8E8E93] flex-shrink-0">
+                        <span className="text-[10px] text-[#64748B] flex-shrink-0">
                           {ex.muscle_group_name}
                         </span>
                       )}
                     </button>
                   ))
                 ) : (
-                  <div className="p-3 text-center text-xs text-[#8E8E93]">
+                  <div className="p-3 text-center text-xs text-[#64748B]">
                     No se encontraron ejercicios
                   </div>
                 )}
@@ -324,142 +249,33 @@ export default function ExerciseProgressCard({ defaultExerciseId = null, onSelec
         </div>
       </div>
 
-      {/* Badge destacado de progreso neto */}
-      {progressBadge && (
-        <div className={`rounded-2xl border px-3.5 py-2.5 text-xs font-semibold ${progressBadge.className} flex items-center gap-2`}>
-          <span>{progressBadge.text}</span>
+      {/* Contenido ultra simple de comparativa directa */}
+      {loadingHistory || loadingList ? (
+        <div className="flex h-20 items-center justify-center text-red-500 gap-2 rounded-xl border border-slate-100 bg-[#F9FAFB]">
+          <Loader2 size={18} className="animate-spin" />
+          <span className="text-xs text-[#64748B]">Cargando comparativa...</span>
         </div>
-      )}
+      ) : comparisonData.hasData ? (
+        <div className="space-y-3">
+          {/* Mensaje directo en una línea */}
+          <div className={`rounded-xl border px-3.5 py-3 text-xs sm:text-sm font-semibold ${comparisonData.badgeClass}`}>
+            {comparisonData.statusMessage}
+          </div>
 
-      {/* Gráfico SVG Minimalista con las últimas 6 sesiones */}
-      <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-4 space-y-3">
-        <div className="flex items-center justify-between text-xs text-[#8E8E93]">
-          <span className="font-semibold text-white flex items-center gap-1.5">
-            <Dumbbell size={14} className="text-[#FF5722]" />
-            {selectedExercise?.name || "Ejercicio"}
-          </span>
-          <span>Últimas 6 sesiones registradas</span>
+          {/* Datos concisos */}
+          <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] px-4 py-3 text-xs sm:text-sm font-bold text-[#0F172A] flex items-center justify-between sm:justify-start gap-3">
+            <span>
+              Última marca: <strong className="text-red-500">{comparisonData.lastWeight} kg</strong>
+            </span>
+            <span className="text-[#64748B]">|</span>
+            <span>
+              Anterior: <strong className="text-[#0F172A]">{comparisonData.prevWeight} kg</strong>
+            </span>
+          </div>
         </div>
-
-        {loadingHistory ? (
-          <div className="flex h-36 items-center justify-center text-[#FF5722] gap-2">
-            <Loader2 size={22} className="animate-spin" />
-            <span className="text-xs text-[#8E8E93]">Cargando evolución...</span>
-          </div>
-        ) : chartPointsData.hasData ? (
-          <div className="space-y-2">
-            <div className="w-full h-36 sm:h-40 relative">
-              <svg
-                viewBox={`0 0 ${chartPointsData.width} ${chartPointsData.height}`}
-                className="w-full h-full overflow-visible"
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <linearGradient id="gradientProgressLine" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#FF5722" />
-                    <stop offset="100%" stopColor="#7C4DFF" />
-                  </linearGradient>
-                  <linearGradient id="gradientProgressArea" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#FF5722" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#FF5722" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-
-                {/* Área bajo la curva */}
-                {chartPointsData.areaD && (
-                  <path d={chartPointsData.areaD} fill="url(#gradientProgressArea)" />
-                )}
-
-                {/* Línea principal */}
-                {chartPointsData.pathD && (
-                  <path
-                    d={chartPointsData.pathD}
-                    fill="none"
-                    stroke="url(#gradientProgressLine)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                )}
-
-                {/* Nodos con el peso levantado */}
-                {chartPointsData.svgPoints.map((p, idx) => {
-                  const isLast = idx === chartPointsData.svgPoints.length - 1;
-                  return (
-                    <g key={idx}>
-                      {/* Texto con el peso máximo encima del nodo */}
-                      <text
-                        x={p.x}
-                        y={Math.max(12, p.y - 9)}
-                        textAnchor="middle"
-                        fill={isLast ? "#FF8A65" : "#FFFFFF"}
-                        fontSize="10"
-                        fontWeight="700"
-                      >
-                        {p.weight}kg
-                      </text>
-
-                      {/* Círculo del punto */}
-                      <circle
-                        cx={p.x}
-                        cy={p.y}
-                        r={isLast ? 5 : 3.5}
-                        fill={isLast ? "#FF5722" : "#121212"}
-                        stroke={isLast ? "#FFFFFF" : "#FF5722"}
-                        strokeWidth={isLast ? 2.5 : 1.8}
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-
-            {/* Fechas en el eje inferior */}
-            <div className="flex items-center justify-between text-[11px] font-semibold text-[#8E8E93] pt-1 px-1 border-t border-white/5">
-              {chartPointsData.svgPoints.map((p, idx) => (
-                <span key={idx} className={idx === chartPointsData.svgPoints.length - 1 ? "text-white font-bold" : ""}>
-                  {p.dateLabel}
-                </span>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="py-10 text-center text-xs text-[#8E8E93] space-y-1">
-            <p className="font-semibold text-white">Sin sesiones para este ejercicio</p>
-            <p>Registrá tus series en la pestaña Entrenar para ver la curva de fuerza.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Resumen rápido de la última marca y 1RM */}
-      {historyData?.history && historyData.history.length > 0 && (
-        <div className="grid grid-cols-3 gap-2.5 pt-1">
-          <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3 text-center">
-            <span className="text-[10px] uppercase font-bold text-[#8E8E93] block">
-              Primera Sesión
-            </span>
-            <span className="text-base font-extrabold text-white block mt-0.5">
-              {historyData.first_max_weight} kg
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3 text-center">
-            <span className="text-[10px] uppercase font-bold text-[#8E8E93] block">
-              Marca Actual
-            </span>
-            <span className="text-base font-extrabold text-[#FF8A65] block mt-0.5">
-              {historyData.current_max_weight} kg
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3 text-center">
-            <span className="text-[10px] uppercase font-bold text-[#8E8E93] block">
-              1RM Estimado
-            </span>
-            <span className="text-base font-extrabold text-[#7C4DFF] block mt-0.5">
-              {Math.round(historyData.history[historyData.history.length - 1]?.estimated_1rm || 0)} kg
-            </span>
-          </div>
+      ) : (
+        <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] p-4 text-center text-xs text-[#64748B]">
+          Sin registros aún para <strong className="text-[#0F172A]">{selectedExercise?.name || "este ejercicio"}</strong>.
         </div>
       )}
     </div>

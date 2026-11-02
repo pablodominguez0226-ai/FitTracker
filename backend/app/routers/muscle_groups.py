@@ -18,15 +18,24 @@ def list_muscle_groups(db: Session = Depends(get_db)):
         .group_by(models.Exercise.muscle_group_id)
         .all()
     )
+    canonical_order = ["pecho", "espalda", "brazos", "piernas"]
     result = []
     for g in groups:
-        result.append(
-            schemas.MuscleGroupOut(
-                id=g.id,
-                name=g.name,
-                exercise_count=counts.get(g.id, 0),
+        cnt = counts.get(g.id, 0)
+        g_norm = (g.name or "").strip().lower()
+        if g_norm in canonical_order or cnt > 0:
+            result.append(
+                schemas.MuscleGroupOut(
+                    id=g.id,
+                    name=g.name,
+                    exercise_count=cnt,
+                )
             )
-        )
+    result.sort(
+        key=lambda item: canonical_order.index(item.name.strip().lower())
+        if item.name.strip().lower() in canonical_order
+        else 99
+    )
     return result
 
 

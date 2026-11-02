@@ -391,9 +391,9 @@ export default function LiveBattle() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-[#FF5722]">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-red-500">
         <Loader2 size={34} className="animate-spin" />
-        <p className="text-sm font-medium text-[#8E8E93]">Cargando módulo de Duelos...</p>
+        <p className="text-sm font-medium text-[#64748B]">Cargando módulo de Duelos...</p>
       </div>
     );
   }
@@ -407,23 +407,23 @@ export default function LiveBattle() {
 
       {/* Connection / Polling indicator */}
       {battle && (
-        <div className="flex items-center justify-between text-xs px-2 text-[#8E8E93]">
+        <div className="flex items-center justify-between text-xs px-2 text-[#64748B]">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34D399] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34D399]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-600 hover:bg-red-700 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600 hover:bg-red-700"></span>
             </span>
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-[#0F172A]">
               Duelo #{battle.id} • {battle.exercise_name}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            {pollingError && <span className="text-amber-400 text-[11px]">{pollingError}</span>}
+            {pollingError && <span className="text-red-400 text-[11px]">{pollingError}</span>}
             <button
               type="button"
               onClick={handleReset}
-              className="text-[#8E8E93] hover:text-red-400 text-[11px] font-semibold underline"
+              className="text-[#64748B] hover:text-red-400 text-[11px] font-semibold underline"
             >
               Salir del Duelo
             </button>
@@ -437,39 +437,39 @@ export default function LiveBattle() {
       {!battle && (
         <div className="space-y-4">
           {/* Mode Switcher */}
-          <div className="flex items-center gap-2 rounded-2xl border border-white/5 bg-[#1C1C1E] p-1.5">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-1.5">
             <button
               type="button"
               onClick={() => setActiveTab("create")}
-              className={`flex-1 min-h-[44px] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition active:scale-95 ${
+              className={`flex-1 min-h-[44px] rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition active:scale-95 ${
                 activeTab === "create"
-                  ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
-                  : "text-[#8E8E93] hover:text-white"
+                  ? "bg-red-600 hover:bg-red-700 text-white font-bold"
+                  : "text-[#64748B] hover:text-[#0F172A]"
               }`}
             >
-              <Crown size={16} className="text-amber-400" />
+              <Crown size={16} className={activeTab === "create" ? "text-black" : "text-red-400"} />
               <span>Crear Duelo (Anfitrión)</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab("join")}
-              className={`flex-1 min-h-[44px] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition active:scale-95 ${
+              className={`flex-1 min-h-[44px] rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition active:scale-95 ${
                 activeTab === "join"
-                  ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
-                  : "text-[#8E8E93] hover:text-white"
+                  ? "bg-red-600 hover:bg-red-700 text-white font-bold"
+                  : "text-[#64748B] hover:text-[#0F172A]"
               }`}
             >
-              <Swords size={16} className="text-[#7C4DFF]" />
+              <Swords size={16} className={activeTab === "join" ? "text-black" : "text-red-500"} />
               <span>Unirme con PIN (Rival)</span>
             </button>
           </div>
 
           {/* Form: CREATE BATTLE */}
           {activeTab === "create" && (
-            <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-4">
-              <div className="flex items-center gap-2 text-white">
-                <Crown size={20} className="text-amber-400" />
+            <div className="rounded-xl border border-slate-100 bg-white p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-2 text-[#0F172A]">
+                <Crown size={20} className="text-red-400" />
                 <h3 className="text-sm font-semibold uppercase tracking-wider">
                   Configurar Nuevo Duelo
                 </h3>
@@ -477,13 +477,13 @@ export default function LiveBattle() {
 
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5">
+                  <label className="text-xs font-semibold text-[#64748B] block mb-1.5">
                     Ejercicio a competir
                   </label>
                   <select
                     value={createExerciseId}
                     onChange={(e) => setCreateExerciseId(e.target.value)}
-                    className="w-full min-h-[48px] rounded-2xl border border-white/10 bg-[#121212] px-3.5 py-2.5 text-sm font-semibold text-white outline-none focus:border-[#FF5722]"
+                    className="h-11 w-full rounded-xl border border-slate-100 bg-[#F9FAFB] px-3.5 py-2 text-sm font-semibold text-[#0F172A] outline-none focus:border-red-500"
                   >
                     {(exercises || []).map((ex) => (
                       <option key={ex?.id || Math.random()} value={ex?.id}>
@@ -495,7 +495,7 @@ export default function LiveBattle() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5">
+                    <label className="text-xs font-semibold text-[#64748B] block mb-1.5">
                       Tu Nombre / Apodo
                     </label>
                     <input
@@ -508,7 +508,7 @@ export default function LiveBattle() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5">
+                    <label className="text-xs font-semibold text-[#64748B] block mb-1.5">
                       Tu Peso Corporal (kg)
                     </label>
                     <div className="relative">
@@ -521,7 +521,7 @@ export default function LiveBattle() {
                         className="iron-input w-full text-sm font-semibold pr-10"
                         placeholder="75.0"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8E8E93] font-semibold">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#64748B] font-semibold">
                         kg
                       </span>
                     </div>
@@ -529,7 +529,7 @@ export default function LiveBattle() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5">
+                  <label className="text-xs font-semibold text-[#64748B] block mb-1.5">
                     Cantidad de Rondas
                   </label>
                   <div className="flex gap-2">
@@ -540,8 +540,8 @@ export default function LiveBattle() {
                         onClick={() => setCreateRounds(r)}
                         className={`flex-1 min-h-[42px] rounded-xl border text-xs font-semibold transition ${
                           createRounds === r
-                            ? "border-[#FF5722] bg-[#FF5722]/10 text-white"
-                            : "border-white/5 bg-[#121212] text-[#8E8E93]"
+                            ? "border-red-500 bg-red-500/15 text-red-500"
+                            : "border-slate-100 bg-slate-50 text-[#64748B]"
                         }`}
                       >
                         {r} {r === 1 ? "Ronda" : "Rondas"}
@@ -550,13 +550,13 @@ export default function LiveBattle() {
                   </div>
                 </div>
 
-                <div className="p-3 rounded-2xl border border-white/5 bg-[#121212] text-[11px] text-[#8E8E93] space-y-1">
-                  <p className="text-amber-300 font-semibold flex items-center gap-1.5">
+                <div className="p-3 rounded-xl border border-slate-100 bg-[#F9FAFB] text-[11px] text-[#64748B] space-y-1">
+                  <p className="text-red-400 font-semibold flex items-center gap-1.5">
                     <Scale size={14} /> Normalización de Fuerza Relativa:
                   </p>
                   <p>
                     El ganador se determina por el score relativo:{" "}
-                    <code className="text-[#FF5722]">(peso / peso_corp^0.67) × reps</code>. ¡50kg
+                    <code className="text-red-500 font-mono">(peso / peso_corp^0.67) × reps</code>. ¡50kg
                     levantados por alguien de 50kg tienen mucho más mérito que por alguien de 90kg!
                   </p>
                 </div>
@@ -581,9 +581,9 @@ export default function LiveBattle() {
 
           {/* Form: JOIN BATTLE */}
           {activeTab === "join" && (
-            <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-4">
-              <div className="flex items-center gap-2 text-white">
-                <Swords size={20} className="text-[#7C4DFF]" />
+            <div className="rounded-xl border border-slate-100 bg-white p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-2 text-[#0F172A]">
+                <Swords size={20} className="text-red-500" />
                 <h3 className="text-sm font-semibold uppercase tracking-wider">
                   Unirse a Duelo con PIN
                 </h3>
@@ -591,7 +591,7 @@ export default function LiveBattle() {
 
               <form onSubmit={handleJoin} className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5 text-center">
+                  <label className="text-xs font-semibold text-[#64748B] block mb-1.5 text-center">
                     Ingresá el PIN de 4 dígitos proporcionado por tu amigo
                   </label>
                   <input
@@ -601,13 +601,13 @@ export default function LiveBattle() {
                     value={joinPin}
                     onChange={(e) => setJoinPin(e.target.value.trim())}
                     placeholder="Ej: 4819"
-                    className="w-full text-center text-3xl sm:text-4xl font-mono font-bold tracking-widest py-3 rounded-2xl border border-white/10 bg-[#121212] text-white outline-none focus:border-[#FF5722]"
+                    className="w-full text-center text-3xl sm:text-4xl font-mono font-bold tracking-widest py-3 rounded-xl border border-slate-100 bg-[#F9FAFB] text-[#0F172A] outline-none focus:border-red-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5">
+                    <label className="text-xs font-semibold text-[#64748B] block mb-1.5">
                       Tu Nombre / Apodo
                     </label>
                     <input
@@ -620,7 +620,7 @@ export default function LiveBattle() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5">
+                    <label className="text-xs font-semibold text-[#64748B] block mb-1.5">
                       Tu Peso Corporal (kg)
                     </label>
                     <div className="relative">
@@ -633,7 +633,7 @@ export default function LiveBattle() {
                         className="iron-input w-full text-sm font-semibold pr-10"
                         placeholder="80.0"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8E8E93] font-semibold">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#64748B] font-semibold">
                         kg
                       </span>
                     </div>
@@ -664,53 +664,53 @@ export default function LiveBattle() {
       {/* 2. LOBBY WAITING FOR OPPONENT                                 */}
       {/* ------------------------------------------------------------- */}
       {battle && battle.status === "waiting" && (
-        <div className="rounded-3xl border border-white/10 bg-[#1C1C1E] p-6 text-center space-y-5 animate-fadeIn">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-[#FF5722]">
+        <div className="rounded-xl border border-slate-100 bg-white p-6 text-center space-y-5 animate-fadeIn">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 border border-slate-100 text-red-500">
             <Swords size={32} />
           </div>
 
           <div>
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#FF5722]">
+            <span className="text-xs font-semibold uppercase tracking-widest text-red-500">
               SALA DE DUELO CREADA
             </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-white mt-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A] mt-1">
               Esperando a tu compañero de gym...
             </h2>
-            <p className="text-xs text-[#8E8E93] mt-1">
+            <p className="text-xs text-[#64748B] mt-1">
               Decile a tu rival que ingrese este PIN en su celular:
             </p>
           </div>
 
           {/* Giant PIN Badge */}
-          <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-[#121212] px-6 py-4">
-            <span className="text-4xl sm:text-5xl font-mono font-bold tracking-widest text-white">
+          <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-6 py-4">
+            <span className="text-4xl sm:text-5xl font-mono font-bold tracking-widest text-[#0F172A]">
               {battle.pin_code}
             </span>
             <button
               type="button"
               onClick={handleCopyPin}
-              className="p-2 rounded-xl bg-white/5 text-[#8E8E93] hover:text-white transition active:scale-95"
+              className="p-2 rounded-xl bg-slate-50 text-[#64748B] hover:text-[#0F172A] transition active:scale-95"
               title="Copiar PIN"
             >
-              {copiedPin ? <Check size={20} className="text-[#34D399]" /> : <Copy size={20} />}
+              {copiedPin ? <Check size={20} className="text-red-500" /> : <Copy size={20} />}
             </button>
           </div>
 
           {/* Details */}
           <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto text-left text-xs">
-            <div className="rounded-2xl border border-white/5 bg-[#121212] p-3">
-              <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block">Ejercicio</span>
-              <span className="font-semibold text-white truncate block">{battle.exercise_name}</span>
+            <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] p-3">
+              <span className="text-[10px] text-[#64748B] uppercase font-semibold block">Ejercicio</span>
+              <span className="font-semibold text-[#0F172A] truncate block">{battle.exercise_name}</span>
             </div>
-            <div className="rounded-2xl border border-white/5 bg-[#121212] p-3">
-              <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block">Rondas</span>
-              <span className="font-semibold text-white block">{battle.target_rounds} Rondas</span>
+            <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] p-3">
+              <span className="text-[10px] text-[#64748B] uppercase font-semibold block">Rondas</span>
+              <span className="font-semibold text-[#0F172A] block">{battle.target_rounds} Rondas</span>
             </div>
           </div>
 
           {/* Pulsing Radar */}
-          <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#8E8E93] pt-2">
-            <Loader2 size={16} className="animate-spin text-[#FF5722]" />
+          <div className="flex items-center justify-center gap-2 text-xs font-medium text-[#64748B] pt-2">
+            <Loader2 size={16} className="animate-spin text-red-500" />
             <span>Esperando conexión del rival en tiempo real...</span>
           </div>
         </div>
@@ -722,13 +722,13 @@ export default function LiveBattle() {
       {battle && battle.status === "in_progress" && (
         <div className="space-y-4 animate-fadeIn">
           {/* Versus Header Banner */}
-          <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4">
-            <div className="flex items-center justify-between text-xs text-[#8E8E93] border-b border-white/5 pb-2 mb-3">
-              <div className="flex items-center gap-1.5 font-semibold text-white">
-                <Dumbbell size={15} className="text-[#FF5722]" />
+          <div className="rounded-xl border border-slate-100 bg-white p-4">
+            <div className="flex items-center justify-between text-xs text-[#64748B] border-b border-slate-100 pb-2 mb-3">
+              <div className="flex items-center gap-1.5 font-semibold text-[#0F172A]">
+                <Dumbbell size={15} className="text-red-500" />
                 <span className="truncate break-words">{battle.exercise_name}</span>
               </div>
-              <span className="font-mono font-semibold text-white">
+              <span className="font-mono font-semibold text-[#0F172A]">
                 Ronda {battle.current_round} de {battle.target_rounds}
               </span>
             </div>
@@ -737,24 +737,24 @@ export default function LiveBattle() {
               {/* Participant 1 */}
               {battle?.participants?.[0] && (
                 <div
-                  className={`rounded-2xl border p-3 transition ${
+                  className={`rounded-xl border p-3 transition ${
                     battle?.current_turn_user_name === battle?.participants?.[0]?.user_name
-                      ? "border-[#FF5722] bg-[#FF5722]/10"
-                      : "border-white/5 bg-[#121212]"
+                      ? "border-red-500 bg-red-500/15"
+                      : "border-slate-100 bg-[#F9FAFB]"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-xs sm:text-sm font-semibold text-white truncate">
+                    <span className="text-xs sm:text-sm font-semibold text-[#0F172A] truncate">
                       {battle?.participants?.[0]?.user_name || "Participante 1"}
                       {battle?.participants?.[0]?.user_name === myParticipantName ? " (Vos)" : ""}
                     </span>
                     {battle?.current_turn_user_name === battle?.participants?.[0]?.user_name && (
-                      <span className="h-2 w-2 rounded-full bg-[#34D399] animate-ping" />
+                      <span className="h-2 w-2 rounded-full bg-red-600 hover:bg-red-700 animate-ping" />
                     )}
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-[11px] text-[#8E8E93]">
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-[#64748B]">
                     <span>{battle?.participants?.[0]?.bodyweight || 0} kg</span>
-                    <span className="font-mono font-semibold text-[#34D399]">
+                    <span className="font-mono font-semibold text-red-500">
                       {battle?.participants?.[0]?.total_score || 0} pts
                     </span>
                   </div>
@@ -764,24 +764,24 @@ export default function LiveBattle() {
               {/* Participant 2 */}
               {battle?.participants?.[1] && (
                 <div
-                  className={`rounded-2xl border p-3 transition ${
+                  className={`rounded-xl border p-3 transition ${
                     battle?.current_turn_user_name === battle?.participants?.[1]?.user_name
-                      ? "border-[#FF5722] bg-[#FF5722]/10"
-                      : "border-white/5 bg-[#121212]"
+                      ? "border-red-500 bg-red-500/15"
+                      : "border-slate-100 bg-[#F9FAFB]"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-xs sm:text-sm font-semibold text-white truncate">
+                    <span className="text-xs sm:text-sm font-semibold text-[#0F172A] truncate">
                       {battle?.participants?.[1]?.user_name || "Participante 2"}
                       {battle?.participants?.[1]?.user_name === myParticipantName ? " (Vos)" : ""}
                     </span>
                     {battle?.current_turn_user_name === battle?.participants?.[1]?.user_name && (
-                      <span className="h-2 w-2 rounded-full bg-[#34D399] animate-ping" />
+                      <span className="h-2 w-2 rounded-full bg-red-600 hover:bg-red-700 animate-ping" />
                     )}
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-[11px] text-[#8E8E93]">
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-[#64748B]">
                     <span>{battle?.participants?.[1]?.bodyweight || 0} kg</span>
-                    <span className="font-mono font-semibold text-[#34D399]">
+                    <span className="font-mono font-semibold text-red-500">
                       {battle?.participants?.[1]?.total_score || 0} pts
                     </span>
                   </div>
@@ -793,34 +793,34 @@ export default function LiveBattle() {
           {/* TURN ACTION CONTAINER */}
           {/* CASE A: OPPONENT COMPLETED A SET -> I MUST CROSS-VALIDATE CLEAN REPS! */}
           {amIValidator && (
-            <div className="rounded-3xl border border-[#34D399]/30 bg-[#1C1C1E] p-5 space-y-4">
+            <div className="rounded-3xl border border-red-500/30 bg-white p-5 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-[#34D399]/10 border border-[#34D399]/30 flex items-center justify-center text-[#34D399] flex-shrink-0">
+                <div className="h-11 w-11 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 flex-shrink-0">
                   <CheckCircle2 size={24} />
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#34D399]">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-red-500">
                     HONESTIDAD PRESENCIAL REQUERIDA
                   </span>
-                  <h3 className="text-base sm:text-lg font-bold text-white">
+                  <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">
                     Validá la serie de {pendingRound.participant_name}
                   </h3>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/5 bg-[#121212] p-4 text-center space-y-1">
-                <p className="text-xs text-[#8E8E93]">Carga declarada por tu rival:</p>
-                <p className="text-2xl sm:text-3xl font-mono font-bold text-white">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center space-y-1">
+                <p className="text-xs text-[#64748B]">Carga declarada por tu rival:</p>
+                <p className="text-2xl sm:text-3xl font-mono font-bold text-[#0F172A]">
                   {pendingRound.weight_lifted} kg × {pendingRound.reps} reps
                 </p>
-                <p className="text-xs font-semibold text-[#34D399]">
+                <p className="text-xs font-semibold text-red-500">
                   {pendingRound.bodyweight_ratio}× su peso corporal
                 </p>
               </div>
 
               {/* Optional clean reps adjustment */}
               <div>
-                <label className="text-xs text-[#8E8E93] block mb-1 text-center">
+                <label className="text-xs text-[#64748B] block mb-1 text-center">
                   ¿Hizo menos reps limpias sin trampa o balanceo? (Opcional):
                 </label>
                 <input
@@ -837,7 +837,7 @@ export default function LiveBattle() {
                 type="button"
                 onClick={() => handleValidateRound(pendingRound.id)}
                 disabled={isValidatingRound}
-                className="w-full min-h-[52px] rounded-2xl bg-[#34D399] text-black font-semibold text-base flex items-center justify-center gap-2 hover:bg-[#34D399]/90 active:scale-[0.98] transition"
+                className="w-full min-h-[52px] rounded-2xl bg-red-600 hover:bg-red-700 text-white font-semibold text-base flex items-center justify-center gap-2 hover:bg-red-500/90 active:scale-[0.98] transition"
               >
                 {isValidatingRound ? (
                   <Loader2 size={20} className="animate-spin" />
@@ -853,14 +853,14 @@ export default function LiveBattle() {
 
           {/* CASE B: I COMPLETED A SET -> WAITING FOR RIVAL'S VALIDATION */}
           {amIWaitingForValidation && (
-            <div className="rounded-3xl border border-white/10 bg-[#1C1C1E] p-5 text-center space-y-3">
-              <Loader2 size={32} className="animate-spin text-[#FF5722] mx-auto" />
-              <h3 className="text-base font-semibold text-white">
+            <div className="rounded-xl border border-slate-100 bg-white p-5 text-center space-y-3">
+              <Loader2 size={32} className="animate-spin text-red-500 mx-auto" />
+              <h3 className="text-base font-semibold text-[#0F172A]">
                 Esperando que tu compañero valide tu serie...
               </h3>
-              <p className="text-xs text-[#8E8E93]">
+              <p className="text-xs text-[#64748B]">
                 Declaraste:{" "}
-                <strong className="text-white font-semibold">
+                <strong className="text-[#0F172A] font-semibold">
                   {pendingRound.weight_lifted} kg × {pendingRound.reps} reps
                 </strong>
                 . Tu rival está confirmando en su pantalla que la técnica haya sido limpia.
@@ -870,15 +870,15 @@ export default function LiveBattle() {
 
           {/* CASE C: IT'S MY TURN TO LIFT */}
           {isMyTurn && !pendingRound && (
-            <div className="rounded-3xl border border-[#FF5722]/30 bg-[#1C1C1E] p-4 sm:p-5 space-y-4">
+            <div className="rounded-xl border border-slate-100 bg-white p-4 sm:p-5 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white">
-                  <Flame size={20} className="text-[#FF5722]" />
+                <div className="flex items-center gap-2 text-[#0F172A]">
+                  <Flame size={20} className="text-red-500" />
                   <h3 className="text-sm sm:text-base font-semibold uppercase tracking-wider">
                     ¡Tu Turno de Levantar!
                   </h3>
                 </div>
-                <span className="rounded-full bg-[#FF5722]/10 border border-[#FF5722]/30 px-2.5 py-0.5 text-[11px] font-semibold text-[#FF5722]">
+                <span className="rounded-full bg-red-500/10 border border-red-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-red-500">
                   Ronda {battle.current_round}
                 </span>
               </div>
@@ -887,7 +887,7 @@ export default function LiveBattle() {
                 <div className="grid grid-cols-2 gap-3">
                   {/* Weight Input */}
                   <div>
-                    <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5 text-center">
+                    <label className="text-xs font-semibold text-[#64748B] block mb-1.5 text-center">
                       Peso Levantado
                     </label>
                     <div className="relative">
@@ -897,10 +897,10 @@ export default function LiveBattle() {
                         inputMode="decimal"
                         value={liftWeight}
                         onChange={(e) => setLiftWeight(e.target.value)}
-                        className="w-full text-center px-2 py-2.5 text-xl font-bold rounded-2xl border border-white/10 bg-[#121212] text-white outline-none focus:border-[#FF5722]"
+                        className="h-11 w-full text-center px-2 py-2 text-xl font-bold rounded-xl border border-slate-100 bg-[#F9FAFB] text-[#0F172A] outline-none focus:border-red-500"
                         placeholder="kg"
                       />
-                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#64748B]">
                         kg
                       </span>
                     </div>
@@ -908,7 +908,7 @@ export default function LiveBattle() {
 
                   {/* Reps Input */}
                   <div>
-                    <label className="text-xs font-semibold text-[#8E8E93] block mb-1.5 text-center">
+                    <label className="text-xs font-semibold text-[#64748B] block mb-1.5 text-center">
                       Repeticiones Limpias
                     </label>
                     <div className="relative">
@@ -918,10 +918,10 @@ export default function LiveBattle() {
                         inputMode="decimal"
                         value={liftReps}
                         onChange={(e) => setLiftReps(e.target.value)}
-                        className="w-full text-center px-2 py-2.5 text-xl font-bold rounded-2xl border border-white/10 bg-[#121212] text-white outline-none focus:border-[#FF5722]"
+                        className="h-11 w-full text-center px-2 py-2 text-xl font-bold rounded-xl border border-slate-100 bg-[#F9FAFB] text-[#0F172A] outline-none focus:border-red-500"
                         placeholder="reps"
                       />
-                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#64748B]">
                         reps
                       </span>
                     </div>
@@ -929,20 +929,20 @@ export default function LiveBattle() {
                 </div>
 
                 {/* Real-Time Formula Score Preview */}
-                <div className="rounded-2xl border border-white/5 bg-[#121212] p-3 flex items-center justify-between text-xs">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block">
+                    <span className="text-[10px] text-[#64748B] uppercase font-semibold block">
                       Ratio Fuerza Relativa
                     </span>
-                    <span className="font-mono font-bold text-white text-sm">
+                    <span className="font-mono font-bold text-[#0F172A] text-sm">
                       {estimatedRatio.toFixed(2)}× peso corporal
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block">
+                    <span className="text-[10px] text-[#64748B] uppercase font-semibold block">
                       Score de Duelo
                     </span>
-                    <span className="font-mono font-bold text-[#34D399] text-base">
+                    <span className="font-mono font-bold text-red-500 text-base">
                       +{estimatedScore.toFixed(1)} pts
                     </span>
                   </div>
@@ -968,14 +968,14 @@ export default function LiveBattle() {
 
           {/* CASE D: RIVAL IS CURRENTLY LIFTING */}
           {!isMyTurn && !pendingRound && (
-            <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-6 text-center space-y-3">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-[#FF5722]">
+            <div className="rounded-xl border border-slate-100 bg-white p-6 text-center space-y-3">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-red-500">
                 <Dumbbell size={24} />
               </div>
-              <h3 className="text-base font-semibold text-white">
+              <h3 className="text-base font-semibold text-[#0F172A]">
                 Turno de {battle.current_turn_user_name}
               </h3>
-              <p className="text-xs text-[#8E8E93] max-w-xs mx-auto">
+              <p className="text-xs text-[#64748B] max-w-xs mx-auto">
                 Tu compañero está en la barra o máquina. Prestá atención a su recorrido y rango de
                 movimiento para validarlo cuando termine.
               </p>
@@ -984,8 +984,8 @@ export default function LiveBattle() {
 
           {/* Rounds Log History */}
           {battle.rounds && battle.rounds.length > 0 && (
-            <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">
+            <div className="rounded-xl border border-slate-100 bg-white p-4 space-y-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
                 Historial de Series del Duelo
               </h4>
 
@@ -993,29 +993,29 @@ export default function LiveBattle() {
                 {battle.rounds.map((r) => (
                   <div
                     key={r.id}
-                    className={`flex items-center justify-between p-2.5 rounded-2xl border text-xs ${
+                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs ${
                       r.is_validated
-                        ? "border-white/5 bg-[#121212]"
-                        : "border-amber-500/30 bg-amber-500/10"
+                        ? "border-slate-100 bg-[#F9FAFB]"
+                        : "border-red-400/30 bg-red-500/10"
                     }`}
                   >
                     <div>
-                      <span className="font-semibold text-white mr-2">{r.participant_name}</span>
-                      <span className="text-[#8E8E93]">
+                      <span className="font-semibold text-[#0F172A] mr-2">{r.participant_name}</span>
+                      <span className="text-[#64748B]">
                         {r.weight_lifted} kg × {r.reps} reps
                       </span>
-                      <span className="ml-2 text-[#FF5722] font-mono font-semibold">
+                      <span className="ml-2 text-red-500 font-mono font-semibold">
                         ({r.bodyweight_ratio}×)
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
                       {r.is_validated ? (
-                        <span className="font-mono font-bold text-[#34D399]">
+                        <span className="font-mono font-bold text-red-500">
                           +{r.relative_score} pts
                         </span>
                       ) : (
-                        <span className="text-[10px] text-amber-300 font-semibold">
+                        <span className="text-[10px] text-red-400 font-semibold">
                           Pendiente validación
                         </span>
                       )}
@@ -1028,7 +1028,7 @@ export default function LiveBattle() {
                 <button
                   type="button"
                   onClick={handleFinishEarly}
-                  className="text-xs text-[#8E8E93] hover:text-white underline font-semibold"
+                  className="text-xs text-[#64748B] hover:text-[#0F172A] underline font-semibold"
                 >
                   Finalizar Duelo y ver Podio ahora
                 </button>
@@ -1044,19 +1044,19 @@ export default function LiveBattle() {
       {battle && battle.status === "finished" && (
         <div className="space-y-5 animate-fadeIn">
           {/* Victory Banner */}
-          <div className="relative overflow-hidden rounded-3xl border border-amber-400/30 bg-[#1C1C1E] p-6 text-center space-y-3">
-            <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-400/10 border border-amber-400/30 text-amber-400">
+          <div className="relative overflow-hidden rounded-3xl border border-red-400/30 bg-white p-6 text-center space-y-3">
+            <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-red-500/10 border border-red-400/30 text-red-400">
               <Trophy size={42} strokeWidth={2} />
             </div>
 
             <div>
-              <span className="text-xs font-semibold uppercase tracking-widest text-amber-300">
+              <span className="text-xs font-semibold uppercase tracking-widest text-red-400">
                 ¡DUELO FINALIZADO!
               </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mt-1">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A] mt-1">
                 Ganador: {battle.winner_user_name || "Empate Técnico"}
               </h2>
-              <p className="text-xs text-[#8E8E93] mt-1">
+              <p className="text-xs text-[#64748B] mt-1">
                 Competencia honesta en {battle.exercise_name} normalizada por peso corporal.
               </p>
             </div>
@@ -1071,57 +1071,57 @@ export default function LiveBattle() {
                   key={p.id}
                   className={`rounded-3xl border p-5 space-y-3.5 relative overflow-hidden ${
                     isWinner
-                      ? "border-amber-400/40 bg-[#1C1C1E]"
-                      : "border-white/5 bg-[#1C1C1E]"
+                      ? "border-red-400/40 bg-white"
+                      : "border-slate-100 bg-white"
                   }`}
                 >
                   {isWinner && (
-                    <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-amber-400 text-black px-2.5 py-0.5 text-[10px] font-bold uppercase">
+                    <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full bg-red-600 text-white px-2.5 py-0.5 text-[10px] font-bold uppercase">
                       <Crown size={12} />
                       <span>CAMPEÓN</span>
                     </div>
                   )}
 
                   <div>
-                    <h3 className="text-lg font-bold text-white truncate break-words">
+                    <h3 className="text-lg font-bold text-[#0F172A] truncate break-words">
                       {p.user_name}
                       {p.user_name.toLowerCase() === myParticipantName.toLowerCase() ? " (Vos)" : ""}
                     </h3>
-                    <span className="text-xs text-[#8E8E93] font-medium">
-                      Peso corporal: <strong className="text-white font-semibold">{p.bodyweight} kg</strong>
+                    <span className="text-xs text-[#64748B] font-medium">
+                      Peso corporal: <strong className="text-[#0F172A] font-semibold">{p.bodyweight} kg</strong>
                     </span>
                   </div>
 
                   {/* Multiplier in HUGE text */}
-                  <div className="rounded-2xl border border-white/5 bg-[#121212] p-3 text-center">
-                    <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 text-center">
+                    <span className="text-[10px] uppercase font-semibold text-[#64748B] block">
                       Multiplicador de Fuerza Relativa
                     </span>
                     <span
                       className={`text-3xl sm:text-4xl font-mono font-bold tracking-tight ${
-                        isWinner ? "text-amber-400" : "text-white"
+                        isWinner ? "text-red-400" : "text-[#0F172A]"
                       }`}
                     >
                       {p.best_ratio.toFixed(2)}×
                     </span>
-                    <span className="text-[11px] text-[#8E8E93] block mt-0.5">
+                    <span className="text-[11px] text-[#64748B] block mt-0.5">
                       de su peso corporal
                     </span>
                   </div>
 
                   {/* Quick stats row */}
                   <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="rounded-xl border border-white/5 bg-[#121212] p-2">
-                      <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2">
+                      <span className="text-[10px] text-[#64748B] uppercase font-semibold block">
                         Carga Máxima
                       </span>
-                      <span className="font-mono font-bold text-white">{p.max_weight} kg</span>
+                      <span className="font-mono font-bold text-[#0F172A]">{p.max_weight} kg</span>
                     </div>
-                    <div className="rounded-xl border border-white/5 bg-[#121212] p-2">
-                      <span className="text-[10px] text-[#8E8E93] uppercase font-semibold block">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2">
+                      <span className="text-[10px] text-[#64748B] uppercase font-semibold block">
                         Score Duelo
                       </span>
-                      <span className="font-mono font-bold text-[#34D399]">
+                      <span className="font-mono font-bold text-red-500">
                         {p.total_score} pts
                       </span>
                     </div>
@@ -1132,13 +1132,13 @@ export default function LiveBattle() {
           </div>
 
           {/* Save to Workout & Next Actions */}
-          <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-5 space-y-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">
+          <div className="rounded-3xl border border-slate-100 bg-white p-5 space-y-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
               Registrar en tu Entrenamiento del Día
             </h4>
 
             {savedWorkoutMsg ? (
-              <div className="p-3.5 rounded-2xl border border-[#34D399]/30 bg-[#34D399]/10 text-[#34D399] text-xs font-semibold flex items-center gap-2">
+              <div className="p-3.5 rounded-2xl border border-red-500/30 bg-red-500/10 text-red-500 text-xs font-semibold flex items-center gap-2">
                 <CheckCircle2 size={18} />
                 <span>{savedWorkoutMsg}</span>
               </div>
@@ -1147,7 +1147,7 @@ export default function LiveBattle() {
                 type="button"
                 onClick={handleSaveToWorkout}
                 disabled={isSavingWorkout}
-                className="w-full min-h-[48px] rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white text-xs font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition"
+                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition cursor-pointer"
               >
                 {isSavingWorkout ? (
                   <Loader2 size={16} className="animate-spin" />

@@ -17,12 +17,78 @@ import {
 } from "../api/client";
 import { processSyncQueue, isOnline } from "../utils/syncQueue";
 
+export const ACTIVE_SESSION_CACHE_KEY = "fittracker_active_session_cache";
+
 export function getActiveSessionStorageKey(userId) {
   return userId ? `fittracker_active_session_${userId}` : "fittracker_active_session";
 }
 
 export function getSessionStartedAtStorageKey(userId) {
   return userId ? `fittracker_session_started_at_${userId}` : "fittracker_session_started_at";
+}
+
+export function readActiveSessionCache() {
+  try {
+    const raw = localStorage.getItem(ACTIVE_SESSION_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      return parsed;
+    }
+  } catch (e) {
+    console.warn("Error leyendo fittracker_active_session_cache:", e);
+  }
+  return null;
+}
+
+export function writeActiveSessionCache(payload) {
+  try {
+    if (!payload || typeof payload !== "object") return;
+    localStorage.setItem(ACTIVE_SESSION_CACHE_KEY, JSON.stringify(payload));
+  } catch (e) {
+    console.warn("Error guardando fittracker_active_session_cache:", e);
+  }
+}
+
+export function clearActiveSessionCache(userId = null) {
+  try {
+    const explicitKeys = [
+      ACTIVE_SESSION_CACHE_KEY,
+      "fittracker_active_session",
+      "active_workout_id",
+      "active_workout",
+      "active_workout_session",
+      "fittracker_session_started_at",
+    ];
+    if (userId) {
+      explicitKeys.push(getActiveSessionStorageKey(userId));
+      explicitKeys.push(getSessionStartedAtStorageKey(userId));
+    }
+    explicitKeys.forEach((k) => localStorage.removeItem(k));
+
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (
+        key &&
+        (key.startsWith("fittracker_active_session") ||
+          key.startsWith("fittracker_session_started_at") ||
+          key.startsWith("active_workout"))
+      ) {
+        localStorage.removeItem(key);
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("fittracker:sessionTimerChanged", { detail: null })
+      );
+      window.dispatchEvent(
+        new CustomEvent("fittracker:activeSessionCleared")
+      );
+    }
+  } catch (e) {
+    console.warn("Error purgando caché de sesión activa:", e);
+  }
 }
 
 // Contexto global de entrenamientos y sesiones
@@ -47,42 +113,9 @@ export function WorkoutProvider({ children }) {
   // -------------------------------------------------------------
   const isMountedRef = useRef(true);
 
-  // Función para purgar claves residuales de sesión activa en localStorage
+  // Función para purgar claves residuales de sesión activa en localStorage (solo bajo acción explícita)
   const purgeResidualActiveSessionStorage = () => {
-    try {
-      const explicitKeys = [
-        "fittracker_active_session",
-        "active_workout_id",
-        "active_workout",
-        "active_workout_session",
-        "fittracker_session_started_at",
-      ];
-      explicitKeys.forEach((k) => localStorage.removeItem(k));
-
-      // Purgar también cualquier clave indexada por usuario en localStorage
-      for (let i = localStorage.length - 1; i >= 0; i--) {
-        const key = localStorage.key(i);
-        if (
-          key &&
-          (key.startsWith("fittracker_active_session") ||
-            key.startsWith("fittracker_session_started_at") ||
-            key.startsWith("active_workout"))
-        ) {
-          localStorage.removeItem(key);
-        }
-      }
-
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("fittracker:sessionTimerChanged", { detail: null })
-        );
-        window.dispatchEvent(
-          new CustomEvent("fittracker:activeSessionCleared")
-        );
-      }
-    } catch (e) {
-      console.warn("Error purgando almacenamiento residual de sesión activa:", e);
-    }
+    clearActiveSessionCache();
   };
 
   const refreshWorkoutData = useCallback(async () => {
@@ -107,10 +140,12 @@ export function WorkoutProvider({ children }) {
 
       if (!isMountedRef.current) return;
 
-      // Si el backend respondió 404 o null, purgar claves de sesión residuales
+      // Si el backend no tiene sesión en progreso, verificar si existe fittracker_active_session_cache
+      // NUNCA purgar automáticamente la caché local aquí: solo se purga al presionar
+      // explícitamente "Terminar Entrenamiento" o "Descartar Sesión".
+      const cachedSession = readActiveSessionCache();
       if (!active || active.status !== "in_progress") {
-        purgeResidualActiveSessionStorage();
-        active = null;
+        active = cachedSession ? { ...cachedSession, status: "in_progress", fromCache: true } : null;
       }
 
       const safeWorkouts = Array.isArray(wList)

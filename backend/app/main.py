@@ -4,14 +4,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from .database import Base, engine, ensure_database_migration, SessionLocal
-from .routers import auth, admin, muscle_groups, exercises, workouts, records, profile, analytics, tips, ai_coach, battles, routines, metrics, supplements, nutrition, checkins
+from .routers import auth, admin, muscle_groups, exercises, workouts, records, profile, analytics, tips, ai_coach, battles, routines, metrics, supplements, nutrition, checkins, blood_tests
 from . import schemas
-from .seed import seed_initial_data
+# Seeding automático desactivado para evitar inyección de sesiones ficticias en el arranque
+# from .seed import seed_initial_data
 
 Base.metadata.create_all(bind=engine)
 ensure_database_migration()
 with SessionLocal() as db:
-    seed_initial_data(db)
+    # seed_initial_data(db)
+    try:
+        blood_tests.repair_legacy_blood_tests(db)
+    except Exception:
+        pass
 
 app = FastAPI(title="FitTracker API", version="2.0.0")
 
@@ -45,6 +50,7 @@ app.include_router(muscle_groups.router, prefix="/api/muscle-groups", tags=["mus
 app.include_router(exercises.router, prefix="/api/exercises", tags=["exercises"])
 app.include_router(routines.router, prefix="/api/routines", tags=["routines"])
 app.include_router(workouts.router, prefix="/api/workouts", tags=["workouts"])
+app.include_router(workouts.router, prefix="/api/sessions", tags=["sessions"])
 app.include_router(battles.router, prefix="/api/battles", tags=["battles"])
 app.include_router(records.router, prefix="/api/records", tags=["records"])
 app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
@@ -56,6 +62,7 @@ app.include_router(metrics.router, prefix="/api", tags=["metrics"])
 app.include_router(supplements.router, prefix="/api/supplements", tags=["supplements"])
 app.include_router(nutrition.router, prefix="/api/nutrition", tags=["nutrition"])
 app.include_router(checkins.router, prefix="/api/checkins", tags=["checkins"])
+app.include_router(blood_tests.router, prefix="/api/blood-tests", tags=["blood-tests"])
 app.add_api_route(
     "/api/training-guidelines",
     profile.get_training_guidelines,

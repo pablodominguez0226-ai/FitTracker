@@ -1,6 +1,6 @@
 import datetime as dt
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from .database import Base
@@ -24,13 +24,15 @@ class Exercise(Base):
     __tablename__ = "exercises"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    slug: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
     muscle_group_id: Mapped[int] = mapped_column(ForeignKey("muscle_groups.id", ondelete="CASCADE"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    subgroup: Mapped[str | None] = mapped_column(String(120), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     execution_tips: Mapped[str | None] = mapped_column(Text, nullable=True)
     target_tempo: Mapped[str | None] = mapped_column(String(100), nullable=True)
     primary_muscles: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    equipment_type: Mapped[str | None] = mapped_column(String(50), default="barra", nullable=True)
+    equipment_type: Mapped[str | None] = mapped_column(String(50), default=None, nullable=True)
     mechanics_type: Mapped[str | None] = mapped_column(String(50), default="compuesto", nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     key_cue: Mapped[str | None] = mapped_column(String(80), nullable=True)
@@ -53,6 +55,8 @@ class WorkoutSession(Base):
     is_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default="0", index=True)
     started_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
+    finished_at: Mapped[dt.datetime | None] = mapped_column(DateTime, nullable=True)
+    total_volume: Mapped[float | None] = mapped_column(Float, nullable=True, default=0.0)
     readiness_energy: Mapped[int | None] = mapped_column(Integer, nullable=True)
     readiness_motivation: Mapped[int | None] = mapped_column(Integer, nullable=True)
     mental_effort: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -120,6 +124,9 @@ class User(Base):
     target_protein_g: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     target_water_l: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     checkin_frequency: Mapped[str | None] = mapped_column(String(20), default="weekly", nullable=True)
+    total_workouts: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
+    workout_days_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
+    weekly_pattern: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
     updated_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), onupdate=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
 
@@ -129,9 +136,12 @@ class User(Base):
     supplements_list: Mapped[list["Supplement"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     chemistry_compounds: Mapped[list["ChemistryCompound"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     lab_analyses: Mapped[list["LabAnalysis"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    blood_tests: Mapped[list["BloodTest"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     check_ins: Mapped[list["CheckIn"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     nutrition_plans: Mapped[list["NutritionPlan"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     daily_nutrition_logs: Mapped[list["DailyNutritionLog"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    custom_recipes: Mapped[list["CustomRecipe"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    daily_food_logs: Mapped[list["DailyFoodLog"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Routine(Base):
@@ -198,6 +208,9 @@ class UserProfile(Base):
     target_goal: Mapped[str | None] = mapped_column(String(40), default="hipertrofia", nullable=True)
     target_protein_g: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     target_water_l: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    total_workouts: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
+    workout_days_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
+    weekly_pattern: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), onupdate=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
 
 
@@ -322,6 +335,36 @@ class LabAnalysis(Base):
     user: Mapped["User"] = relationship(back_populates="lab_analyses")
 
 
+class BloodTest(Base):
+    __tablename__ = "blood_tests"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    test_date: Mapped[dt.date] = mapped_column(Date, default=dt.date.today, nullable=False, index=True)
+    entry_date: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
+    birth_date: Mapped[dt.date | None] = mapped_column(Date, nullable=True)
+    petition_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    data_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    hematocrit: Mapped[float | None] = mapped_column(Float, nullable=True)
+    hemoglobin: Mapped[float | None] = mapped_column(Float, nullable=True)
+    glucose: Mapped[float | None] = mapped_column(Float, nullable=True)
+    creatinine: Mapped[float | None] = mapped_column(Float, nullable=True)
+    urea: Mapped[float | None] = mapped_column(Float, nullable=True)
+    got_ast: Mapped[float | None] = mapped_column(Float, nullable=True)
+    gpt_alt: Mapped[float | None] = mapped_column(Float, nullable=True)
+    cholesterol_total: Mapped[float | None] = mapped_column(Float, nullable=True)
+    cholesterol_hdl: Mapped[float | None] = mapped_column(Float, nullable=True)
+    cholesterol_ldl: Mapped[float | None] = mapped_column(Float, nullable=True)
+    triglycerides: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sodium: Mapped[float | None] = mapped_column(Float, nullable=True)
+    potassium: Mapped[float | None] = mapped_column(Float, nullable=True)
+    pdf_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
+
+    user: Mapped["User"] = relationship(back_populates="blood_tests")
+
+
 class CheckIn(Base):
     __tablename__ = "check_ins"
 
@@ -373,5 +416,60 @@ class DailyNutritionLog(Base):
     created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="daily_nutrition_logs")
+
+
+class FoodItem(Base):
+    __tablename__ = "food_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    category: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    calories_100g: Mapped[float] = mapped_column(Float, nullable=False)
+    protein_100g: Mapped[float] = mapped_column(Float, nullable=False)
+    carbs_100g: Mapped[float] = mapped_column(Float, nullable=False)
+    fat_100g: Mapped[float] = mapped_column(Float, nullable=False)
+    serving_unit: Mapped[str] = mapped_column(String(80), default="100g", nullable=False)
+    serving_weight_g: Mapped[float] = mapped_column(Float, default=100.0, nullable=False)
+    created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
+
+
+class CustomRecipe(Base):
+    __tablename__ = "custom_recipes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False, index=True)
+    total_weight_g: Mapped[float] = mapped_column(Float, nullable=False)
+    ingredients_json: Mapped[str] = mapped_column(Text, nullable=False)
+    calculated_calories: Mapped[float] = mapped_column(Float, nullable=False)
+    calculated_protein: Mapped[float] = mapped_column(Float, nullable=False)
+    calculated_carbs: Mapped[float] = mapped_column(Float, nullable=False)
+    calculated_fat: Mapped[float] = mapped_column(Float, nullable=False)
+    servings: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
+
+    user: Mapped["User"] = relationship(back_populates="custom_recipes")
+
+
+class DailyFoodLog(Base):
+    __tablename__ = "daily_food_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    food_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    grams_or_units: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    calories: Mapped[float] = mapped_column(Float, nullable=False)
+    protein: Mapped[float] = mapped_column(Float, nullable=False)
+    carbs: Mapped[float] = mapped_column(Float, nullable=False)
+    fat: Mapped[float] = mapped_column(Float, nullable=False)
+    log_date: Mapped[dt.date] = mapped_column(Date, default=dt.date.today, nullable=False, index=True)
+    side_dish_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    side_dish_grams: Mapped[float | None] = mapped_column(Float, nullable=True)
+    meal_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    recipe_id: Mapped[int | None] = mapped_column(ForeignKey("custom_recipes.id", ondelete="SET NULL"), nullable=True)
+    food_id: Mapped[int | None] = mapped_column(ForeignKey("food_items.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
+
+    user: Mapped["User"] = relationship(back_populates="daily_food_logs")
 
 

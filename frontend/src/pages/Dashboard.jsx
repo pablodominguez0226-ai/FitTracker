@@ -1,695 +1,581 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Activity,
-  ArrowUpRight,
-  BookOpen,
-  Bot,
-  Brain,
   Calendar,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
+  Check,
+  ChevronRight,
   Dumbbell,
   Flame,
-  Layers,
-  Loader2,
-  RefreshCw,
-  Repeat,
-  Send,
-  ShieldAlert,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  TrendingUp,
-  Trophy,
-  User,
-  Zap,
+  Play,
+  Scale,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  askAICoach,
-  getAIWeeklyBriefing,
-  getAnalyticsDashboard,
-  getContextualTips,
-  getLevelExplanations,
-  getUserProfile,
-} from "../api/client";
-import Header from "../components/Header";
-import { formatDateSafe, getLocalDateString, parseDateSafe } from "../utils/dateUtils";
+import { getProfile, getWorkouts, getMetricsSummary } from "../api/client";
+import HistoryModal from "../components/HistoryModal";
+import { getLocalDateString, parseDateSafe } from "../utils/dateUtils";
 
-// Custom dark tooltip for recharts
-function CustomTooltip({ active, payload, label }) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-2xl border border-white/10 bg-[#1C1C1E]/95 p-3 text-xs text-white backdrop-blur-md">
-        <p className="font-bold text-[#FF5722] mb-1">{label}</p>
-        {payload.map((entry, index) => {
-          const entryName = entry?.name || "";
+const DAY_LABELS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+
+/**
+ * Calcula los 7 días (lunes a domingo) de la semana actual
+ */
+function getCurrentWeekDays(completedDatesSet = new Set()) {
+  const now = new Date();
+  const todayStr = getLocalDateString(now);
+
+  // Obtener lunes de la semana actual (getDay(): 0 = domingo, 1 = lunes, ...)
+  const dayOfWeek = now.getDay();
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+  const monday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + diffToMonday,
+    12,
+    0,
+    0
+  );
+
+  return DAY_LABELS.map((label, idx) => {
+    const d = new Date(
+      monday.getFullYear(),
+      monday.getMonth(),
+      monday.getDate() + idx,
+      12,
+      0,
+      0
+    );
+    const dateStr = getLocalDateString(d);
+    const isToday = dateStr === todayStr;
+    const isCompleted = completedDatesSet.has(dateStr);
+
+    return {
+      key: dateStr,
+      label,
+      dayNumber: d.getDate(),
+      isToday,
+      isCompleted,
+    };
+  });
+}
+
+/**
+ * Calcula la racha de días consecutivos entrenando hasta hoy/ayer
+ */
+function calculateStreakDays(completedDatesSet) {
+  if (!completedDatesSet || completedDatesSet.size === 0) return 0;
+
+  const today = new Date();
+  const todayStr = getLocalDateString(today);
+  const yesterday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - 1,
+    12,
+    0,
+    0
+  );
+  const yesterdayStr = getLocalDateString(yesterday);
+
+  if (!completedDatesSet.has(todayStr) && !completedDatesSet.has(yesterdayStr)) {
+    return 0;
+  }
+
+  let streak = 0;
+  let cursor = completedDatesSet.has(todayStr) ? today : yesterday;
+
+  while (true) {
+    const str = getLocalDateString(cursor);
+    if (completedDatesSet.has(str)) {
+      streak += 1;
+      cursor = new Date(
+        cursor.getFullYear(),
+        cursor.getMonth(),
+        cursor.getDate() - 1,
+        12,
+        0,
+        0
+      );
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+/**
+ * 1. Header Principal
+ */
+function HomeHeader({ formattedDate, onOpenHistory, onStartWorkout }) {
+  return (
+    <section className="space-y-3.5">
+      <button
+        type="button"
+        onClick={onOpenHistory}
+        className="text-red-600 dark:text-red-500 text-sm font-semibold flex items-center gap-1.5 hover:opacity-80 transition cursor-pointer"
+      >
+        <Calendar size={15} strokeWidth={2.25} />
+        <span className="capitalize">{formattedDate}</span>
+        <ChevronRight size={14} strokeWidth={2.5} />
+      </button>
+
+      <div className="space-y-1.5">
+        <h1 className="font-black text-3xl tracking-tight text-[#0F172A] dark:text-[#F8FAFC] leading-tight">
+          ¿Listo? Empieza a entrenar.
+        </h1>
+        <p className="text-[#64748B] dark:text-[#94A3B8] text-sm font-normal max-w-[90%] leading-relaxed">
+          Supera tus marcas personales y mantén tu disciplina día a día.
+        </p>
+      </div>
+
+      <div className="pt-1">
+        <button
+          type="button"
+          onClick={onStartWorkout}
+          className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-full flex items-center justify-center gap-2 shadow-sm shadow-red-600/20 active:scale-[0.99] transition-all cursor-pointer"
+        >
+          <Play size={16} fill="currentColor" strokeWidth={2} />
+          <span>Iniciar entrenamiento</span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 2. Selector Semanal de Días (Horizontal Strip)
+ */
+function WeeklyDayStrip({ weekDays, onSelectDay }) {
+  return (
+    <section
+      aria-label="Calendario semanal"
+      className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl px-4 py-4 shadow-sm transition-colors duration-200"
+    >
+      <div className="grid grid-cols-7 gap-1.5">
+        {weekDays.map((day) => {
+          const isToday = day.isToday;
+          const isCompleted = day.isCompleted;
+
           return (
-            <p key={`item-${index}`} className="flex justify-between gap-4 font-medium">
-              <span className="text-[#8E8E93]">{entryName}:</span>
-              <span className="font-semibold text-white">
-                {entryName.toLowerCase().includes("volumen")
-                  ? `${Math.round(entry?.value || 0).toLocaleString()} kg`
-                  : `${entry?.value || 0} sesiones`}
+            <button
+              key={day.key}
+              type="button"
+              onClick={() => onSelectDay && onSelectDay(day)}
+              className="flex flex-col items-center justify-start gap-1.5 py-0.5 cursor-pointer group"
+            >
+              <span
+                className={`text-[11px] font-semibold uppercase tracking-tight ${
+                  isToday
+                    ? "text-red-600 dark:text-red-500 font-bold"
+                    : "text-[#64748B] dark:text-[#94A3B8]"
+                }`}
+              >
+                {day.label}
               </span>
-            </p>
+
+              {isToday ? (
+                <div className="w-10 h-10 rounded-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-sm flex items-center justify-center shadow-sm transition-transform group-active:scale-95">
+                  {isCompleted ? <Check size={16} strokeWidth={3} /> : day.dayNumber}
+                </div>
+              ) : isCompleted ? (
+                <div className="w-10 h-10 rounded-full border-2 border-red-500 bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 font-bold text-sm flex items-center justify-center transition-transform group-active:scale-95">
+                  <Check size={15} strokeWidth={2.75} />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full border-dashed border-2 border-slate-300 dark:border-slate-700 text-[#64748B] dark:text-[#94A3B8] font-semibold text-sm flex items-center justify-center transition-transform group-hover:border-red-500/50 group-active:scale-95">
+                  {day.dayNumber}
+                </div>
+              )}
+
+              <span
+                className={`text-[10px] leading-none h-3 flex items-center ${
+                  isToday
+                    ? "font-bold text-red-600 dark:text-red-500"
+                    : isCompleted
+                    ? "font-semibold text-red-500"
+                    : "text-transparent select-none"
+                }`}
+              >
+                {isToday ? "Hoy" : isCompleted ? "•" : "·"}
+              </span>
+            </button>
           );
         })}
       </div>
-    );
-  }
-  return null;
+    </section>
+  );
 }
 
-export default function Dashboard() {
-  const [data, setData] = useState(null);
-  const [tips, setTips] = useState([]);
-  const [userLevel, setUserLevel] = useState("intermedio");
-  const [aiBriefing, setAiBriefing] = useState(null);
-  const [loadingBriefing, setLoadingBriefing] = useState(false);
-  const [aiQuestion, setAiQuestion] = useState("");
-  const [aiAnswer, setAiAnswer] = useState(null);
-  const [askingAi, setAskingAi] = useState(false);
-  const [loading, setLoading] = useState(true);
+/**
+ * 3. Tarjeta Meta Semanal
+ */
+function WeeklyGoalCard({ completedCount = 0, targetCount = 3, onClick }) {
+  const safeCompleted = Math.max(0, completedCount);
+  const safeTarget = Math.max(1, targetCount);
+  const remaining = Math.max(0, safeTarget - safeCompleted);
+  const progressRatio = Math.min(1, safeCompleted / safeTarget);
 
-  const loadDashboard = async () => {
+  const size = 64;
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progressRatio);
+
+  return (
+    <section
+      onClick={onClick}
+      className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 flex items-center gap-5 shadow-sm cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99]"
+    >
+      {/* Lado izquierdo: Progress ring circular SVG minimalista */}
+      <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
+        <svg className="w-16 h-16 -rotate-90" viewBox={`0 0 ${size} ${size}`}>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="transparent"
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            className="text-[#F1F5F9] dark:text-slate-800"
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="transparent"
+            stroke="#EF4444"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-500 ease-out"
+          />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
+          {safeCompleted}/{safeTarget}
+        </span>
+      </div>
+
+      {/* Lado derecho: Título en negrita y contador destacado */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-bold text-base text-[#0F172A] dark:text-[#F8FAFC] truncate">
+            Metas de esta semana
+          </h2>
+          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8] flex-shrink-0" />
+        </div>
+        <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
+          Mantén el ritmo semanal de entrenamiento
+        </p>
+        <p className="text-sm font-bold text-red-600 dark:text-red-500 mt-1.5">
+          {remaining > 0
+            ? `Faltan ${remaining} • Vamos`
+            : "¡Meta cumplida! • Vamos"}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 4. Bento Grid 2 Columnas (Métricas Rápidas: Racha y Volumen/Tiempo)
+ */
+function QuickMetricsBentoGrid({ streakDays = 0, totalHours = 0, onOpenMetrics }) {
+  const formattedHours =
+    totalHours === 0
+      ? "0 Hora"
+      : totalHours === 1
+      ? "1 Hora"
+      : `${totalHours} Horas`;
+
+  return (
+    <section className="grid grid-cols-2 gap-3.5">
+      {/* Card Racha */}
+      <div
+        onClick={onOpenMetrics}
+        className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-[152px] relative overflow-hidden cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99]"
+      >
+        <div className="flex items-start justify-between">
+          <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center">
+            <Flame size={20} strokeWidth={2.25} />
+          </div>
+          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8]" />
+        </div>
+
+        <div className="mt-4 flex items-end justify-between gap-2">
+          <div>
+            <span className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] block mb-0.5">
+              Racha
+            </span>
+            <p className="text-2xl font-black text-[#0F172A] dark:text-[#F8FAFC] tracking-tight leading-none">
+              {streakDays} Días
+            </p>
+          </div>
+
+          {/* Mini sparkline chart SVG minimalista de tendencia */}
+          <svg
+            width="64"
+            height="32"
+            viewBox="0 0 64 32"
+            fill="none"
+            aria-hidden="true"
+            className="flex-shrink-0"
+          >
+            <path
+              d="M2 26 C12 25, 18 18, 26 20 C34 22, 42 10, 50 12 C56 13, 59 6, 62 4"
+              stroke="#EF4444"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="62" cy="4" r="2.5" fill="#EF4444" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Card Volumen/Horas */}
+      <div
+        onClick={onOpenMetrics}
+        className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-[152px] relative overflow-hidden cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99]"
+      >
+        <div className="flex items-start justify-between">
+          <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center">
+            <Dumbbell size={20} strokeWidth={2.25} />
+          </div>
+          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8]" />
+        </div>
+
+        <div className="mt-4 flex items-end justify-between gap-2">
+          <div>
+            <span className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] block mb-0.5">
+              Tiempo
+            </span>
+            <p className="text-2xl font-black text-[#0F172A] dark:text-[#F8FAFC] tracking-tight leading-none">
+              {formattedHours}
+            </p>
+          </div>
+
+          {/* Mini gráfico de barras SVG vertical a la derecha */}
+          <svg
+            width="48"
+            height="34"
+            viewBox="0 0 48 34"
+            fill="none"
+            aria-hidden="true"
+            className="flex-shrink-0"
+          >
+            <rect x="2" y="18" width="6" height="14" rx="3" className="fill-red-100 dark:fill-red-950/80" />
+            <rect x="12" y="12" width="6" height="20" rx="3" className="fill-red-200 dark:fill-red-900/70" />
+            <rect x="22" y="16" width="6" height="16" rx="3" className="fill-red-300 dark:fill-red-800/80" />
+            <rect x="32" y="6" width="6" height="26" rx="3" className="fill-red-600 dark:fill-red-500" />
+            <rect x="42" y="10" width="6" height="22" rx="3" className="fill-red-400 dark:fill-red-600/80" />
+          </svg>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 5. Tarjeta Métricas Corporales
+ */
+function BodyMetricsCard({ weightKg, heightCm, onOpenBodyMetrics }) {
+  const formattedWeight = Number(weightKg || 85).toFixed(1);
+  const formattedHeight = Math.round(Number(heightCm || 180));
+
+  return (
+    <section
+      onClick={onOpenBodyMetrics}
+      className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4 cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99]"
+    >
+      <div className="flex items-center gap-3.5 min-w-0">
+        <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center flex-shrink-0">
+          <Scale size={22} strokeWidth={2.25} />
+        </div>
+        <div className="min-w-0">
+          <h2 className="font-bold text-base text-[#0F172A] dark:text-[#F8FAFC] truncate">
+            Métricas corporales
+          </h2>
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5 truncate">
+            Peso, tendencias
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <span className="text-sm font-extrabold text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
+          {formattedWeight}kg / {formattedHeight}cm
+        </span>
+        <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8]" />
+      </div>
+    </section>
+  );
+}
+
+export function HomeScreen({ currentUser }) {
+  const navigate = useNavigate();
+  const [workouts, setWorkouts] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const loadHomeData = async () => {
     try {
-      setLoading(true);
-      const [dashRes, tipsRes, aiRes, profRes] = await Promise.all([
-        getAnalyticsDashboard(getLocalDateString()),
-        getContextualTips().catch(() => []),
-        getAIWeeklyBriefing().catch(() => null),
-        getUserProfile().catch(() => null),
+      const [workoutsRes, profileRes] = await Promise.all([
+        getWorkouts().catch(() => []),
+        getProfile().catch(() => null),
+        getMetricsSummary().catch(() => null),
       ]);
-      setData(dashRes);
-      setTips(tipsRes);
-      setAiBriefing(aiRes);
-      if (profRes?.training_level || profRes?.level) {
-        setUserLevel(profRes.training_level || profRes.level);
+      if (Array.isArray(workoutsRes)) {
+        setWorkouts(workoutsRes);
+      }
+      if (profileRes && typeof profileRes === "object") {
+        setProfile(profileRes);
       }
     } catch (err) {
-      console.error("Error cargando dashboard:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefreshBriefing = async () => {
-    try {
-      setLoadingBriefing(true);
-      const res = await getAIWeeklyBriefing();
-      setAiBriefing(res);
-    } catch (err) {
-      console.error("Error actualizando briefing:", err);
-    } finally {
-      setLoadingBriefing(false);
-    }
-  };
-
-  const handleAsk = async (queryToAsk) => {
-    const q = (queryToAsk || aiQuestion).trim();
-    if (!q) return;
-    try {
-      setAskingAi(true);
-      const res = await askAICoach(q);
-      setAiAnswer(res);
-    } catch (err) {
-      console.error("Error consultando al Coach IA:", err);
-    } finally {
-      setAskingAi(false);
+      console.warn("Error cargando HomeScreen:", err);
     }
   };
 
   useEffect(() => {
-    loadDashboard();
+    loadHomeData();
+
+    const handleRefresh = () => loadHomeData();
+    window.addEventListener("fittracker:workoutFinished", handleRefresh);
+    window.addEventListener("fittracker:workoutDeleted", handleRefresh);
+    window.addEventListener("fittracker:workoutSaved", handleRefresh);
+    window.addEventListener("fittracker:workoutUpdated", handleRefresh);
+    window.addEventListener("fittracker:profileChanged", handleRefresh);
+
+    return () => {
+      window.removeEventListener("fittracker:workoutFinished", handleRefresh);
+      window.removeEventListener("fittracker:workoutDeleted", handleRefresh);
+      window.removeEventListener("fittracker:workoutSaved", handleRefresh);
+      window.removeEventListener("fittracker:workoutUpdated", handleRefresh);
+      window.removeEventListener("fittracker:profileChanged", handleRefresh);
+    };
   }, []);
 
+  // Fechas con entrenamientos completados
+  const completedDatesSet = useMemo(() => {
+    const set = new Set();
+    workouts.forEach((w) => {
+      const rawDate = w?.date || w?.workout_date || w?.created_at;
+      const parsed = parseDateSafe(rawDate);
+      if (parsed) {
+        set.add(getLocalDateString(parsed));
+      }
+    });
+    return set;
+  }, [workouts]);
 
+  // Días de la semana actual (lun - dom)
+  const weekDays = useMemo(
+    () => getCurrentWeekDays(completedDatesSet),
+    [completedDatesSet]
+  );
 
-  const formatDate = (val) =>
-    formatDateSafe(val, {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
+  // Cantidad de días entrenados esta semana
+  const completedThisWeek = useMemo(
+    () => weekDays.filter((d) => d.isCompleted).length,
+    [weekDays]
+  );
+
+  // Racha de días entrenando
+  const streakDays = useMemo(
+    () => calculateStreakDays(completedDatesSet),
+    [completedDatesSet]
+  );
+
+  // Horas estimadas de entrenamiento en la semana actual (aprox. 1h por sesión registrada esta semana)
+  const totalHoursThisWeek = useMemo(() => {
+    if (!workouts.length) return 0;
+    const weekKeys = new Set(weekDays.map((d) => d.key));
+    let totalMinutes = 0;
+
+    workouts.forEach((w) => {
+      const parsed = parseDateSafe(w?.date || w?.workout_date || w?.created_at);
+      if (!parsed) return;
+      const dateStr = getLocalDateString(parsed);
+      if (weekKeys.has(dateStr)) {
+        const durMin = Number(w?.duration_minutes || w?.duration || 60);
+        totalMinutes += durMin > 0 ? durMin : 60;
+      }
     });
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[55vh] flex-col items-center justify-center gap-3 text-[#FF5722]">
-        <Loader2 size={36} className="animate-spin" />
-        <p className="text-sm font-bold text-[#A1A1AA]">
-          Analizando esfuerzo y sobrecarga progresiva...
-        </p>
-      </div>
-    );
-  }
+    return Math.round(totalMinutes / 60);
+  }, [workouts, weekDays]);
 
-  if (!data || data.total_workouts === 0) {
-    return (
-      <div className="space-y-6 pb-20">
-        <Header
-          title="Métricas &amp; Voluntad"
-          subtitle="Análisis de sobrecarga progresiva, consistencia y esfuerzo real"
-        />
-        <div className="rounded-2xl border border-dashed border-[#2A1B14] bg-[#181210]/60 p-12 text-center">
-          <Dumbbell size={40} className="mx-auto text-[#71717A]" />
-          <h3 className="mt-3 text-base font-black text-white">
-            Aún no hay entrenamientos suficientes para analizar
-          </h3>
-          <p className="mt-1 text-xs text-[#A1A1AA] max-w-sm mx-auto">
-            Completá tus primeras sesiones desde "Entrenar Hoy". FitTracker cruzará tus cargas con tu estado del día para generar métricas de voluntad y rendimiento.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Fecha formateada para el header superior
+  const formattedToday = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat("es-ES", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }).format(new Date());
+    } catch {
+      return "Hoy";
+    }
+  }, []);
+
+  const weightKg =
+    profile?.bodyweight ?? currentUser?.bodyweight ?? 85.0;
+  const heightCm =
+    profile?.height ?? currentUser?.height ?? 180;
+
+  const handleOpenBodyMetrics = () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("fittracker:openCheckIn"));
+    }
+  };
 
   return (
-    <div className="space-y-5 pb-20">
-      <Header
-        title="Métricas &amp; Voluntad"
-        subtitle="Los números miden tu entrenamiento; FitTracker entiende tu esfuerzo"
-        rightElement={
-          <div className="flex items-center gap-2">
-            <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] px-3.5 py-2 text-right">
-              <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">
-                Nivel Actual
-              </span>
-              <span className="text-base font-bold text-white capitalize">
-                {userLevel}
-              </span>
-            </div>
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3.5 py-2 text-right">
-              <span className="text-[10px] uppercase font-semibold text-amber-400 block">
-                Voluntad de Hierro
-              </span>
-              <span className="text-base font-bold text-amber-300">
-                {data.willpower_sessions_count}
-              </span>
-            </div>
-          </div>
-        }
+    <div className="w-full space-y-5 pb-6 select-none">
+      {/* 1. Header */}
+      <HomeHeader
+        formattedDate={formattedToday}
+        onOpenHistory={() => setIsHistoryOpen(true)}
+        onStartWorkout={() => navigate("/workouts")}
       />
 
-      {/* 1. Tarjeta Hero: Métrica de Voluntad & Retención de Carga */}
-      <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-[#1C1C1E] p-5 sm:p-6 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-400">
-              <Brain size={15} className="text-amber-400" />
-              <span>ÍNDICE DE DISCIPLINA &amp; VOLUNTAD</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-              El <span className="text-amber-300">{data.willpower_percentage}%</span> de tus entrenamientos se construyeron en días difíciles
-            </h2>
-            <p className="text-xs text-[#8E8E93] leading-relaxed">
-              Superaste la barrera mental en <strong className="text-white font-semibold">{data.willpower_sessions_count} de {data.total_workouts} sesiones</strong> (entrenando con energía baja o alta exigencia psicológica). La consistencia en estos días es la que consolida el progreso físico real.
-            </p>
-          </div>
+      {/* 2. Selector Semanal de Días (Horizontal Strip) */}
+      <WeeklyDayStrip
+        weekDays={weekDays}
+        onSelectDay={() => setIsHistoryOpen(true)}
+      />
 
-          {/* KPI Circular / Tarjeta de Retención de Rendimiento */}
-          <div className="rounded-2xl border border-white/5 bg-[#121212] p-4 min-w-[240px] text-center space-y-2.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400 block">
-              Retención de Carga en Días Bajos
-            </span>
-            <div className="flex items-baseline justify-center gap-1.5">
-              <span className="text-3xl sm:text-4xl font-bold text-white">
-                {data.volume_comparison.retention_percentage}%
-              </span>
-            </div>
-            <p className="text-[11px] text-[#8E8E93]">
-              {data.volume_comparison.low_energy_avg_volume > 0 ? (
-                <>
-                  Promedio normal: <strong className="text-white font-semibold">{Math.round(data.volume_comparison.normal_avg_volume)} kg</strong>
-                  <br />
-                  Promedio con energía baja: <strong className="text-amber-300 font-semibold">{Math.round(data.volume_comparison.low_energy_avg_volume)} kg</strong>
-                </>
-              ) : (
-                "Aún sin sesiones registradas con energía ≤ 2"
-              )}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* 3. Tarjeta Meta Semanal */}
+      <WeeklyGoalCard
+        completedCount={completedThisWeek}
+        targetCount={3}
+        onClick={() => navigate("/train")}
+      />
 
-      {/* 2. Resumen Rápido de Números Globales */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
-            Tonelaje Movido
-          </span>
-          <p className="mt-1 text-xl sm:text-2xl font-bold text-[#FF5722]">
-            {Math.round(data.total_volume_kg).toLocaleString()} <span className="text-xs font-medium text-[#8E8E93]">kg</span>
-          </p>
-        </div>
-        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
-            Series Totales
-          </span>
-          <p className="mt-1 text-xl sm:text-2xl font-bold text-[#34D399]">
-            {data.total_sets.toLocaleString()}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
-            Repeticiones
-          </span>
-          <p className="mt-1 text-xl sm:text-2xl font-bold text-white">
-            {data.total_reps.toLocaleString()}
-          </p>
-        </div>
-        <div className="rounded-2xl border border-white/5 bg-[#1C1C1E] p-3.5 text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8E8E93] block">
-            Sesiones de Voluntad
-          </span>
-          <p className="mt-1 text-xl sm:text-2xl font-bold text-amber-300">
-            {data.willpower_sessions_count} <span className="text-xs font-medium text-[#8E8E93]">★</span>
-          </p>
-        </div>
-      </div>
+      {/* 4. Bento Grid 2 Columnas (Métricas Rápidas) */}
+      <QuickMetricsBentoGrid
+        streakDays={streakDays}
+        totalHours={totalHoursThisWeek}
+        onOpenMetrics={() => navigate("/records")}
+      />
 
-      {/* 2.8. Coach IA: Diagnóstico Semanal & Asistente Interactivo */}
-      <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white flex-shrink-0">
-              <Bot size={18} />
-            </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-bold text-white">
-                  Coach IA: Diagnóstico Semanal &amp; Sobrecarga
-                </h3>
-                <span className="rounded-lg border border-[#34D399]/30 bg-[#34D399]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#34D399]">
-                  Inteligencia Biomecánica
-                </span>
-              </div>
-              <p className="text-xs text-[#8E8E93]">
-                Análisis integral de sobrecarga progresiva, volumen y fatiga basado en tus series reales.
-              </p>
-            </div>
-          </div>
+      {/* 5. Tarjeta Métricas Corporales */}
+      <BodyMetricsCard
+        weightKg={weightKg}
+        heightCm={heightCm}
+        onOpenBodyMetrics={handleOpenBodyMetrics}
+      />
 
-
-          <button
-            type="button"
-            onClick={handleRefreshBriefing}
-            disabled={loadingBriefing}
-            className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-2xl border border-white/5 bg-[#121212] px-3 py-1.5 text-xs font-semibold text-white hover:border-white/20 transition active:scale-95 disabled:opacity-50"
-          >
-            <RefreshCw size={13} className={loadingBriefing ? "animate-spin" : ""} />
-            <span>Actualizar Diagnóstico</span>
-          </button>
-        </div>
-
-        {aiBriefing && (
-          <div className="space-y-4">
-            {/* Headline & Summary */}
-            <div className="rounded-2xl border border-white/5 bg-[#121212] p-3.5 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
-                <Sparkles size={15} />
-                <span>{aiBriefing.headline}</span>
-              </div>
-              <p className="text-xs text-[#D4D4D8] leading-relaxed">
-                {aiBriefing.willpower_analysis}
-              </p>
-            </div>
-
-            {/* Status Badges Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-              <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5">
-                <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Sesiones 7d</span>
-                <span className="text-base font-bold text-white">{aiBriefing.total_workouts}</span>
-              </div>
-              <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5">
-                <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Volumen 7d</span>
-                <span className="text-base font-bold text-[#34D399]">{Math.round(aiBriefing.total_volume_kg).toLocaleString()} kg</span>
-              </div>
-              <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5">
-                <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Voluntad de Hierro</span>
-                <span className="text-base font-bold text-amber-300">{aiBriefing.willpower_sessions} sesiones</span>
-              </div>
-              <div className="rounded-2xl border border-white/5 bg-[#121212] p-2.5">
-                <span className="text-[10px] uppercase font-semibold text-[#8E8E93] block">Recuperación</span>
-                <span className="text-base font-bold text-[#FF5722]">{aiBriefing.recovery_status}</span>
-              </div>
-            </div>
-
-            {/* Achievements & Recommendations */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {aiBriefing.achievements?.length > 0 && (
-                <div className="rounded-2xl border border-white/5 bg-[#121212] p-3 space-y-2">
-                  <h4 className="text-xs font-semibold uppercase text-[#34D399] flex items-center gap-1.5">
-                    <CheckCircle2 size={14} />
-                    Hitos y Rendimiento Destacado
-                  </h4>
-                  <ul className="space-y-1.5 text-xs text-[#8E8E93]">
-                    {aiBriefing.achievements.map((ach, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="text-[#34D399] font-bold">✓</span>
-                        <span className="text-white font-medium">{ach}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {aiBriefing.overload_recommendations?.length > 0 && (
-                <div className="rounded-2xl border border-white/5 bg-[#121212] p-3 space-y-2">
-                  <h4 className="text-xs font-semibold uppercase text-[#FF5722] flex items-center gap-1.5">
-                    <Target size={14} />
-                    Estrategia de Sobrecarga Progresiva
-                  </h4>
-                  <ul className="space-y-1.5 text-xs text-[#8E8E93]">
-                    {aiBriefing.overload_recommendations.map((rec, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="text-[#FF5722] font-semibold">→</span>
-                        <span className="text-white font-medium">{rec}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Interactive Q&A Bar */}
-        <div className="pt-2 border-t border-white/5 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#E4E4E7] flex items-center gap-1.5">
-              <Brain size={14} className="text-[#FF5722]" />
-              Consultale al Coach IA
-            </span>
-            <span className="text-[10px] text-[#8E8E93]">
-              Respuestas fundamentadas en tus series y fatiga
-            </span>
-          </div>
-
-          {/* Quick Query Chips */}
-          <div className="flex flex-wrap gap-1.5">
-            {[
-              "¿Cómo viene mi sobrecarga progresiva?",
-              "¿El sistema detecta fatiga o necesidad de descarga?",
-              "¿Qué grupo muscular tiene menor estímulo este mes?",
-              "¿Cómo romper mi estancamiento actual?",
-            ].map((chip, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => {
-                  setAiQuestion(chip);
-                  handleAsk(chip);
-                }}
-                className="rounded-xl border border-white/5 bg-[#121212] px-2.5 py-1 text-[11px] font-medium text-[#8E8E93] hover:border-white/20 hover:text-white transition"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-
-
-
-          {/* Input & Send Form */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleAsk();
-            }}
-            className="flex items-center gap-2"
-          >
-            <input
-              type="text"
-              placeholder="Preguntale al Coach IA sobre tu entrenamiento..."
-              value={aiQuestion}
-              onChange={(e) => setAiQuestion(e.target.value)}
-              className="flex-1 min-h-[40px] rounded-2xl border border-white/10 bg-[#121212] px-3.5 py-2 text-xs text-white outline-none focus:border-[#FF5722]"
-            />
-            <button
-              type="submit"
-              disabled={askingAi || !aiQuestion.trim()}
-              className="iron-btn-primary min-h-[40px] px-3.5 text-xs flex items-center gap-1.5 disabled:opacity-50"
-            >
-              {askingAi ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-              <span className="hidden sm:inline">Preguntar</span>
-            </button>
-          </form>
-
-          {/* AI Response Card */}
-          {aiAnswer && (
-            <div className="rounded-2xl border border-white/10 bg-[#121212] p-3.5 space-y-2 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-[#FF5722] flex items-center gap-1.5">
-                  <Bot size={15} />
-                  Respuesta del Coach ({aiAnswer.category})
-                </span>
-                <span className="text-[10px] text-[#8E8E93]">
-                  {new Date(aiAnswer.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </div>
-              <p className="text-xs text-white leading-relaxed">
-                {aiAnswer.answer}
-              </p>
-              {aiAnswer.cited_data?.length > 0 && (
-                <div className="pt-2 border-t border-white/5 flex flex-wrap gap-1.5 items-center">
-                  <span className="text-[10px] font-semibold uppercase text-[#8E8E93]">
-                    Datos citados:
-                  </span>
-                  {aiAnswer.cited_data.map((c, i) => (
-                    <span
-                      key={i}
-                      className="rounded-lg border border-white/5 bg-[#1C1C1E] px-2 py-0.5 text-[10px] text-amber-300 font-mono"
-                    >
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 3. Consistencia Semanal (Últimas 8 Semanas - No Punitiva) */}
-      <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-3.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-xs font-semibold text-[#FF5722]">
-                <TrendingUp size={14} />
-              </span>
-              <h3 className="text-sm sm:text-base font-bold text-white">
-                Consistencia Semanal &amp; Volumen de Carga
-              </h3>
-            </div>
-            <p className="text-xs text-[#8E8E93] mt-0.5">
-              Evolución de las últimas 8 semanas (el descanso también es parte de la recuperación).
-            </p>
-          </div>
-        </div>
-
-        {/* Gráfico Recharts de Barras Semanales */}
-        <div className="h-60 w-full pt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.weekly_consistency} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <XAxis
-                dataKey="week_label"
-                stroke="#71717A"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke="#71717A"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(val) => `${Math.round(val / 1000)}k`}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total_volume" name="Volumen (kg)" radius={[6, 6, 0, 0]}>
-                {data.weekly_consistency.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.sessions_count > 0 ? "#FF5722" : "#252528"}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Chips de resumen semanal rápido */}
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 pt-1">
-          {data.weekly_consistency.map((w, idx) => (
-            <div
-              key={idx}
-              className={`rounded-2xl border p-2 text-center ${
-                w.sessions_count > 0
-                  ? "border-[#FF5722]/30 bg-[#FF5722]/10"
-                  : "border-white/5 bg-[#121212]"
-              }`}
-            >
-              <span className="text-[9px] uppercase font-semibold text-[#8E8E93] block truncate">
-                {w.week_label}
-              </span>
-              <span className={`text-xs font-bold block mt-0.5 ${w.sessions_count > 0 ? "text-[#34D399]" : "text-[#52525B]"}`}>
-                {w.sessions_count} {w.sessions_count === 1 ? "sesión" : "sesiones"}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. Distribución por Grupo Muscular & Días de la Semana */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Distribución Muscular */}
-        <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-xs font-semibold text-[#FF5722]">
-              <Layers size={14} />
-            </span>
-            <h3 className="text-sm sm:text-base font-bold text-white">
-              Distribución por Grupo Muscular
-            </h3>
-          </div>
-          <p className="text-xs text-[#8E8E93]">
-            Balance de estímulo acumulado según el volumen total movido.
-          </p>
-
-          <div className="space-y-2.5 pt-1">
-            {data.muscle_distribution.length === 0 ? (
-              <p className="text-xs text-[#8E8E93]">Sin datos musculares disponibles.</p>
-            ) : (
-              data.muscle_distribution.map((m, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-white">{m?.name || "Músculo"}</span>
-                    <span className="text-[#FF5722]">
-                      {Math.round(m.volume).toLocaleString()} kg ({m.percentage}%)
-                    </span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#121212]">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#FF5722] to-[#7C4DFF]"
-                      style={{ width: `${Math.min(100, m.percentage)}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Frecuencia por Día de la Semana */}
-        <div className="rounded-3xl border border-white/5 bg-[#1C1C1E] p-4 sm:p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/5 text-xs font-semibold text-[#FF5722]">
-              <Calendar size={14} />
-            </span>
-            <h3 className="text-sm sm:text-base font-bold text-white">
-              Patrón de Entrenamiento Semanal
-            </h3>
-          </div>
-          <p className="text-xs text-[#8E8E93]">
-            Tus días preferidos de asistencia al gimnasio.
-          </p>
-
-          <div className="grid grid-cols-7 gap-1.5 pt-4">
-            {data.day_of_week_distribution.map((d, idx) => {
-              const maxCount = Math.max(...data.day_of_week_distribution.map((x) => x.count), 1);
-              const heightPct = Math.round((d.count / maxCount) * 100);
-              return (
-                <div key={idx} className="flex flex-col items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-white">
-                    {d.count}
-                  </span>
-                  <div className="h-24 w-full rounded-2xl bg-[#121212] flex items-end p-1">
-                    <div
-                      className={`w-full rounded-xl transition-all ${
-                        d.count > 0 ? "bg-gradient-to-t from-[#FF5722] to-[#7C4DFF]" : "bg-transparent"
-                      }`}
-                      style={{ height: `${Math.max(8, heightPct)}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase text-[#8E8E93]">
-                    {d.day_name}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* 5. Muro de Hitos de Voluntad de Hierro */}
-      {data.recent_willpower_sessions.length > 0 && (
-        <div className="rounded-3xl border border-amber-500/20 bg-[#1C1C1E] p-4 sm:p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-amber-400" />
-              <h3 className="text-sm sm:text-base font-bold text-white">
-                Muro de Reconocimiento: Voluntad de Hierro
-              </h3>
-            </div>
-            <span className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase text-amber-300">
-              {data.willpower_sessions_count} Registradas
-            </span>
-          </div>
-          <p className="text-xs text-[#8E8E93]">
-            Sesiones donde te presentaste al gimnasio y rendiste a pesar de la baja energía o alta exigencia mental.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
-            {data.recent_willpower_sessions.map((s, idx) => (
-              <div
-                key={idx}
-                className="rounded-2xl border border-white/5 bg-[#121212] p-3.5 space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold capitalize text-white">
-                    {formatDate(s.date)}
-                  </span>
-                  {s.muscle_group_name && (
-                    <span className="rounded-lg border border-white/5 bg-[#1C1C1E] px-2 py-0.5 text-[10px] font-semibold text-[#FF5722]">
-                      {s.muscle_group_name}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 text-[10px] font-semibold">
-                  {s.readiness_energy && (
-                    <span className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-amber-300 font-medium">
-                      ⚡ Energía: {s.readiness_energy}/5
-                    </span>
-                  )}
-                  {s.mental_effort && (
-                    <span className="rounded-lg border border-purple-500/20 bg-purple-500/10 px-1.5 py-0.5 text-purple-300 font-medium">
-                      🧠 Esfuerzo: {s.mental_effort}/5
-                    </span>
-                  )}
-                </div>
-
-                <div className="text-xs text-[#8E8E93] pt-1 border-t border-white/5 flex justify-between">
-                  <span>{s.sets_count} series completadas</span>
-                  <span className="font-semibold text-white">{Math.round(s.total_volume)} kg</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Modal de Historial */}
+      <HistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onWorkoutDeleted={() => loadHomeData()}
+        onSessionUpdated={() => loadHomeData()}
+      />
     </div>
   );
+}
+
+export default function Dashboard(props) {
+  return <HomeScreen {...props} />;
 }

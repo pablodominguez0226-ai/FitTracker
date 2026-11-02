@@ -117,6 +117,38 @@ export function getExerciseEquipment(name = "", exerciseId = null) {
 }
 
 /**
+ * Detects whether an exercise is unilateral based on name or metadata.
+ * @param {string|object} exerciseOrName
+ * @returns {boolean}
+ */
+export function isUnilateralExercise(exerciseOrName = "") {
+  if (!exerciseOrName) return false;
+  if (typeof exerciseOrName === "object") {
+    if (exerciseOrName.mechanics_type === "unilateral") return true;
+    exerciseOrName = exerciseOrName.name || "";
+  }
+  const n = String(exerciseOrName).toLowerCase();
+  return (
+    n.includes("unilateral") ||
+    n.includes("a una mano") ||
+    n.includes("a un brazo") ||
+    n.includes("un brazo") ||
+    n.includes("una mano") ||
+    n.includes("a una pierna") ||
+    n.includes("una pierna") ||
+    n.includes("1 brazo") ||
+    n.includes("1 mano") ||
+    n.includes("1 pierna") ||
+    n.includes("unipodal") ||
+    n.includes("single arm") ||
+    n.includes("single leg") ||
+    n.includes("búlgara") ||
+    n.includes("bulgara") ||
+    n.includes("suitcase")
+  );
+}
+
+/**
  * Evaluates record recency:
  * - "🔥 Récord reciente" (<= 14 days)
  * - "⚠️ Meseta" (>= 40 days)
@@ -141,7 +173,7 @@ export function getPrStatus(prDateVal) {
       label: "🔥 Récord reciente",
       days: diffDays,
       className:
-        "border border-amber-500/30 bg-amber-500/10 text-amber-300 font-semibold",
+        "border border-red-400/30 bg-red-500/10 text-red-400 font-semibold",
     };
   }
 
@@ -276,4 +308,112 @@ export function matchMusclePill(record, pill) {
     default:
       return true;
   }
+}
+
+export const LOWER_BODY_KEYWORDS = [
+  "pierna",
+  "piernas",
+  "cuádriceps",
+  "cuadriceps",
+  "isquiotibiales",
+  "isquio",
+  "femoral",
+  "glúteos",
+  "gluteos",
+  "glúteo",
+  "gluteo",
+  "gemelos",
+  "gemelo",
+  "pantorrilla",
+  "sóleo",
+  "soleo",
+  "aductores",
+  "aductor",
+  "abductores",
+  "abductor",
+  "aducción",
+  "abducción",
+  "aduccion",
+  "abduccion",
+  "sentadilla",
+  "prensa",
+  "zancada",
+  "estocada",
+  "búlgara",
+  "bulgara",
+  "hip thrust",
+  "hack",
+];
+
+export function isLowerBodyText(text = "") {
+  const norm = String(text || "").toLowerCase().trim();
+  if (!norm) return false;
+  return LOWER_BODY_KEYWORDS.some((kw) => norm.includes(kw));
+}
+
+/**
+ * Clasifica automáticamente una sesión de entrenamiento en "Tren Inferior" o "Tren Superior"
+ * analizando los ejercicios/series registrados:
+ * - Si contiene al menos un ejercicio cuyo grupo muscular principal sea "Piernas"
+ *   (o subgrupos: Cuádriceps, Isquiotibiales, Glúteos, Gemelos, Aductores, Abductores):
+ *   -> "Tren Inferior"
+ * - En cualquier otro caso (sesión sin piernas):
+ *   -> "Tren Superior"
+ * @param {Object} session
+ * @returns {"Tren Inferior" | "Tren Superior"}
+ */
+export function classifySessionSplit(session) {
+  if (!session) return "Tren Superior";
+
+  const sets = Array.isArray(session.sets)
+    ? session.sets
+    : Array.isArray(session.exercises)
+    ? session.exercises
+    : [];
+
+  if (sets.length > 0) {
+    const hasLowerBody = sets.some((st) => {
+      if (!st) return false;
+      const combined = [
+        st.muscle_group_name,
+        st.muscle_group,
+        st.muscleGroupName,
+        st.subgroup,
+        st.primary_muscles,
+        st.exercise_name,
+        st.exerciseName,
+        st.name,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      return isLowerBodyText(combined);
+    });
+    return hasLowerBody ? "Tren Inferior" : "Tren Superior";
+  }
+
+  if (session.session_split === "Tren Inferior") {
+    return "Tren Inferior";
+  }
+  if (session.session_split === "Tren Superior") {
+    return "Tren Superior";
+  }
+
+  if (isLowerBodyText(session.muscle_group_name || session.routine_name || "")) {
+    return "Tren Inferior";
+  }
+
+  return "Tren Superior";
+}
+
+/**
+ * Devuelve las clases de Tailwind para el badge binario de la sesión ("Tren Superior" / "Tren Inferior").
+ * @param {string} split
+ * @returns {string}
+ */
+export function getSessionSplitBadgeClasses(split) {
+  const base = "text-[10px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap inline-flex items-center justify-center";
+  if (split === "Tren Inferior") {
+    return `${base} bg-blue-950/40 text-blue-400 border-blue-900/30`;
+  }
+  return `${base} bg-red-950/40 text-red-400 border-red-900/30`;
 }

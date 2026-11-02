@@ -191,18 +191,18 @@ export default function FloatingRestTimer({
 
   return (
     <div className="fixed z-50 left-1/2 -translate-x-1/2 bottom-[calc(var(--bottom-nav-height,4rem)+env(safe-area-inset-bottom,0px)+1rem)] sm:bottom-6 w-[calc(100%-1.25rem)] max-w-md animate-in slide-in-from-bottom-5 duration-200">
-      <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-[#1C1C1E]/95 p-3.5 backdrop-blur-xl">
+      <div className="rounded-2xl border border-slate-100 bg-white/95 p-3.5 backdrop-blur-xl">
         {/* Header line: Info & Close */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#FF5722]/15 text-[#FF5722]">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-red-500/10 text-red-500">
               <Clock size={14} className={isRunning ? "animate-spin" : ""} style={{ animationDuration: "4s" }} />
             </span>
-            <span className="text-xs font-semibold text-white truncate">
+            <span className="text-xs font-semibold text-[#0F172A] truncate">
               {exerciseName ? `Descanso • ${exerciseName}` : "Descanso entre series"}
             </span>
             {setNumber && (
-              <span className="rounded-md bg-white/5 border border-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#8E8E93]">
+              <span className="rounded-md bg-slate-50 border border-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-[#64748B]">
                 S#{setNumber}
               </span>
             )}
@@ -211,7 +211,7 @@ export default function FloatingRestTimer({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-xl text-[#8E8E93] hover:bg-white/5 hover:text-white transition"
+            className="flex h-7 w-7 items-center justify-center rounded-xl text-[#64748B] hover:bg-slate-50 hover:text-[#0F172A] transition"
             title="Cerrar temporizador"
           >
             <X size={15} />
@@ -224,20 +224,20 @@ export default function FloatingRestTimer({
             <span
               className={`text-3xl sm:text-4xl font-semibold tracking-tight tabular-nums ${
                 isFinished
-                  ? "text-[#34D399] animate-bounce"
+                  ? "text-red-500 animate-bounce"
                   : secondsLeft <= 10
                   ? "text-red-400 animate-pulse"
-                  : "text-white"
+                  : "text-[#0F172A]"
               }`}
             >
               {timeFormatted}
             </span>
             {isFinished ? (
-              <span className="text-[11px] font-semibold uppercase text-[#34D399] flex items-center gap-1">
+              <span className="text-[11px] font-semibold uppercase text-red-500 flex items-center gap-1">
                 <CheckCircle2 size={12} /> ¡A entrenar!
               </span>
             ) : (
-              <span className="text-[10px] font-semibold uppercase text-[#8E8E93]">
+              <span className="text-[10px] font-semibold uppercase text-[#64748B]">
                 {isRunning ? "en curso" : "pausado"}
               </span>
             )}
@@ -248,7 +248,7 @@ export default function FloatingRestTimer({
             <button
               type="button"
               onClick={() => handleAdjustSeconds(-15)}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-[#121212] text-[11px] font-semibold text-[#8E8E93] hover:border-white/20 hover:text-white active:scale-95 transition"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-100 bg-[#F9FAFB] text-[11px] font-semibold text-[#64748B] hover:border-slate-100 hover:text-[#0F172A] active:scale-95 transition"
               title="-15 segundos"
             >
               -15s
@@ -259,8 +259,8 @@ export default function FloatingRestTimer({
               onClick={handleTogglePause}
               className={`flex h-9 w-9 items-center justify-center rounded-xl font-semibold transition active:scale-90 ${
                 isRunning
-                  ? "bg-[#FF5722] text-white hover:opacity-90"
-                  : "bg-[#34D399] text-[#000000] hover:opacity-90"
+                  ? "bg-red-600 hover:bg-red-700 text-white hover:bg-red-600 hover:bg-red-700"
+                  : "bg-red-600 hover:bg-red-700 text-white hover:bg-red-600 hover:bg-red-700"
               }`}
               title={isRunning ? "Pausar" : "Reanudar"}
             >
@@ -270,7 +270,7 @@ export default function FloatingRestTimer({
             <button
               type="button"
               onClick={() => handleAdjustSeconds(+15)}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-[#121212] text-[11px] font-semibold text-[#8E8E93] hover:border-white/20 hover:text-white active:scale-95 transition"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-100 bg-[#F9FAFB] text-[11px] font-semibold text-[#64748B] hover:border-slate-100 hover:text-[#0F172A] active:scale-95 transition"
               title="+15 segundos"
             >
               +15s
@@ -279,22 +279,22 @@ export default function FloatingRestTimer({
         </div>
 
         {/* Progress Bar (Flat OLED) */}
-        <div className="mt-2.5 h-1.5 w-full rounded-full bg-[#121212] border border-white/5 overflow-hidden">
+        <div className="mt-2.5 h-1.5 w-full rounded-full bg-[#F9FAFB] border border-slate-100 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-300 ${
               isFinished
-                ? "bg-[#34D399]"
+                ? "bg-red-600 hover:bg-red-700"
                 : secondsLeft <= 10
                 ? "bg-red-500"
-                : "bg-gradient-to-r from-[#FF5722] to-[#7C4DFF]"
+                : "bg-red-600 hover:bg-red-700"
             }`}
             style={{ width: `${progressPct}%` }}
           />
         </div>
 
         {/* Quick Reset Pills: [60s | 90s | 2m | 3m] */}
-        <div className="mt-2.5 flex items-center justify-between gap-1.5 pt-1 border-t border-white/10">
-          <span className="text-[10px] font-semibold text-[#8E8E93] flex items-center gap-1">
+        <div className="mt-2.5 flex items-center justify-between gap-1.5 pt-1 border-t border-slate-100">
+          <span className="text-[10px] font-semibold text-[#64748B] flex items-center gap-1">
             <RotateCcw size={10} />
             <span>Reiniciar:</span>
           </span>
@@ -306,8 +306,8 @@ export default function FloatingRestTimer({
                 onClick={() => handleResetTo(opt.seconds)}
                 className={`rounded-xl px-2 py-1 text-[10px] font-semibold transition active:scale-95 ${
                   totalSeconds === opt.seconds && !isFinished
-                    ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
-                    : "border border-white/10 bg-[#121212] text-[#8E8E93] hover:text-white"
+                    ? "border border-red-500 bg-red-500/10 text-[#0F172A]"
+                    : "border border-slate-100 bg-[#F9FAFB] text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
                 {opt.label}

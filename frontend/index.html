@@ -3,21 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#050505" />
+    <meta name="theme-color" content="#05070B" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="FitTracker Iron" />
-    <meta name="application-name" content="FitTracker Iron" />
-    <meta name="description" content="FitTracker Iron • OLED GYM - Seguimiento minimalista de hipertrofia y fuerza" />
+    <meta name="apple-mobile-web-app-title" content="FiTracker" />
+    <meta name="application-name" content="FiTracker" />
+    <meta name="description" content="FiTracker • Bento Minimalist Fitness & Health" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <link rel="alternate icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    <title>FitTracker Iron • OLED GYM</title>
+    <title>FiTracker • Fitness & Health</title>
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("fittracker_theme") || localStorage.getItem("theme") || "system";
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var isDark = saved === "dark" || (saved === "system" && prefersDark);
+          if (isDark) {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#050505] text-[#FFFFFF] antialiased select-none touch-manipulation overflow-x-hidden min-h-[100dvh]">
-    <div id="root" class="w-full min-h-[100dvh] overflow-x-hidden bg-[#050505] text-white flex flex-col items-center"></div>
+  <body class="w-full min-h-[100dvh] overflow-x-hidden bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] antialiased select-none touch-manipulation transition-colors duration-200">
+    <div id="root" class="w-full min-h-[100dvh] overflow-x-hidden bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC]"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -27,6 +27,7 @@ import {
   updateProfile,
 } from "../api/client";
 import { showToast } from "./Toast.jsx";
+import { ThemeToggle } from "../context/ThemeContext.jsx";
 
 export const NUTRITION_OPTIONS = [
   {
@@ -211,16 +212,16 @@ export default function ProfileModal({
     const val = bw / (hM * hM);
     const bmi = Math.round(val * 10) / 10;
     let label = "Saludable";
-    let badgeClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    let badgeClass = "bg-red-500/10 text-red-500 border-red-500/20";
     if (bmi < 18.5) {
       label = "Bajo peso";
-      badgeClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+      badgeClass = "bg-red-500/10 text-red-400 border-red-400/20";
     } else if (bmi < 25) {
       label = "Saludable";
-      badgeClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      badgeClass = "bg-red-500/10 text-red-500 border-red-500/20";
     } else if (bmi < 30) {
       label = "Robusto / Masa";
-      badgeClass = "bg-[#7C4DFF]/10 text-[#C084FC] border-[#7C4DFF]/20";
+      badgeClass = "bg-red-500/10 text-red-500 border-red-500/30";
     } else {
       label = "Elevado";
       badgeClass = "bg-rose-500/10 text-rose-400 border-rose-500/20";
@@ -308,7 +309,7 @@ export default function ProfileModal({
       setTimeout(() => setSaveSuccess(false), 3500);
 
       showToast("Perfil físico y biométrico actualizado correctamente.", {
-        variant: "emerald",
+        variant: "red",
       });
     } catch (err) {
       console.error("Error guardando perfil físico:", err);
@@ -334,7 +335,7 @@ export default function ProfileModal({
       setIsSavingEmail(true);
       const updated = await updateProfile({ email: clean });
       if (updated?.email) setEmail(updated.email);
-      showToast("Correo electrónico vinculado con éxito", { variant: "emerald" });
+      showToast("Correo electrónico vinculado con éxito", { variant: "red" });
     } catch (err) {
       console.error("Error guardando email:", err);
       alert(err.response?.data?.detail || "Error al vincular el correo electrónico.");
@@ -365,7 +366,7 @@ export default function ProfileModal({
       setNewPassword("");
       setConfirmPassword("");
       setIsChangePasswordOpen(false);
-      showToast("Contraseña actualizada correctamente", { variant: "emerald" });
+      showToast("Contraseña actualizada correctamente", { variant: "red" });
     } catch (err) {
       console.error("Error cambiando contraseña:", err);
       setPasswordError(
@@ -379,36 +380,36 @@ export default function ProfileModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-150">
-      <div className="relative w-full max-w-2xl max-h-[88dvh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-[#2C2C2E] bg-[#050505] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-150">
+      <div className="relative w-full max-w-2xl max-h-[88dvh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-[#F1F5F9] dark:border-[#1E293B]/60 bg-[#FFFFFF] dark:bg-[#121824] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-[#2C2C2E] bg-[#050505] p-4 sm:p-5 flex-shrink-0">
+        <div className="flex items-center justify-between border-b border-[#F1F5F9] dark:border-slate-800 bg-[#F8FAFC] dark:bg-[#0B0F17] p-4 sm:p-5 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#7C4DFF] text-white flex-shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-white font-bold flex-shrink-0">
               <User size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-bold text-white">
+                <h2 className="text-base sm:text-lg font-bold text-[#0F172A] dark:text-[#F8FAFC]">
                   {profileUsername ? `@${profileUsername}` : "Perfil Físico"}
                 </h2>
 
-                <span className="rounded-md border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-400 font-mono">
+                <span className="rounded-md border border-red-500/30 bg-red-50 dark:bg-red-950/40 px-2 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400 font-mono">
                   FFMI {calculatedBiometrics.ffmi}
                 </span>
 
                 {bodyweight && (
-                  <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 font-mono">
+                  <span className="rounded-md border border-red-500/30 bg-red-50 dark:bg-red-950/40 px-2 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400 font-mono">
                     {bodyweight} kg
                   </span>
                 )}
                 {nutritionContext !== "no_especifica" && (
-                  <span className="rounded-md border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-[#8E8E93]">
+                  <span className="rounded-md border border-[#F1F5F9] dark:border-slate-800 bg-[#FFFFFF] dark:bg-[#121824] px-2 py-0.5 text-[10px] font-semibold text-[#64748B] dark:text-[#94A3B8]">
                     {NUTRITION_OPTIONS.find((n) => n.id === nutritionContext)?.shortLabel || nutritionContext}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#8E8E93]">
+              <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
                 Calibración biomecánica cuantitativa para fuerza relativa y requerimientos metabólicos
               </p>
             </div>
@@ -421,10 +422,10 @@ export default function ProfileModal({
                 onClose();
                 window.dispatchEvent(new CustomEvent("fittracker:openCheckIn"));
               }}
-              className="flex items-center gap-1.5 bg-[#1C1C1E] border border-white/15 hover:border-[#FF5722]/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-white/5 transition active:scale-95 cursor-pointer shadow-sm"
+              className="flex items-center gap-1.5 bg-[#FFFFFF] dark:bg-[#121824] border border-[#F1F5F9] dark:border-slate-800 hover:border-red-500/60 text-[#0F172A] dark:text-[#F8FAFC] text-xs font-semibold px-3 py-1.5 rounded-full transition active:scale-95 cursor-pointer shadow-sm"
               title="Abrir Sistema de Check-Ins Periódicos"
             >
-              <span className="text-[#FF5722]">⚖️</span>
+              <span className="text-red-500">⚖️</span>
               <span>Check-In</span>
             </button>
 
@@ -439,7 +440,7 @@ export default function ProfileModal({
                     window.location.pathname = "/admin";
                   }
                 }}
-                className="flex items-center gap-1.5 bg-[#1C1C1E] border border-[#FF5722]/40 text-[#FF5722] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#FF5722]/15 transition active:scale-95 cursor-pointer shadow-md shadow-[#FF5722]/10"
+                className="flex items-center gap-1.5 bg-[#FFFFFF] dark:bg-[#121824] border border-red-500/40 text-red-600 dark:text-red-400 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-950/40 transition active:scale-95 cursor-pointer shadow-sm"
                 title="Abrir Panel de Control de Administrador"
               >
                 <span>🛡️</span>
@@ -449,7 +450,7 @@ export default function ProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl p-2 text-[#8E8E93] hover:bg-white/5 hover:text-white transition cursor-pointer"
+              className="rounded-xl p-2 text-[#64748B] dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#0F172A] dark:hover:text-[#F8FAFC] transition cursor-pointer"
               title="Cerrar"
             >
               <X size={20} />
@@ -458,11 +459,24 @@ export default function ProfileModal({
         </div>
 
         {/* Modal Body - Scrolleable */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5 custom-scrollbar bg-[#050505]">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5 custom-scrollbar bg-[#F8FAFC] dark:bg-[#0B0F17]">
+          {/* SECCIÓN 0: APARIENCIA / TEMA (CLARO / OSCURO / SISTEMA) */}
+          <div className="rounded-2xl border border-[#F1F5F9] dark:border-[#1E293B]/60 bg-[#FFFFFF] dark:bg-[#121824] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#0F172A] dark:text-[#F8FAFC]">
+                Apariencia de la Interfaz
+              </h3>
+              <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+                Alterná entre Modo Claro (Clean Bento) y Modo Oscuro (Deep Minimal OLED)
+              </p>
+            </div>
+            <ThemeToggle variant="segmented" className="w-full sm:w-auto sm:min-w-[260px]" />
+          </div>
+
           <form id="profile-physical-form" onSubmit={handleSavePhysicalProfile} className="space-y-5">
             {saveSuccess && (
-              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-3 flex items-center gap-2.5 text-xs text-emerald-300 animate-in fade-in">
-                <Check size={16} className="text-emerald-400 flex-shrink-0" />
+              <div className="rounded-xl border border-red-500/40 bg-red-500/15 p-3 flex items-center gap-2.5 text-xs text-red-500 animate-in fade-in">
+                <Check size={16} className="text-red-500 flex-shrink-0" />
                 <span className="font-bold">Datos físicos y biométricos actualizados correctamente.</span>
               </div>
             )}
@@ -470,8 +484,8 @@ export default function ProfileModal({
             {/* SECCIÓN 1: BIOMETRÍA & ANTROPOMETRÍA */}
             <div className="space-y-3.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
-                  <Scale size={14} className="text-[#FF5722]" />
+                <label className="text-xs font-bold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
+                  <Scale size={14} className="text-red-500" />
                   <span>1. Biometría Cuantitativa &amp; Antropometría</span>
                 </label>
                 {bmiData && (
@@ -486,13 +500,13 @@ export default function ProfileModal({
               {/* Grid de 5 inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* 1. Peso Corporal */}
-                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2">
+                <div className="rounded-2xl border border-[#2C2C2E] bg-slate-50 p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
-                      <Scale size={13} className="text-[#FF5722]" />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
+                      <Scale size={13} className="text-red-500" />
                       <span>Peso Corporal</span>
                     </label>
-                    <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Base Prime</span>
+                    <span className="text-[9px] font-mono text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">Base Prime</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -519,7 +533,7 @@ export default function ProfileModal({
                         onChange={(e) => setBodyweight(e.target.value)}
                         className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
                       />
-                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#64748B]">
                         kg
                       </span>
                     </div>
@@ -539,13 +553,13 @@ export default function ProfileModal({
                 </div>
 
                 {/* 2. Altura */}
-                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2">
+                <div className="rounded-2xl border border-[#2C2C2E] bg-slate-50 p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
-                      <Ruler size={13} className="text-[#FF5722]" />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
+                      <Ruler size={13} className="text-red-500" />
                       <span>Altura</span>
                     </label>
-                    <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Palanca</span>
+                    <span className="text-[9px] font-mono text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">Palanca</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -572,7 +586,7 @@ export default function ProfileModal({
                         onChange={(e) => setHeight(e.target.value)}
                         className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
                       />
-                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#64748B]">
                         cm
                       </span>
                     </div>
@@ -592,13 +606,13 @@ export default function ProfileModal({
                 </div>
 
                 {/* 3. % Grasa Corporal */}
-                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2">
+                <div className="rounded-2xl border border-[#2C2C2E] bg-slate-50 p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
-                      <Flame size={13} className="text-amber-400" />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
+                      <Flame size={13} className="text-red-400" />
                       <span>% Grasa Corporal</span>
                     </label>
-                    <span className="text-[9px] text-[#8E8E93]">Opcional</span>
+                    <span className="text-[9px] text-[#64748B]">Opcional</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -625,7 +639,7 @@ export default function ProfileModal({
                         onChange={(e) => setBodyFat(e.target.value)}
                         className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
                       />
-                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#64748B]">
                         %
                       </span>
                     </div>
@@ -645,13 +659,13 @@ export default function ProfileModal({
                 </div>
 
                 {/* 4. Perímetro Bíceps */}
-                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2">
+                <div className="rounded-2xl border border-[#2C2C2E] bg-slate-50 p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
                       <Dumbbell size={13} className="text-[#C084FC]" />
                       <span>Circunf. Bíceps</span>
                     </label>
-                    <span className="text-[9px] text-[#8E8E93]">Opcional</span>
+                    <span className="text-[9px] text-[#64748B]">Opcional</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -678,7 +692,7 @@ export default function ProfileModal({
                         onChange={(e) => setBicepsGirth(e.target.value)}
                         className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
                       />
-                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#64748B]">
                         cm
                       </span>
                     </div>
@@ -698,13 +712,13 @@ export default function ProfileModal({
                 </div>
 
                 {/* 5. Perímetro Cintura */}
-                <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] p-3 space-y-2 sm:col-span-2 lg:col-span-1">
+                <div className="rounded-2xl border border-[#2C2C2E] bg-slate-50 p-3 space-y-2 sm:col-span-2 lg:col-span-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93] flex items-center gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
                       <Ruler size={13} className="text-cyan-400" />
                       <span>Circunf. Cintura</span>
                     </label>
-                    <span className="text-[9px] text-[#8E8E93]">Opcional</span>
+                    <span className="text-[9px] text-[#64748B]">Opcional</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -731,7 +745,7 @@ export default function ProfileModal({
                         onChange={(e) => setWaistGirth(e.target.value)}
                         className="iron-input w-full text-center text-sm font-bold py-1.5 pr-7"
                       />
-                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#8E8E93]">
+                      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#64748B]">
                         cm
                       </span>
                     </div>
@@ -752,83 +766,83 @@ export default function ProfileModal({
               </div>
 
               {/* DASHBOARD BIOMÉTRICO TÉCNICO */}
-              <div className="rounded-2xl border border-[#2C2C2E] bg-[#0E0E10] p-4 space-y-3 shadow-lg">
-                <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+              <div className="rounded-2xl border border-slate-100 bg-white p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <Activity size={16} className="text-[#FF5722]" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-white">
+                    <Activity size={16} className="text-red-500" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
                       Dashboard Biométrico &amp; Nutricional
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono text-[#8E8E93] bg-[#1C1C1E] px-2 py-0.5 rounded border border-white/10">
+                  <span className="text-[10px] font-mono text-[#64748B] bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
                     Katch-McArdle • Casey Butt
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {/* FFMI actual */}
-                  <div className="rounded-xl border border-white/5 bg-[#141416] p-3 flex flex-col justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#8E8E93]">FFMI / Límite Nat.</span>
+                  <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] p-3 flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#64748B]">FFMI / Límite Nat.</span>
                     <div className="my-1 flex items-baseline gap-1">
-                      <span className="text-lg font-black text-white">{calculatedBiometrics.ffmi}</span>
-                      <span className="text-[11px] font-bold text-[#8E8E93]">/ 25.0</span>
+                      <span className="text-lg font-black text-[#0F172A]">{calculatedBiometrics.ffmi}</span>
+                      <span className="text-[11px] font-bold text-[#64748B]">/ 25.0</span>
                     </div>
-                    <div className="w-full bg-[#242426] h-1.5 rounded-full overflow-hidden mb-1">
+                    <div className="w-full bg-[#26262B] h-1.5 rounded-full overflow-hidden mb-1">
                       <div
-                        className="bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] h-full"
+                        className="bg-red-600 hover:bg-red-700 h-full"
                         style={{ width: `${Math.min(100, Math.round((calculatedBiometrics.ffmi / 25.0) * 100))}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-[#8E8E93] font-medium">
-                      Masa Magra: <strong className="text-white">{calculatedBiometrics.leanMass} kg</strong>
+                    <span className="text-[10px] text-[#64748B] font-medium">
+                      Masa Magra: <strong className="text-[#0F172A]">{calculatedBiometrics.leanMass} kg</strong>
                     </span>
                   </div>
 
                   {/* Potencial remanente */}
-                  <div className="rounded-xl border border-white/5 bg-[#141416] p-3 flex flex-col justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#8E8E93]">Potencial Magro</span>
+                  <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] p-3 flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#64748B]">Potencial Magro</span>
                     <div className="my-1">
-                      <span className="text-lg font-black text-emerald-400">
+                      <span className="text-lg font-black text-red-500">
                         +{calculatedBiometrics.remainingPotentialKg} <span className="text-xs font-bold">kg</span>
                       </span>
                     </div>
-                    <span className="text-[10px] text-[#8E8E93] font-medium">
+                    <span className="text-[10px] text-[#64748B] font-medium">
                       Hasta techo 25.0 FFMI
                     </span>
-                    <span className="text-[10px] text-emerald-400/80 font-mono">
+                    <span className="text-[10px] text-red-500/80 font-mono">
                       {Math.min(100, Math.round((calculatedBiometrics.ffmi / 25.0) * 100))}% alcanzado
                     </span>
                   </div>
 
                   {/* TDEE & Meta calórica */}
-                  <div className="rounded-xl border border-white/5 bg-[#141416] p-3 flex flex-col justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#8E8E93]">TDEE / Meta</span>
+                  <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] p-3 flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#64748B]">TDEE / Meta</span>
                     <div className="my-1 flex items-baseline gap-1">
-                      <span className="text-lg font-black text-[#C084FC]">{calculatedBiometrics.targetCalories}</span>
-                      <span className="text-[10px] font-bold text-[#8E8E93]">kcal/d</span>
+                      <span className="text-lg font-black text-[#0F172A]">{calculatedBiometrics.targetCalories}</span>
+                      <span className="text-[10px] font-bold text-[#64748B]">kcal/d</span>
                     </div>
-                    <span className="text-[10px] text-[#8E8E93] font-medium">
-                      Mant: <strong className="text-white">{calculatedBiometrics.tdee}</strong> (TMB {calculatedBiometrics.bmr})
+                    <span className="text-[10px] text-[#64748B] font-medium">
+                      Mant: <strong className="text-[#0F172A]">{calculatedBiometrics.tdee}</strong> (TMB {calculatedBiometrics.bmr})
                     </span>
-                    <span className="text-[10px] text-[#C084FC] font-semibold">
+                    <span className="text-[10px] text-red-500 font-semibold">
                       {calculatedBiometrics.calorieGoalLabel}
                     </span>
                   </div>
 
                   {/* Proteína & Agua */}
-                  <div className="rounded-xl border border-white/5 bg-[#141416] p-3 flex flex-col justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#8E8E93]">Macro &amp; Hidratación</span>
+                  <div className="rounded-xl border border-slate-100 bg-[#F9FAFB] p-3 flex flex-col justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#64748B]">Macro &amp; Hidratación</span>
                     <div className="my-1 flex flex-col gap-0.5">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-[#8E8E93]">Proteína:</span>
-                        <span className="font-black text-white">{calculatedBiometrics.targetProtein} g/d</span>
+                        <span className="text-[#64748B]">Proteína:</span>
+                        <span className="font-black text-[#0F172A]">{calculatedBiometrics.targetProtein} g/d</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-[#8E8E93]">Agua:</span>
+                        <span className="text-[#64748B]">Agua:</span>
                         <span className="font-black text-cyan-400">{calculatedBiometrics.targetWater} L/d</span>
                       </div>
                     </div>
-                    <span className="text-[10px] text-[#8E8E93] font-mono">
+                    <span className="text-[10px] text-[#64748B] font-mono">
                       2.0 g/kg • 40ml/kg+0.8
                     </span>
                   </div>
@@ -837,33 +851,33 @@ export default function ProfileModal({
             </div>
 
             {/* SECCIÓN 2: CONTEXTO NUTRICIONAL & SALUD (COLAPSABLE) */}
-            <div className="rounded-2xl border border-[#2C2C2E] bg-[#121212] overflow-hidden transition">
+            <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden transition">
               <button
                 type="button"
                 onClick={() => setIsBioContextOpen((prev) => !prev)}
                 className="w-full p-4 flex items-center justify-between text-left hover:bg-white/[0.02] transition cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 flex-shrink-0">
                     <HeartPulse size={18} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="text-xs sm:text-sm font-bold text-white">
+                      <h4 className="text-xs sm:text-sm font-bold text-[#0F172A]">
                         2. Contexto Nutricional &amp; Biológico
                       </h4>
                       {nutritionContext !== "no_especifica" && (
-                        <span className="rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-semibold">
+                        <span className="rounded-full bg-red-500/10 text-red-500 border border-red-500/20 px-2 py-0.5 text-[9px] font-semibold">
                           {NUTRITION_OPTIONS.find((o) => o.id === nutritionContext)?.shortLabel || nutritionContext}
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-[#8E8E93]">
+                    <p className="text-[11px] text-[#64748B]">
                       Fase nutricional activa, suplementación y anotaciones privadas
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-[#8E8E93]">
+                <div className="flex items-center gap-2 text-[#64748B]">
                   <span className="text-[11px] font-medium hidden sm:inline">
                     {isBioContextOpen ? "Plegar" : "Expandir"}
                   </span>
@@ -872,10 +886,10 @@ export default function ProfileModal({
               </button>
 
               {isBioContextOpen && (
-                <div className="p-4 pt-2 border-t border-[#2C2C2E] space-y-4 animate-in fade-in duration-150">
+                <div className="p-4 pt-2 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
                   <div className="space-y-2">
-                    <label className="text-xs font-semibold text-[#8E8E93] flex items-center gap-1.5">
-                      <Apple size={14} className="text-emerald-400" />
+                    <label className="text-xs font-semibold text-[#64748B] flex items-center gap-1.5">
+                      <Apple size={14} className="text-red-500" />
                       <span>Fase o Contexto Nutricional</span>
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -888,15 +902,15 @@ export default function ProfileModal({
                             onClick={() => setNutritionContext(opt.id)}
                             className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between gap-1 active:scale-[0.98] cursor-pointer ${
                               isSelected
-                                ? "border-[#FF5722] bg-[#FF5722]/15 text-white"
-                                : "border-[#2C2C2E] bg-[#1C1C1E] text-[#8E8E93] hover:text-white hover:border-white/20"
+                                ? "border-red-500 bg-red-500/15 text-red-500"
+                                : "border-slate-100 bg-slate-50 text-[#64748B] hover:text-[#0F172A] hover:border-slate-100"
                             }`}
                           >
                             <div className="flex items-center gap-1.5">
                               <span className="text-sm">{opt.emoji}</span>
                               <span className="text-xs font-bold truncate">{opt.label}</span>
                             </div>
-                            <p className="text-[10px] text-[#8E8E93] leading-snug line-clamp-2">
+                            <p className="text-[10px] text-[#64748B] leading-snug line-clamp-2">
                               {opt.description}
                             </p>
                           </button>
@@ -906,12 +920,12 @@ export default function ProfileModal({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#8E8E93] flex items-center justify-between">
+                    <label className="text-xs font-semibold text-[#64748B] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
-                        <Pill size={14} className="text-[#7C4DFF]" />
+                        <Pill size={14} className="text-red-500" />
                         <span>Suplementación Habitual</span>
                       </span>
-                      <span className="text-[10px] text-[#8E8E93] font-normal">Opcional</span>
+                      <span className="text-[10px] text-[#64748B] font-normal">Opcional</span>
                     </label>
                     <input
                       type="text"
@@ -923,12 +937,12 @@ export default function ProfileModal({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#8E8E93] flex items-center justify-between">
+                    <label className="text-xs font-semibold text-[#64748B] flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
-                        <FileText size={14} className="text-amber-400" />
+                        <FileText size={14} className="text-red-400" />
                         <span>Notas de Salud y Biológicas (Privado)</span>
                       </span>
-                      <span className="text-[10px] text-amber-400/80 font-medium">Confidencial</span>
+                      <span className="text-[10px] text-red-400/80 font-medium">Confidencial</span>
                     </label>
                     <textarea
                       rows={2}
@@ -946,7 +960,7 @@ export default function ProfileModal({
             <button
               type="submit"
               disabled={isSavingPhysical}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-90 active:scale-[0.99] text-white font-semibold text-sm flex items-center justify-center gap-2 transition select-none cursor-pointer"
+              className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 active:scale-[0.99] text-white font-semibold text-sm flex items-center justify-center gap-2 transition select-none cursor-pointer shadow-sm"
             >
               {isSavingPhysical ? (
                 <>
@@ -964,16 +978,16 @@ export default function ProfileModal({
 
           {/* ACCESO DIRECTO PANEL MASTER (SOLO ADMINS) */}
           {isAdmin && (
-            <div className="bg-[#121212] border border-[#FF5722]/40 rounded-3xl p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-lg shadow-[#FF5722]/5">
+            <div className="bg-white border border-slate-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FF5722]/15 border border-[#FF5722]/30 text-lg flex-shrink-0">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/15 border border-red-500/30 text-lg flex-shrink-0">
                   👑
                 </span>
                 <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
                     <span>Privilegios de Administrador</span>
                   </h4>
-                  <p className="text-[11px] text-[#8E8E93] leading-relaxed">
+                  <p className="text-[11px] text-[#64748B] leading-relaxed">
                     Gestión de usuarios registrados, catálogo de ejercicios y métricas del servidor.
                   </p>
                 </div>
@@ -989,7 +1003,7 @@ export default function ProfileModal({
                     window.location.pathname = "/admin";
                   }
                 }}
-                className="flex items-center justify-center gap-1.5 bg-[#1C1C1E] border border-[#FF5722]/40 text-[#FF5722] text-xs font-semibold px-4 py-2 rounded-full hover:bg-[#FF5722]/15 transition active:scale-95 cursor-pointer shadow-md shadow-[#FF5722]/10 whitespace-nowrap self-stretch sm:self-auto"
+                className="h-11 px-4 rounded-xl bg-slate-50 border border-red-500/40 text-red-500 text-xs font-semibold hover:bg-red-500/10 transition active:scale-95 cursor-pointer whitespace-nowrap flex items-center justify-center self-stretch sm:self-auto"
               >
                 <span>🛡️ Admin Panel</span>
               </button>
@@ -997,20 +1011,20 @@ export default function ProfileModal({
           )}
 
           {/* TARJETA CUENTA, EMAIL & SEGURIDAD */}
-          <div className="bg-[#121212] border border-[#2C2C2E] rounded-3xl p-5 space-y-5">
+          <div className="bg-white border border-slate-100 rounded-2xl p-4 space-y-4">
             {/* CORREO */}
             <div className="space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <Mail size={16} className="text-[#FF5722]" />
-                  <h3 className="text-sm font-bold text-white">Correo Electrónico</h3>
+                  <Mail size={16} className="text-red-500" />
+                  <h3 className="text-sm font-bold text-[#0F172A]">Correo Electrónico</h3>
                 </div>
                 {email ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-500 bg-red-500/10 border border-red-500/30 px-2.5 py-0.5 rounded-full">
                     ✓ Vinculado
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-500/10 border border-red-400/30 px-2.5 py-0.5 rounded-full">
                     ⚠️ Sin vincular
                   </span>
                 )}
@@ -1022,13 +1036,13 @@ export default function ProfileModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tuemail@ejemplo.com"
-                  className="iron-input flex-1 text-sm"
+                  className="iron-input flex-1 text-sm h-11"
                 />
                 <button
                   type="button"
                   onClick={handleSaveEmail}
                   disabled={isSavingEmail}
-                  className="iron-btn-secondary px-4 py-2.5 text-xs font-semibold whitespace-nowrap active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="h-11 px-4 rounded-xl bg-slate-50 border border-slate-100 text-[#0F172A] text-xs font-semibold hover:border-red-500/40 transition active:scale-95 disabled:opacity-50 cursor-pointer whitespace-nowrap"
                 >
                   {isSavingEmail ? (
                     <>
@@ -1043,11 +1057,11 @@ export default function ProfileModal({
             </div>
 
             {/* CAMBIAR CONTRASEÑA */}
-            <div className="pt-3 border-t border-white/5 space-y-3">
+            <div className="pt-3 border-t border-slate-100 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Lock size={16} className="text-[#7C4DFF]" />
-                  <h3 className="text-sm font-bold text-white">Seguridad de la Cuenta</h3>
+                  <Lock size={16} className="text-red-500" />
+                  <h3 className="text-sm font-bold text-[#0F172A]">Seguridad de la Cuenta</h3>
                 </div>
                 <button
                   type="button"
@@ -1055,7 +1069,7 @@ export default function ProfileModal({
                     setIsChangePasswordOpen((prev) => !prev);
                     setPasswordError("");
                   }}
-                  className="text-xs font-semibold text-[#FF5722] hover:underline cursor-pointer"
+                  className="text-xs font-semibold text-red-500 hover:underline cursor-pointer"
                 >
                   {isChangePasswordOpen ? "Ocultar formulario" : "Cambiar Contraseña"}
                 </button>
@@ -1064,36 +1078,36 @@ export default function ProfileModal({
               {isChangePasswordOpen && (
                 <form onSubmit={handleChangePassword} className="space-y-3 pt-2 animate-in fade-in duration-150">
                   <div>
-                    <label className="text-xs text-[#8E8E93] mb-1 block font-medium">Contraseña actual</label>
+                    <label className="text-xs text-[#64748B] mb-1 block font-medium">Contraseña actual</label>
                     <input
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Tu contraseña actual"
-                      className="iron-input text-sm"
+                      className="iron-input text-sm h-11"
                       required
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-xs text-[#8E8E93] mb-1 block font-medium">Nueva contraseña</label>
+                      <label className="text-xs text-[#64748B] mb-1 block font-medium">Nueva contraseña</label>
                       <input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Mínimo 6 caracteres"
-                        className="iron-input text-sm"
+                        className="iron-input text-sm h-11"
                         required
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-[#8E8E93] mb-1 block font-medium">Confirmar nueva contraseña</label>
+                      <label className="text-xs text-[#64748B] mb-1 block font-medium">Confirmar nueva contraseña</label>
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Repetí la contraseña"
-                        className="iron-input text-sm"
+                        className="iron-input text-sm h-11"
                         required
                       />
                     </div>
@@ -1108,7 +1122,7 @@ export default function ProfileModal({
                   <button
                     type="submit"
                     disabled={isSavingPassword}
-                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-90 active:scale-[0.99] text-white font-semibold text-sm flex items-center justify-center gap-2 transition select-none disabled:opacity-50 cursor-pointer"
+                    className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 active:scale-[0.99] text-white font-semibold text-sm flex items-center justify-center gap-2 transition select-none disabled:opacity-50 cursor-pointer"
                   >
                     {isSavingPassword ? (
                       <>
@@ -1129,7 +1143,7 @@ export default function ProfileModal({
         </div>
 
         {/* Modal Footer Fijo */}
-        <div className="border-t border-[#2C2C2E] bg-[#050505] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 flex-shrink-0">
+        <div className="border-t border-[#F1F5F9] dark:border-slate-800 bg-[#F8FAFC] dark:bg-[#0B0F17] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-2.5 flex-shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -1140,7 +1154,7 @@ export default function ProfileModal({
                 window.dispatchEvent(new CustomEvent("fittracker:requestLogout"));
               }
             }}
-            className="inline-flex items-center gap-1.5 rounded-2xl border border-red-500/20 bg-red-500/10 px-3.5 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition cursor-pointer active:scale-95"
+            className="h-11 inline-flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-50 dark:bg-red-950/40 px-3.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/70 transition cursor-pointer active:scale-95"
             title="Cerrar sesión"
           >
             <LogOut size={14} />
@@ -1151,7 +1165,7 @@ export default function ProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-[#2C2C2E] bg-[#121212] hover:bg-white/5 px-4 py-2.5 text-xs font-semibold text-[#8E8E93] hover:text-white transition cursor-pointer"
+              className="h-11 rounded-xl border border-[#F1F5F9] dark:border-slate-800 bg-[#FFFFFF] dark:bg-[#121824] hover:bg-slate-100 dark:hover:bg-slate-800 px-4 text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] transition cursor-pointer"
             >
               Cerrar
             </button>
@@ -1160,7 +1174,7 @@ export default function ProfileModal({
               type="submit"
               form="profile-physical-form"
               disabled={isSavingPhysical}
-              className="rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] hover:opacity-95 active:scale-95 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white transition cursor-pointer disabled:opacity-50 flex items-center gap-2 shadow-none"
+              className="h-11 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 px-5 text-xs sm:text-sm font-semibold text-white transition cursor-pointer disabled:opacity-50 flex items-center gap-2 shadow-sm"
             >
               {isSavingPhysical ? (
                 <>

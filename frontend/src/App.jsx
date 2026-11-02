@@ -1,21 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
-  Check,
   Dumbbell,
-  HelpCircle,
-  Home,
-  Layers,
   Loader2,
   LogOut,
-  Pill,
   Scale,
-  ShieldCheck,
-  Swords,
-  TrendingUp,
-  Trophy,
   User,
-  Utensils,
   X,
 } from "lucide-react";
 import "./index.css";
@@ -27,16 +17,18 @@ import Workouts from "./pages/Workouts.jsx";
 import Routines from "./pages/Routines.jsx";
 import Records from "./pages/Records.jsx";
 import Exercises from "./pages/Exercises.jsx";
+import ExerciseDetailView from "./components/ExerciseDetailView.jsx";
 import Metrics from "./pages/Metrics.jsx";
 import Login from "./pages/Login.jsx";
 import Admin from "./pages/Admin.jsx";
-import Navbar from "./components/Navbar.jsx";
+import FloatingBottomNav from "./components/FloatingBottomNav.jsx";
 import CheckInModal from "./components/CheckInModal.jsx";
 import ProfileModal from "./components/ProfileModal.jsx";
 import SupportModal from "./components/SupportModal.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
-import Toast, { showToast } from "./components/Toast.jsx";
+import Toast from "./components/Toast.jsx";
 import { WorkoutProvider } from "./context/WorkoutContext.jsx";
+import { ThemeProvider, ThemeToggle } from "./context/ThemeContext.jsx";
 import {
   AUTH_TOKEN_KEY,
   AUTH_USER_KEY,
@@ -75,7 +67,6 @@ export function AppShell() {
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
-
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const [userRecords, setUserRecords] = useState([]);
@@ -184,7 +175,6 @@ export function AppShell() {
       }
     };
 
-
     const handleOpenProfile = () => {
       setIsProfileOpen(true);
     };
@@ -213,7 +203,7 @@ export function AppShell() {
       window.removeEventListener("fittracker:requestLogout", handleRequestLogout);
     };
   }, [currentUser?.id]);
- 
+
   // Load records for User Global Strength Rank calculation
   useEffect(() => {
     if (!currentUser) return;
@@ -247,12 +237,16 @@ export function AppShell() {
 
     window.addEventListener("fittracker:recordUpdated", handleRecordUpdated);
     window.addEventListener("fittracker:workoutSaved", handleWorkoutSaved);
+    window.addEventListener("fittracker:workoutUpdated", handleWorkoutSaved);
+    window.addEventListener("fittracker:workoutDeleted", handleWorkoutSaved);
     window.addEventListener("fittracker:rankUp", handleRankUp);
 
     return () => {
       isMounted = false;
       window.removeEventListener("fittracker:recordUpdated", handleRecordUpdated);
       window.removeEventListener("fittracker:workoutSaved", handleWorkoutSaved);
+      window.removeEventListener("fittracker:workoutUpdated", handleWorkoutSaved);
+      window.removeEventListener("fittracker:workoutDeleted", handleWorkoutSaved);
       window.removeEventListener("fittracker:rankUp", handleRankUp);
     };
   }, [currentUser?.id]);
@@ -330,14 +324,14 @@ export function AppShell() {
   // If initial auth check is running (e.g. token in localStorage without user data)
   if (isCheckingAuth) {
     return (
-      <div className="min-h-[100dvh] bg-[#050505] text-white flex flex-col items-center justify-center p-4 select-none">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#7C4DFF] text-white animate-pulse mb-4">
-          <Dumbbell size={28} />
+      <div className="min-h-[100dvh] bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] flex flex-col items-center justify-center p-4 select-none transition-colors duration-200">
+        <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center animate-pulse mb-4 shadow-bento">
+          <Dumbbell size={24} />
         </div>
-        <div className="flex items-center gap-2 text-[#FF5722]">
-          <Loader2 size={20} className="animate-spin" />
-          <p className="text-xs sm:text-sm font-semibold tracking-wide text-[#8E8E93]">
-            Iniciando FitTracker...
+        <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+          <Loader2 size={18} className="animate-spin" />
+          <p className="text-xs sm:text-sm font-semibold tracking-wide text-[#64748B] dark:text-[#94A3B8]">
+            Iniciando FiTracker...
           </p>
         </div>
       </div>
@@ -360,226 +354,152 @@ export function AppShell() {
     currentUser?.role === "admin"
   );
 
-  const desktopNavItems = [
-    { to: "/", label: "Home", icon: Home },
-    { to: "/train", label: "Train (Bitácora)", icon: Dumbbell },
-    { to: "/nutri", label: "Nutri", icon: Utensils },
-    { to: "/suple", label: "Suple", icon: Pill },
-    { to: "/metrics", label: "Métricas", icon: TrendingUp },
-    { to: "/records", label: "Récords", icon: Trophy },
-  ];
-
   return (
-    <div className="min-h-[100dvh] bg-[#050505] text-white flex flex-col w-full overflow-x-hidden">
-      {/* Top Navbar with Clean Flat OLED Border */}
-      <header className="sticky top-0 z-30 border-b border-white/5 bg-[#050505]/90 backdrop-blur-xl safe-top">
-        <div className="mx-auto flex max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl items-center justify-between px-3 py-2.5 sm:px-6 sm:py-3">
-          <div className="flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-9 h-9 drop-shadow-none">
-              <defs>
-                {/* Definición del degradado para el borde */}
-                <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FF5722" />
-                  <stop offset="100%" stopColor="#7C4DFF" />
-                </linearGradient>
-              </defs>
-              
-              {/* Fondo negro OLED con borde fino en degradado */}
-              <rect x="0.5" y="0.5" width="99" height="99" rx="24" fill="#050505" stroke="url(#borderGradient)" strokeWidth="1.5" />
-              
-              {/* Pesita Inclinada en Naranja Ladrillo Sólido */}
-              <g transform="rotate(-45 50 50)">
-                <rect x="35" y="46" width="30" height="8" rx="2" fill="#FF5722" />
-                <rect x="24" y="28" width="10" height="44" rx="3" fill="#FF5722" />
-                <rect x="66" y="28" width="10" height="44" rx="3" fill="#FF5722" />
-                <rect x="14" y="36" width="8" height="28" rx="2" fill="#FF5722" />
-                <rect x="78" y="36" width="8" height="28" rx="2" fill="#FF5722" />
-              </g>
-            </svg>
-            <span className="text-white font-bold tracking-tight text-xl">FitTracker</span>
+    <div className="w-full min-h-[100dvh] bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] overflow-x-hidden transition-colors duration-200">
+      {/* 1. Contenedor Base Mobile-First */}
+      <div className="max-w-md mx-auto min-h-[100dvh] bg-[#F9FAFB] dark:bg-[#05070B] relative pb-[calc(7rem+env(safe-area-inset-bottom))] px-4 pt-6 transition-colors duration-200">
+        {/* Gradiente ambiental de fondo fijo en el top derecho */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed top-0 right-0 w-72 h-72 rounded-full bg-gradient-to-bl from-[#EF4444]/[0.06] dark:from-[#EF4444]/[0.08] via-slate-400/[0.04] dark:via-slate-900/[0.1] to-transparent blur-3xl z-0"
+        />
+
+        {/* Header minimalista Bento Dual Theme */}
+        <header className="relative z-10 flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center shadow-xs border border-red-100/60 dark:border-red-900/30">
+              <Dumbbell size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <span className="text-[#0F172A] dark:text-[#F8FAFC] font-extrabold tracking-tight text-lg leading-none block">
+                FiTracker
+              </span>
+              <span className="text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">
+                {globalRank?.icon || "🥉"} {globalRank?.name || "Liga Bronce"}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {gymTimerText && (
               <NavLink
                 to="/workouts"
-                className="flex items-center gap-1.5 rounded-full border border-[#FF5722]/40 bg-[#1C1C1E] px-2.5 py-1 text-xs font-mono font-bold text-white shadow-sm hover:border-[#FF5722] transition"
+                className="flex items-center gap-1 rounded-full border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-950/40 px-3 py-1.5 text-xs font-mono font-bold text-red-600 dark:text-red-400 transition hover:bg-red-100 dark:hover:bg-red-950/70"
                 title="Sesión de gimnasio activa. Clic para volver a la sesión."
               >
-                <span className="text-[#FF5722] animate-pulse">⏱️</span>
+                <span className="animate-pulse">⏱️</span>
                 <span>{gymTimerText.replace(/^⏱️\s*/, "")}</span>
               </NavLink>
             )}
 
-            {/* Botón Destacado Admin Panel en Navbar para Administradores */}
             {isAdmin && (
               <button
                 type="button"
                 onClick={() => navigate("/admin")}
-                className="flex items-center gap-1.5 bg-[#1C1C1E] border border-[#FF5722]/40 text-[#FF5722] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#FF5722]/15 transition active:scale-95 cursor-pointer shadow-md shadow-[#FF5722]/10"
+                className="flex items-center gap-1 bg-[#FFFFFF] dark:bg-[#0E131F] border border-[#F1F5F9] dark:border-white/[0.07] text-red-600 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-full shadow-bento hover:bg-red-50 dark:hover:bg-red-950/40 transition active:scale-95 cursor-pointer"
                 title="Panel de Control de Administrador"
               >
                 <span>🛡️</span>
-                <span>Admin Panel</span>
+                <span className="hidden xs:inline">Admin</span>
               </button>
             )}
 
-            {/* Desktop Nav: [ HOME | TRAIN | NUTRI | SUPLE | MÉTRICAS | RÉCORDS ] */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {desktopNavItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === "/"}
-                    className={({ isActive }) =>
-                      `flex items-center gap-1.5 rounded-2xl px-3 py-2 text-xs font-semibold transition ${
-                        isActive
-                          ? "border border-[#FF5722] bg-[#FF5722]/10 text-white"
-                          : "text-[#8E8E93] hover:bg-white/5 hover:text-white"
-                      }`
-                    }
-                  >
-                    <Icon size={14} />
-                    <span>{item.label}</span>
-                  </NavLink>
-                );
-              })}
+            {/* Toggle Minimalista de Tema (Light / Dark) */}
+            <ThemeToggle variant="icon" />
 
-              {/* Botón Rápido Check-In Periódico */}
-              <button
-                type="button"
-                onClick={() => setIsCheckInOpen(true)}
-                className="flex items-center gap-1.5 rounded-2xl border border-white/5 bg-[#1C1C1E] px-3 py-2 text-xs font-semibold text-white hover:bg-[#2C2C2E] transition active:scale-95 cursor-pointer"
-                title="Control Biométrico & Check-In Periódico"
-              >
-                <Scale size={14} className="text-[#FF5722]" />
-                <span>Check-In</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => setIsCheckInOpen(true)}
+              className="w-10 h-10 rounded-2xl bg-[#FFFFFF] dark:bg-[#0E131F] border border-[#F1F5F9] dark:border-white/[0.07] text-[#0F172A] dark:text-[#F8FAFC] hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center shadow-bento transition active:scale-95 cursor-pointer"
+              title="Control Biométrico & Check-In Periódico"
+            >
+              <Scale size={18} />
+            </button>
 
-              {/* Perfil (Peso) Button */}
-              <button
-                type="button"
-                onClick={() => setIsProfileOpen(true)}
-                className="flex items-center gap-1.5 rounded-2xl border border-white/5 bg-[#1C1C1E] px-3 py-2 text-xs font-semibold text-white hover:bg-[#2C2C2E] transition active:scale-95"
-                title="Mi Perfil y Peso Corporal"
-              >
-                <User size={14} className="text-[#FF5722]" />
-                <span>Perfil ({currentUser?.bodyweight || 75} kg)</span>
-              </button>
-            </nav>
-
-            {/* Global Strength Rank OLED Chip */}
             <button
               type="button"
               onClick={() => setIsProfileOpen(true)}
-              className="flex items-center gap-1.5 rounded-2xl px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider border transition active:scale-95 cursor-pointer"
-              style={{
-                borderColor: `${globalRank?.color || "#CD7F32"}40`,
-                backgroundColor: `${globalRank?.color || "#CD7F32"}15`,
-                color: globalRank?.color || "#CD7F32",
-              }}
-              title={`Rango Global de Fuerza: ${globalRank?.name || "Liga Bronce"} (${globalRank?.ratio || 0}× peso corporal)`}
+              className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-transparent dark:border-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center transition active:scale-95 cursor-pointer"
+              title={`Mi Perfil (${currentUser?.bodyweight || 75} kg)`}
             >
-              <span className="text-sm leading-none">{globalRank?.icon || "🥉"}</span>
-              <span className="truncate max-w-[70px] sm:max-w-none">{globalRank?.name || "Liga Bronce"}</span>
-              {(globalRank?.ratio || 0) > 0 && (
-                <span className="hidden md:inline rounded bg-black/40 px-1 py-0.2 text-[10px] font-semibold lowercase opacity-90">
-                  {globalRank?.ratio}×
-                </span>
-              )}
+              <User size={18} />
             </button>
 
-            {/* Logout button */}
             <button
               type="button"
               onClick={() => setIsLogoutConfirmOpen(true)}
-              className="inline-flex items-center justify-center rounded-2xl border border-white/5 bg-[#1C1C1E] p-2 text-xs font-semibold text-[#8E8E93] hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 transition active:scale-95 cursor-pointer"
+              className="w-10 h-10 rounded-2xl bg-[#FFFFFF] dark:bg-[#0E131F] border border-[#F1F5F9] dark:border-white/[0.07] text-[#64748B] dark:text-[#94A3B8] hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center shadow-bento transition active:scale-95 cursor-pointer"
               title="Cerrar sesión"
             >
-              <LogOut size={16} />
+              <LogOut size={17} />
             </button>
           </div>
-        </div>
-      </header>
- 
-      {/* Micro-notificación de subida de rango */}
-      {rankUpToast && (
-        <div
-          className="fixed top-16 sm:top-20 inset-x-4 max-w-md mx-auto z-50 rounded-3xl border border-white/10 bg-[#1C1C1E]/95 p-3.5 backdrop-blur-xl animate-in slide-in-from-top-4 duration-300 flex items-center justify-between gap-3 select-none"
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg flex-shrink-0"
-              style={{
-                backgroundColor: `${rankUpToast.rankColor || "#FF5722"}20`,
-                border: `1px solid ${rankUpToast.rankColor || "#FF5722"}50`,
-              }}
-            >
-              ⚡
-            </div>
-            <div>
-              <div
-                className="text-xs font-semibold uppercase tracking-wider"
-                style={{ color: rankUpToast.rankColor || "#FF5722" }}
-              >
-                ⚡ Subida de Rango
+        </header>
+
+        {/* Micro-notificación de subida de rango */}
+        {rankUpToast && (
+          <div className="fixed top-6 inset-x-4 max-w-md mx-auto z-50 rounded-3xl border border-[#F1F5F9] dark:border-white/[0.07] bg-[#FFFFFF]/95 dark:bg-[#0E131F]/95 p-4 backdrop-blur-md shadow-lg animate-in slide-in-from-top-4 duration-300 flex items-center justify-between gap-3 select-none">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-lg flex-shrink-0">
+                ⚡
               </div>
-              <p className="text-xs font-semibold text-white">
-                Has alcanzado el rango{" "}
-                <span
-                  className="uppercase font-bold"
-                  style={{ color: rankUpToast.rankColor || "#FF5722" }}
-                >
-                  {rankUpToast.rankName}
-                </span>{" "}
-                en {rankUpToast.exerciseName || "este ejercicio"}
-              </p>
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+                  ⚡ Subida de Rango
+                </div>
+                <p className="text-xs font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
+                  Has alcanzado el rango{" "}
+                  <span className="uppercase font-extrabold text-red-600 dark:text-red-400">
+                    {rankUpToast.rankName}
+                  </span>{" "}
+                  en {rankUpToast.exerciseName || "este ejercicio"}
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setRankUpToast(null)}
+              className="text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] p-1 transition"
+            >
+              <X size={16} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setRankUpToast(null)}
-            className="text-[#8E8E93] hover:text-white p-1 transition"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
+        )}
 
-      {/* Main Content Area protected by ErrorBoundary */}
-      <main className="mx-auto w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl flex-1 px-3 sm:px-6 pt-4 pb-32">
-        <ErrorBoundary>
-          <Routes>
-            <Route path="/" element={<Dashboard currentUser={currentUser} />} />
-            <Route path="/train" element={<Bitacora currentUser={currentUser} />} />
-            <Route path="/bitacora" element={<Bitacora currentUser={currentUser} />} />
-            <Route path="/workouts" element={<Workouts currentUser={currentUser} />} />
-            <Route path="/routines" element={<Routines />} />
-            <Route path="/nutri" element={<Nutrition currentUser={currentUser} />} />
-            <Route path="/nutrition" element={<Nutrition currentUser={currentUser} />} />
-            <Route path="/suple" element={<Suplements currentUser={currentUser} />} />
-            <Route path="/supplements" element={<Suplements currentUser={currentUser} />} />
-            <Route path="/metrics" element={<Metrics currentUser={currentUser} />} />
-            <Route path="/analytics" element={<Metrics currentUser={currentUser} />} />
-            <Route path="/dashboard" element={<Dashboard currentUser={currentUser} />} />
-            <Route path="/records" element={<Records />} />
-            <Route path="/history" element={<Records defaultTab="history" />} />
-            <Route path="/exercises" element={<Exercises />} />
-            {isAdmin && (
-              <Route path="/admin" element={<Admin currentUser={currentUser} />} />
-            )}
-          </Routes>
-        </ErrorBoundary>
-      </main>
+        {/* Main Content Area protected by ErrorBoundary */}
+        <main className="relative w-full flex flex-col">
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Dashboard currentUser={currentUser} />} />
+              <Route path="/train" element={<Bitacora currentUser={currentUser} />} />
+              <Route path="/bitacora" element={<Bitacora currentUser={currentUser} />} />
+              <Route path="/workouts" element={<Workouts currentUser={currentUser} />} />
+              <Route path="/routines" element={<Routines />} />
+              <Route path="/nutri" element={<Nutrition currentUser={currentUser} />} />
+              <Route path="/nutrition" element={<Nutrition currentUser={currentUser} />} />
+              <Route path="/suple" element={<Suplements currentUser={currentUser} />} />
+              <Route path="/supplements" element={<Suplements currentUser={currentUser} />} />
+              <Route path="/metrics" element={<Metrics currentUser={currentUser} />} />
+              <Route path="/analytics" element={<Metrics currentUser={currentUser} />} />
+              <Route path="/dashboard" element={<Dashboard currentUser={currentUser} />} />
+              <Route path="/records" element={<Records />} />
+              <Route path="/registros" element={<Records />} />
+              <Route path="/history" element={<Records defaultTab="history" />} />
+              <Route path="/exercises" element={<Exercises />} />
+              <Route path="/ejercicios" element={<Exercises />} />
+              <Route path="/exercises/:id" element={<ExerciseDetailView />} />
+              <Route path="/ejercicios/:id" element={<ExerciseDetailView />} />
+              {isAdmin && (
+                <Route path="/admin" element={<Admin currentUser={currentUser} />} />
+              )}
+            </Routes>
+          </ErrorBoundary>
+        </main>
 
-      {/* Mobile Bottom Navigation Bar: Flat OLED [ HOME | TRAIN (Bitácora) | NUTRI | SUPLE | PERFIL ] */}
-      <div className="lg:hidden">
-        <Navbar
-          currentUser={currentUser}
-          onOpenProfile={() => setIsProfileOpen(true)}
-        />
+        {/* 2. Bottom Navigation Bar Flotante (Dock iOS) */}
+        {!location.pathname.startsWith("/workouts") &&
+          !location.pathname.startsWith("/exercises") &&
+          !location.pathname.startsWith("/ejercicios") && <FloatingBottomNav />}
       </div>
 
       {/* Periodic Check-Ins Modal */}
@@ -611,7 +531,6 @@ export function AppShell() {
         }}
       />
 
-
       {/* Support / Contact Admin Modal */}
       <SupportModal
         isOpen={isSupportOpen}
@@ -622,22 +541,22 @@ export function AppShell() {
 
       {/* Modal de Confirmación de Cierre de Sesión */}
       {isLogoutConfirmOpen && (
-        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150 select-none">
-          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1C1C1E] p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-center space-y-4 shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-150">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20">
-              <LogOut size={22} />
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-900/50 dark:bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150 select-none">
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-[#F1F5F9] dark:border-white/[0.07] bg-[#FFFFFF] dark:bg-[#0E131F] p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-center space-y-4 shadow-xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-150">
+            <div className="mx-auto w-10 h-10 rounded-2xl flex items-center justify-center bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
+              <LogOut size={20} />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-white">¿Cerrar sesión?</h3>
-              <p className="text-xs text-[#8E8E93] leading-relaxed">
+              <h3 className="text-base font-extrabold text-[#0F172A] dark:text-[#F8FAFC]">¿Cerrar sesión?</h3>
+              <p className="text-xs text-[#64748B] dark:text-[#94A3B8] leading-relaxed">
                 Tendrás que ingresar tus credenciales para volver a entrar.
               </p>
             </div>
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center justify-center gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setIsLogoutConfirmOpen(false)}
-                className="bg-[#2C2C2E] text-white rounded-xl px-4 py-2.5 text-xs font-semibold hover:bg-[#3A3A3C] transition active:scale-95 cursor-pointer"
+                className="h-11 px-5 text-sm font-semibold rounded-full border border-[#F1F5F9] dark:border-white/[0.07] bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] hover:bg-slate-100 dark:hover:bg-[#161B26] transition active:scale-95 cursor-pointer flex-1"
               >
                 Cancelar
               </button>
@@ -647,7 +566,7 @@ export function AppShell() {
                   setIsLogoutConfirmOpen(false);
                   handleLogout();
                 }}
-                className="bg-red-600 hover:bg-red-500 text-white rounded-xl px-5 py-2.5 font-semibold text-xs transition active:scale-95 shadow-lg shadow-red-600/20 cursor-pointer"
+                className="h-11 px-5 text-sm font-bold rounded-full bg-red-600 hover:bg-red-700 active:bg-[#B91C1C] text-white transition active:scale-95 shadow-md shadow-red-600/20 cursor-pointer flex-1"
               >
                 Confirmar
               </button>
@@ -665,9 +584,11 @@ export function AppShell() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <WorkoutProvider>
-        <AppShell />
-      </WorkoutProvider>
+      <ThemeProvider>
+        <WorkoutProvider>
+          <AppShell />
+        </WorkoutProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

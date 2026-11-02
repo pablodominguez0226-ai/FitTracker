@@ -121,6 +121,15 @@ def me(current_user: models.User = Depends(get_current_user)):
 
 @router.get("/profile", response_model=schemas.ProfileOut)
 def get_auth_profile(current_user: models.User = Depends(get_current_user)):
+    pattern = schemas.DEFAULT_WEEKLY_PATTERN.copy()
+    if current_user.weekly_pattern:
+        try:
+            parsed = json.loads(current_user.weekly_pattern) if isinstance(current_user.weekly_pattern, str) else current_user.weekly_pattern
+            if isinstance(parsed, dict):
+                pattern.update(parsed)
+        except Exception:
+            pass
+
     return schemas.ProfileOut(
         id=current_user.id,
         username=current_user.username,
@@ -138,6 +147,9 @@ def get_auth_profile(current_user: models.User = Depends(get_current_user)):
         nutrition_context=current_user.nutrition_context or "no_especifica",
         supplements=current_user.supplements,
         health_notes=current_user.health_notes,
+        total_workouts=current_user.total_workouts or 0,
+        workout_days_count=current_user.workout_days_count or 0,
+        weekly_pattern=pattern,
         updated_at=current_user.updated_at,
     )
 
@@ -232,10 +244,23 @@ def update_auth_profile(
         clean_health = payload.health_notes.strip()
         current_user.health_notes = clean_health if clean_health else None
 
+    if payload.weekly_pattern is not None:
+        pattern = schemas.DEFAULT_WEEKLY_PATTERN.copy()
+        if isinstance(payload.weekly_pattern, dict):
+            pattern.update(payload.weekly_pattern)
+        elif isinstance(payload.weekly_pattern, str):
+            try:
+                parsed = json.loads(payload.weekly_pattern)
+                if isinstance(parsed, dict):
+                    pattern.update(parsed)
+            except Exception:
+                pass
+        current_user.weekly_pattern = json.dumps(pattern)
+
     current_user.updated_at = dt.datetime.now(dt.timezone.utc)
 
     # Sync user_profile row 1 for backwards compatibility
-    profile = db.get(models.UserProfile, 1)
+    profile = db.get(models.UserProfile, current_user.id) or db.get(models.UserProfile, 1)
     if not profile:
         profile = models.UserProfile(
             id=1,
@@ -252,6 +277,7 @@ def update_auth_profile(
             nutrition_context=current_user.nutrition_context or "no_especifica",
             supplements=current_user.supplements,
             health_notes=current_user.health_notes,
+            weekly_pattern=current_user.weekly_pattern,
             updated_at=dt.datetime.now(dt.timezone.utc),
         )
         db.add(profile)
@@ -269,10 +295,21 @@ def update_auth_profile(
         profile.nutrition_context = current_user.nutrition_context or "no_especifica"
         profile.supplements = current_user.supplements
         profile.health_notes = current_user.health_notes
+        if current_user.weekly_pattern:
+            profile.weekly_pattern = current_user.weekly_pattern
         profile.updated_at = dt.datetime.now(dt.timezone.utc)
 
     db.commit()
     db.refresh(current_user)
+
+    out_pattern = schemas.DEFAULT_WEEKLY_PATTERN.copy()
+    if current_user.weekly_pattern:
+        try:
+            parsed = json.loads(current_user.weekly_pattern) if isinstance(current_user.weekly_pattern, str) else current_user.weekly_pattern
+            if isinstance(parsed, dict):
+                out_pattern.update(parsed)
+        except Exception:
+            pass
 
     return schemas.ProfileOut(
         id=current_user.id,
@@ -291,6 +328,9 @@ def update_auth_profile(
         nutrition_context=current_user.nutrition_context or "no_especifica",
         supplements=current_user.supplements,
         health_notes=current_user.health_notes,
+        total_workouts=current_user.total_workouts or 0,
+        workout_days_count=current_user.workout_days_count or 0,
+        weekly_pattern=out_pattern,
         updated_at=current_user.updated_at,
     )
 

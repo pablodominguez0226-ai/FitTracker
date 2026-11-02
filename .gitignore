@@ -67,3 +67,4 @@ cloudflared.deb
 .env
 __pycache__/
 *.pyc
+fittracker.db

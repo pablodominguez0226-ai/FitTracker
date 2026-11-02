@@ -8,215 +8,7 @@ from ..security import get_optional_current_user
 
 router = APIRouter()
 
-ROUTINE_DEFINITIONS = [
-    {
-        "id": "heavy-duty-day-1",
-        "title": "Heavy Duty Oficial - Día 1 (Lunes): Pecho & Espalda",
-        "category": "Pecho & Espalda",
-        "tag": "Pecho • Espalda",
-        "summary": "Peck Deck, Press Inclinado, Pullover, Jalón Supino, Remo con Barra (1x al fallo)",
-        "exercises": [
-            {
-                "name": "Aperturas en máquina Peck Deck",
-                "muscle": "Pecho",
-                "equipment": "Máquina",
-                "search_terms": ["aperturas en máquina peck deck", "peck deck", "aperturas", "aperturas con mancuernas"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Press inclinado con barra",
-                "muscle": "Pecho",
-                "equipment": "Barra",
-                "search_terms": ["press inclinado con barra", "press inclinado", "inclinado con barra"],
-                "target_sets": 1,
-                "target_reps": "4-8",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Pullover en polea alta",
-                "muscle": "Espalda",
-                "equipment": "Polea",
-                "search_terms": ["pullover en polea alta", "pullover", "pullover con mancuerna"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Jalón al pecho agarre neutro/estrecho",
-                "muscle": "Espalda",
-                "equipment": "Polea",
-                "search_terms": ["jalón al pecho agarre neutro/estrecho", "jalón al pecho", "jalon al pecho", "jalón neutro", "jalón supino"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Remo con barra (prono/supino)",
-                "muscle": "Espalda",
-                "equipment": "Barra",
-                "search_terms": ["remo con barra (prono/supino)", "remo con barra", "remo agarre recto"],
-                "target_sets": 1,
-                "target_reps": "6-8",
-                "cadence": "4-2-4",
-            },
-        ],
-    },
-    {
-        "id": "heavy-duty-day-2",
-        "title": "Heavy Duty Oficial - Día 2 (Martes): Piernas & Core",
-        "category": "Piernas & Core",
-        "tag": "Cuádriceps • Femoral • Gemelos • Core",
-        "summary": "Extensión cuádriceps, Prensa inclinada, Curl femoral, Gemelos, Crunch polea (1x al fallo)",
-        "exercises": [
-            {
-                "name": "Extensión de cuádriceps en máquina",
-                "muscle": "Piernas",
-                "equipment": "Máquina",
-                "search_terms": ["extensión de cuádriceps en máquina", "extensión de cuádriceps", "extensiones"],
-                "target_sets": 1,
-                "target_reps": "8-12",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Prensa inclinada con discos",
-                "muscle": "Piernas",
-                "equipment": "Máquina",
-                "search_terms": ["prensa inclinada con discos", "prensa", "prensa de piernas"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Curl femoral acostado en máquina",
-                "muscle": "Piernas",
-                "equipment": "Máquina",
-                "search_terms": ["curl femoral acostado en máquina", "curl femoral", "femoral"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Elevación de talones de pie en máquina",
-                "muscle": "Piernas",
-                "equipment": "Máquina",
-                "search_terms": ["elevación de talones de pie en máquina", "elevación de talones", "pantorrillas", "gemelos"],
-                "target_sets": 1,
-                "target_reps": "12-15",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Crunch en polea alta de rodillas",
-                "muscle": "Core",
-                "equipment": "Polea",
-                "search_terms": ["crunch en polea alta de rodillas", "crunch en polea", "crunch"],
-                "target_sets": 1,
-                "target_reps": "10-15",
-                "cadence": "4-2-4",
-            },
-        ],
-    },
-    {
-        "id": "heavy-duty-day-3",
-        "title": "Heavy Duty Oficial - Día 3 (Jueves): Hombros & Brazos",
-        "category": "Hombros & Brazos",
-        "tag": "Hombros • Tríceps • Bíceps",
-        "summary": "Elevaciones laterales, Press militar, Pájaros, Extensión tríceps, Fondos lastrados, Curl Z (1x al fallo)",
-        "exercises": [
-            {
-                "name": "Elevaciones laterales con mancuernas",
-                "muscle": "Hombros",
-                "equipment": "Mancuerna",
-                "search_terms": ["elevaciones laterales con mancuernas", "elevaciones laterales", "vuelo lateral"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Press militar de pie con barra",
-                "muscle": "Hombros",
-                "equipment": "Barra",
-                "search_terms": ["press militar de pie con barra", "press militar", "militar"],
-                "target_sets": 1,
-                "target_reps": "4-8",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Pájaros para deltoides posterior con mancuernas",
-                "muscle": "Hombros",
-                "equipment": "Mancuerna",
-                "search_terms": ["pájaros para deltoides posterior con mancuernas", "pájaros", "deltoides posterior"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Extensión en polea con barra (pushdown)",
-                "muscle": "Tríceps",
-                "equipment": "Polea",
-                "search_terms": ["extensión en polea con barra (pushdown)", "extensión en polea con barra", "pushdown"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Fondos en paralelas lastrados",
-                "muscle": "Tríceps",
-                "equipment": "Corporal",
-                "search_terms": ["fondos en paralelas lastrados", "fondos en paralelas", "fondos"],
-                "target_sets": 1,
-                "target_reps": "4-8",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Curl con barra Z",
-                "muscle": "Bíceps",
-                "equipment": "Barra",
-                "search_terms": ["curl con barra z", "curl barra z", "curl z"],
-                "target_sets": 1,
-                "target_reps": "6-10",
-                "cadence": "4-2-4",
-            },
-        ],
-    },
-    {
-        "id": "heavy-duty-day-4",
-        "title": "Heavy Duty Oficial - Día 4 (Viernes): Espalda Baja & Consolidación",
-        "category": "Espalda Baja & Consolidación",
-        "tag": "Espalda Baja • Trapecio • Core",
-        "summary": "Peso muerto convencional, Encogimientos mancuernas, Rueda abdominal (1x al fallo)",
-        "exercises": [
-            {
-                "name": "Peso muerto convencional con barra",
-                "muscle": "Espalda",
-                "equipment": "Barra",
-                "search_terms": ["peso muerto convencional con barra", "peso muerto", "deadlift"],
-                "target_sets": 1,
-                "target_reps": "5-8",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Encogimientos con mancuernas",
-                "muscle": "Hombros",
-                "equipment": "Mancuerna",
-                "search_terms": ["encogimientos con mancuernas", "encogimientos", "trapecio"],
-                "target_sets": 1,
-                "target_reps": "8-12",
-                "cadence": "4-2-4",
-            },
-            {
-                "name": "Rueda abdominal (Ab Wheel rollout)",
-                "muscle": "Core",
-                "equipment": "Corporal",
-                "search_terms": ["rueda abdominal (ab wheel rollout)", "rueda abdominal", "ab wheel"],
-                "target_sets": 1,
-                "target_reps": "10-15",
-                "cadence": "4-2-4",
-            },
-        ],
-    },
-]
+ROUTINE_DEFINITIONS: list[dict] = []
 
 
 GOAL_CONFIGS = {
@@ -299,19 +91,18 @@ def get_suggested_routines(
                 schemas.SuggestedRoutineExercise(
                     name=ex_item["name"],
                     muscle=ex_item["muscle"],
-                    equipment=ex_item["equipment"],
+                    equipment=None,
                     suggested_sets=ex_item.get("target_sets", 1),
                     suggested_reps=ex_item.get("target_reps", "6-10"),
                     rest_seconds=180,
-                    target_tempo="4-2-4-0 (Cadencia Mentzer 4-2-4)",
+                    target_tempo="3-1-2-0 (Controlado)",
                     execution_tips=execution_tips,
                     primary_muscles=primary_muscles,
                     search_terms=ex_item.get("search_terms", []),
                 )
             )
 
-        # Resumen detallado Heavy Duty: 1 serie efectiva al fallo muscular
-        summary = f"{len(exercise_list)} ejercicios · 1 serie al fallo (Cadencia Mentzer 4-2-4)"
+        summary = f"{len(exercise_list)} ejercicios · Series efectivas controladas"
 
         suggested_routines.append(
             schemas.SuggestedRoutine(
@@ -321,7 +112,7 @@ def get_suggested_routines(
                 tag=rdef["tag"],
                 summary=summary,
                 is_recommended=True,
-                recommended_badge="🔥 Heavy Duty Oficial (Mike Mentzer)",
+                recommended_badge="🔥 Rutina Oficial",
                 training_goal=goal_key,
                 experience_level=level,
                 suggested_sets=1,
@@ -337,6 +128,13 @@ def get_suggested_routines(
         recommended_label=recommended_badge,
         routines=suggested_routines,
     )
+
+
+def get_effective_user_id(current_user: models.User | None, db: Session) -> int | None:
+    if current_user:
+        return current_user.id
+    first_user = db.query(models.User.id).first()
+    return first_user[0] if first_user else None
 
 
 def format_routine_out(routine: models.Routine) -> schemas.RoutineOut:
@@ -379,10 +177,11 @@ def get_all_routines(
     """
     from sqlalchemy.orm import joinedload
 
-    if current_user:
-        user_filter = (models.Routine.is_preset == True) | (models.Routine.user_id == current_user.id)
+    effective_uid = get_effective_user_id(current_user, db)
+    if effective_uid:
+        user_filter = (models.Routine.is_preset == True) | (models.Routine.user_id == effective_uid) | (models.Routine.user_id.is_(None))
     else:
-        user_filter = (models.Routine.is_preset == True) | (models.Routine.user_id == 1)
+        user_filter = (models.Routine.is_preset == True) | (models.Routine.user_id.is_(None))
 
     routines = (
         db.query(models.Routine)
@@ -408,7 +207,7 @@ def create_routine(
     """
     Crear una nueva rutina personalizada con su lista de ejercicios ordenados.
     """
-    user_id = current_user.id if current_user else 1
+    user_id = get_effective_user_id(current_user, db)
 
     clean_name = routine_in.name.strip()
     if not clean_name:
@@ -438,11 +237,23 @@ def create_routine(
         db.add(re_entry)
 
     db.commit()
-    db.refresh(routine)
-    return format_routine_out(routine)
+    db.expire_all()
+    from sqlalchemy.orm import joinedload
+    saved = (
+        db.query(models.Routine)
+        .options(
+            joinedload(models.Routine.exercises)
+            .joinedload(models.RoutineExercise.exercise)
+            .joinedload(models.Exercise.muscle_group)
+        )
+        .filter(models.Routine.id == routine.id)
+        .first()
+    )
+    return format_routine_out(saved or routine)
 
 
 @router.put("/{routine_id}", response_model=schemas.RoutineOut)
+@router.patch("/{routine_id}", response_model=schemas.RoutineOut)
 def update_routine(
     routine_id: int,
     routine_in: schemas.RoutineUpdate,
@@ -452,6 +263,8 @@ def update_routine(
     """
     Editar nombre, descripción o ejercicios de una rutina del usuario.
     """
+    from sqlalchemy.orm import joinedload
+
     routine = db.get(models.Routine, routine_id)
     if not routine:
         raise HTTPException(status_code=404, detail="Rutina no encontrada.")
@@ -461,9 +274,9 @@ def update_routine(
             status_code=400, detail="No se pueden editar las rutinas base del sistema."
         )
 
-    user_id = current_user.id if current_user else 1
+    user_id = get_effective_user_id(current_user, db)
     is_admin = getattr(current_user, "is_admin", False)
-    if routine.user_id != user_id and not is_admin:
+    if routine.user_id is not None and routine.user_id != user_id and not is_admin:
         raise HTTPException(
             status_code=403, detail="No tienes permiso para modificar esta rutina."
         )
@@ -478,7 +291,10 @@ def update_routine(
         routine.description = routine_in.description.strip() if routine_in.description else None
 
     if routine_in.exercises is not None:
-        db.query(models.RoutineExercise).filter(models.RoutineExercise.routine_id == routine.id).delete()
+        db.query(models.RoutineExercise).filter(
+            models.RoutineExercise.routine_id == routine.id
+        ).delete(synchronize_session=False)
+        db.flush()
         for idx, ex_in in enumerate(routine_in.exercises):
             ex_exists = db.get(models.Exercise, ex_in.exercise_id)
             if not ex_exists:
@@ -487,17 +303,28 @@ def update_routine(
                 routine_id=routine.id,
                 exercise_id=ex_in.exercise_id,
                 order_index=ex_in.order_index if ex_in.order_index is not None else idx,
-                target_sets=ex_in.target_sets or 4,
+                target_sets=ex_in.target_sets or 3,
                 target_reps=str(ex_in.target_reps or "8-12").strip(),
             )
             db.add(re_entry)
 
     db.commit()
-    db.refresh(routine)
-    return format_routine_out(routine)
+    db.expire_all()
+    updated = (
+        db.query(models.Routine)
+        .options(
+            joinedload(models.Routine.exercises)
+            .joinedload(models.RoutineExercise.exercise)
+            .joinedload(models.Exercise.muscle_group)
+        )
+        .filter(models.Routine.id == routine.id)
+        .first()
+    )
+    return format_routine_out(updated or routine)
 
 
 @router.put("/{routine_id}/exercises", response_model=schemas.RoutineOut)
+@router.patch("/{routine_id}/exercises", response_model=schemas.RoutineOut)
 def update_routine_exercises(
     routine_id: int,
     payload: schemas.RoutineExercisesUpdate,
@@ -508,11 +335,13 @@ def update_routine_exercises(
     Modificar, reordenar, reemplazar o añadir ejercicios a una rutina existente.
     Si la rutina es del sistema (preset), crea una copia personalizada para el usuario.
     """
+    from sqlalchemy.orm import joinedload
+
     routine = db.get(models.Routine, routine_id)
     if not routine:
         raise HTTPException(status_code=404, detail="Rutina no encontrada.")
 
-    user_id = current_user.id if current_user else 1
+    user_id = get_effective_user_id(current_user, db)
     is_admin = getattr(current_user, "is_admin", False)
 
     target_routine = routine
@@ -525,14 +354,15 @@ def update_routine_exercises(
         )
         db.add(target_routine)
         db.flush()
-    elif routine.user_id != user_id and not is_admin:
+    elif routine.user_id is not None and routine.user_id != user_id and not is_admin:
         raise HTTPException(
             status_code=403, detail="No tienes permiso para modificar esta rutina."
         )
     else:
         db.query(models.RoutineExercise).filter(
             models.RoutineExercise.routine_id == target_routine.id
-        ).delete()
+        ).delete(synchronize_session=False)
+        db.flush()
 
     for idx, ex_in in enumerate(payload.exercises):
         ex_exists = db.get(models.Exercise, ex_in.exercise_id)
@@ -542,14 +372,24 @@ def update_routine_exercises(
             routine_id=target_routine.id,
             exercise_id=ex_in.exercise_id,
             order_index=ex_in.order_index if ex_in.order_index is not None else idx,
-            target_sets=ex_in.target_sets or 4,
+            target_sets=ex_in.target_sets or 3,
             target_reps=str(ex_in.target_reps or "8-12").strip(),
         )
         db.add(re_entry)
 
     db.commit()
-    db.refresh(target_routine)
-    return format_routine_out(target_routine)
+    db.expire_all()
+    updated = (
+        db.query(models.Routine)
+        .options(
+            joinedload(models.Routine.exercises)
+            .joinedload(models.RoutineExercise.exercise)
+            .joinedload(models.Exercise.muscle_group)
+        )
+        .filter(models.Routine.id == target_routine.id)
+        .first()
+    )
+    return format_routine_out(updated or target_routine)
 
 
 @router.delete("/{routine_id}")
@@ -559,7 +399,7 @@ def delete_routine(
     db: Session = Depends(get_db),
 ):
     """
-    Eliminar una rutina creada por el usuario.
+    Eliminar una rutina creada por el usuario y desvincular sus ejercicios y sesiones.
     """
     routine = db.get(models.Routine, routine_id)
     if not routine:
@@ -570,14 +410,22 @@ def delete_routine(
             status_code=400, detail="No se pueden eliminar las rutinas base del sistema."
         )
 
-    user_id = current_user.id if current_user else 1
+    user_id = get_effective_user_id(current_user, db)
     is_admin = getattr(current_user, "is_admin", False)
-    if routine.user_id != user_id and not is_admin:
+    if routine.user_id is not None and routine.user_id != user_id and not is_admin:
         raise HTTPException(
             status_code=403, detail="No tienes permiso para eliminar esta rutina."
         )
 
+    # Desvincular sesiones que apunten a esta rutina y eliminar sus ejercicios asociados
+    db.query(models.WorkoutSession).filter(
+        models.WorkoutSession.routine_id == routine.id
+    ).update({models.WorkoutSession.routine_id: None}, synchronize_session=False)
+    db.query(models.RoutineExercise).filter(
+        models.RoutineExercise.routine_id == routine.id
+    ).delete(synchronize_session=False)
+
     db.delete(routine)
     db.commit()
-    return {"message": "Rutina eliminada correctamente", "id": routine_id}
+    return {"message": "Rutina eliminada correctamente", "deleted": True, "id": routine_id}
 

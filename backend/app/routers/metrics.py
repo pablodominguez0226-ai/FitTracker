@@ -9,14 +9,13 @@ from ..security import get_current_user, get_optional_current_user
 
 router = APIRouter()
 
-# Colores de la paleta degradada sólida canónica
+# Colores de la paleta degradada sólida canónica (6 ejes del Radar)
 CANONICAL_MUSCLES_CONFIG = [
-    {"name": "Pecho", "color": "#FF5722"},
-    {"name": "Espalda", "color": "#C84218"},
     {"name": "Piernas", "color": "#9C27B0"},
+    {"name": "Espalda", "color": "#C84218"},
+    {"name": "Pecho", "color": "#FF5722"},
     {"name": "Hombros", "color": "#7C4DFF"},
-    {"name": "Bíceps", "color": "#00BCD4"},
-    {"name": "Tríceps", "color": "#3F51B5"},
+    {"name": "Brazos", "color": "#00BCD4"},
     {"name": "Core", "color": "#4CAF50"},
 ]
 
@@ -31,26 +30,44 @@ FULL_SPANISH_MONTHS = [
 ]
 
 
-def match_canonical_muscle(exercise_name: str = "", muscle_group_name: str = "") -> str:
-    combined = f"{exercise_name} {muscle_group_name}".lower()
-    if any(k in combined for k in ["pecho", "chest", "banca", "pec"]):
-        return "Pecho"
-    if any(k in combined for k in ["espalda", "back", "remo", "jalón", "jalon", "dominada", "pulldown", "dorsal"]):
-        return "Espalda"
-    if any(k in combined for k in ["pierna", "leg", "sentadilla", "squat", "prensa", "femoral", "cuádriceps", "cuadriceps", "gemelo", "hack", "hip thrust", "aductor", "abductor"]):
+def match_canonical_muscle(exercise_name: str = "", muscle_group_name: str = "") -> str | None:
+    """
+    Mapea estrictamente según el muscle_group real de la tabla exercises a los 6 ejes del Radar:
+    [Piernas, Espalda, Pecho, Hombros, Brazos, Core].
+    Los ejercicios de Bíceps y Tríceps computan al 100% en el eje de "Brazos".
+    Nunca asigna "Pecho" por defecto si no corresponde.
+    """
+    mg = (muscle_group_name or "").strip().lower()
+    if mg:
+        if any(k in mg for k in ["pierna", "cuádriceps", "cuadriceps", "femoral", "isquio", "glúteo", "gluteo", "gemelo", "abductor", "aductor"]):
+            return "Piernas"
+        if any(k in mg for k in ["espalda", "dorsal", "trapecio"]):
+            return "Espalda"
+        if any(k in mg for k in ["pecho", "pectoral"]):
+            return "Pecho"
+        if any(k in mg for k in ["hombro", "deltoid"]):
+            return "Hombros"
+        if any(k in mg for k in ["brazo", "bíceps", "biceps", "bicep", "tríceps", "triceps", "tricep", "antebrazo"]):
+            return "Brazos"
+        if any(k in mg for k in ["core", "abdom", "lumbar", "oblicuo"]):
+            return "Core"
+
+    ex = (exercise_name or "").strip().lower()
+    if not ex:
+        return None
+    if any(k in ex for k in ["tríceps", "triceps", "tricep", "francés", "frances", "pushdown", "patada", "katana", "bíceps", "biceps", "bicep", "curl", "martillo", "predicador", "zottman"]):
+        return "Brazos"
+    if any(k in ex for k in ["pierna", "leg", "sentadilla", "squat", "prensa", "femoral", "isquio", "cuádriceps", "cuadriceps", "gemelo", "hack", "hip thrust", "aductor", "abductor", "zancada", "búlgara", "bulgara"]):
         return "Piernas"
-    if any(k in combined for k in ["hombro", "shoulder", "militar", "deltoid", "lateral", "pájaro", "pajaro"]):
+    if any(k in ex for k in ["espalda", "back", "remo", "jalón", "jalon", "dominada", "pulldown", "dorsal", "pullover", "pull over"]):
+        return "Espalda"
+    if any(k in ex for k in ["hombro", "shoulder", "militar", "deltoid", "vuelo lateral", "elevaciones laterales", "pájaro", "pajaro", "face pull"]):
         return "Hombros"
-    if any(k in combined for k in ["tríceps", "triceps", "francés", "frances", "cuerda", "fondos", "pushdown", "patada"]):
-        return "Tríceps"
-    if any(k in combined for k in ["bíceps", "biceps", "curl", "martillo", "predicador"]):
-        return "Bíceps"
-    if any(k in combined for k in ["core", "abs", "abdom", "plancha", "crunch", "lumbar"]):
+    if any(k in ex for k in ["core", "abs", "abdom", "plancha", "crunch", "lumbar", "rueda abdominal", "leñador", "pallof"]):
         return "Core"
-    for m in ["Pecho", "Espalda", "Piernas", "Hombros", "Bíceps", "Tríceps", "Core"]:
-        if m.lower() in combined or m.lower().rstrip("s") in combined:
-            return m
-    return "Pecho"
+    if any(k in ex for k in ["pecho", "chest", "press banca", "press plano", "press inclinado", "press declinado", "aperturas", "cruces en polea", "pec"]):
+        return "Pecho"
+    return None
 
 
 def calculate_1rm(weight: float, reps: int) -> float:
@@ -72,7 +89,7 @@ def get_muscle_distribution(
     """
     thirty_days_ago = dt.date.today() - dt.timedelta(days=30)
 
-    # Buscar sesiones de los últimos 30 días del usuario
+    # 1. Buscar sesiones completadas del usuario en los últimos 30 días
     sessions = (
         db.query(models.WorkoutSession)
         .options(
@@ -84,9 +101,56 @@ def get_muscle_distribution(
         .filter(
             models.WorkoutSession.user_id == current_user.id,
             models.WorkoutSession.date >= thirty_days_ago,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
         )
         .all()
     )
+
+    # Verificar si contienen series completadas efectivas
+    has_valid_sets = any(
+        any(st.completed and getattr(st, "is_valid", True) for st in s.sets)
+        for s in sessions
+    )
+
+    # Si no hay series en los últimos 30 días, evaluar TODAS las sesiones finalizadas del usuario
+    # (independientemente de si provienen de sesión libre o de rutina)
+    if not has_valid_sets:
+        sessions = (
+            db.query(models.WorkoutSession)
+            .options(
+                joinedload(models.WorkoutSession.muscle_group),
+                joinedload(models.WorkoutSession.sets)
+                .joinedload(models.WorkoutSet.exercise)
+                .joinedload(models.Exercise.muscle_group),
+            )
+            .filter(
+                models.WorkoutSession.user_id == current_user.id,
+                (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+            )
+            .order_by(models.WorkoutSession.date.desc())
+            .all()
+        )
+        has_valid_sets = any(
+            any(st.completed and getattr(st, "is_valid", True) for st in s.sets)
+            for s in sessions
+        )
+
+    # Si aún no hay sesiones completadas, considerar la última sesión con series completadas
+    if not has_valid_sets:
+        latest = (
+            db.query(models.WorkoutSession)
+            .options(
+                joinedload(models.WorkoutSession.muscle_group),
+                joinedload(models.WorkoutSession.sets)
+                .joinedload(models.WorkoutSet.exercise)
+                .joinedload(models.Exercise.muscle_group),
+            )
+            .filter(models.WorkoutSession.user_id == current_user.id)
+            .order_by(models.WorkoutSession.id.desc())
+            .first()
+        )
+        if latest and any(st.completed for st in latest.sets):
+            sessions = [latest]
 
     counts = defaultdict(int)
     volumes = defaultdict(float)
@@ -102,10 +166,11 @@ def get_muscle_distribution(
             mg_name = ""
             if st.exercise and st.exercise.muscle_group:
                 mg_name = st.exercise.muscle_group.name
-            elif s.muscle_group:
-                mg_name = s.muscle_group.name
 
             canonical = match_canonical_muscle(ex_name, mg_name)
+            if not canonical:
+                continue
+
             counts[canonical] += 1
             w = float(st.weight or 0.0)
             r = int(st.reps or 0)
@@ -113,25 +178,37 @@ def get_muscle_distribution(
 
     total_sets = sum(counts.values())
     total_volume = round(sum(volumes.values()), 1)
+    all_trained_have_volume = total_volume > 0 and all(
+        volumes[m] > 0 for m, c in counts.items() if c > 0
+    )
 
     distribution_items = []
     for cfg in CANONICAL_MUSCLES_CONFIG:
         name = cfg["name"]
         color = cfg["color"]
         cnt = counts[name]
-        pct = round((cnt / total_sets) * 100, 1) if total_sets > 0 else 0.0
+        vol = round(volumes[name], 1) if cnt > 0 else 0.0
+        if cnt == 0:
+            pct = 0.0
+        elif all_trained_have_volume and total_volume > 0:
+            pct = round((volumes[name] / total_volume) * 100, 1)
+        elif total_sets > 0:
+            pct = round((cnt / total_sets) * 100, 1)
+        else:
+            pct = 0.0
+
         distribution_items.append(
             schemas.MuscleDistributionItem(
                 muscle_group=name,
                 set_count=cnt,
                 percentage=pct,
-                volume=round(volumes[name], 1),
+                volume=vol,
                 color=color,
             )
         )
 
-    # Ordenar por cantidad de series descendente
-    distribution_items.sort(key=lambda x: x.set_count, reverse=True)
+    # Ordenar por porcentaje / volumen descendente
+    distribution_items.sort(key=lambda x: (x.percentage, x.volume, x.set_count), reverse=True)
 
     top_muscle = distribution_items[0].muscle_group if total_sets > 0 else None
     top_percentage = distribution_items[0].percentage if total_sets > 0 else 0.0
@@ -525,6 +602,7 @@ def get_leaderboard(
     )
 
 
+@router.get("/metrics/summary")
 @router.get("/metrics")
 def get_user_metrics_summary(
     current_user: models.User = Depends(get_current_user),
@@ -532,7 +610,11 @@ def get_user_metrics_summary(
 ):
     sessions = (
         db.query(models.WorkoutSession)
-        .filter(models.WorkoutSession.user_id == current_user.id)
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .order_by(models.WorkoutSession.date.desc(), models.WorkoutSession.id.desc())
         .all()
     )
     sets = (
@@ -540,20 +622,66 @@ def get_user_metrics_summary(
         .join(models.WorkoutSession, models.WorkoutSet.workout_session_id == models.WorkoutSession.id)
         .filter(
             models.WorkoutSession.user_id == current_user.id,
-            models.WorkoutSet.completed != False,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+            models.WorkoutSet.completed == True,
             models.WorkoutSet.is_valid != False,
         )
         .all()
     )
+
+    # Si no hay sesiones marcadas como completed pero hay series completadas registradas
+    if not sets:
+        sets = (
+            db.query(models.WorkoutSet)
+            .join(models.WorkoutSession, models.WorkoutSet.workout_session_id == models.WorkoutSession.id)
+            .filter(
+                models.WorkoutSession.user_id == current_user.id,
+                models.WorkoutSet.completed == True,
+                models.WorkoutSet.is_valid != False,
+            )
+            .all()
+        )
+        if sets and not sessions:
+            s_ids = {st.workout_session_id for st in sets}
+            sessions = (
+                db.query(models.WorkoutSession)
+                .filter(models.WorkoutSession.id.in_(s_ids))
+                .order_by(models.WorkoutSession.date.desc(), models.WorkoutSession.id.desc())
+                .all()
+            )
+
     total_volume = sum(
         float(s.weight or 0) * int(s.reps or 0)
         for s in sets
         if (s.set_type or "").lower() not in ["warmup", "w"]
     )
+    total_reps = sum(int(s.reps or 0) for s in sets)
+    distinct_dates = {s.date for s in sessions if s.date}
+
+    last_session_info = None
+    if sessions:
+        ls = sessions[0]
+        ls_sets = [st for st in sets if st.workout_session_id == ls.id]
+        ls_vol = sum(
+            float(st.weight or 0) * int(st.reps or 0)
+            for st in ls_sets
+            if (st.set_type or "").lower() not in ["warmup", "w"]
+        )
+        last_session_info = {
+            "id": ls.id,
+            "date": str(ls.date),
+            "total_volume": round(ls_vol, 1),
+            "sets_count": len(ls_sets),
+        }
+
     return {
         "user_id": current_user.id,
         "total_workouts": len(sessions),
+        "workout_days_count": len(distinct_dates),
         "total_sets": len(sets),
+        "total_reps": total_reps,
         "total_volume_kg": round(total_volume, 1),
+        "last_session": last_session_info,
     }
+
 

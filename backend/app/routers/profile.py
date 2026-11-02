@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -228,6 +229,25 @@ LEVEL_EXPLANATIONS: dict[str, schemas.ExperienceLevelDetail] = {
 }
 
 
+def parse_weekly_pattern(val) -> dict[str, str]:
+    if not val:
+        return schemas.DEFAULT_WEEKLY_PATTERN.copy()
+    if isinstance(val, dict):
+        res = schemas.DEFAULT_WEEKLY_PATTERN.copy()
+        res.update(val)
+        return res
+    if isinstance(val, str):
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, dict):
+                res = schemas.DEFAULT_WEEKLY_PATTERN.copy()
+                res.update(parsed)
+                return res
+        except Exception:
+            pass
+    return schemas.DEFAULT_WEEKLY_PATTERN.copy()
+
+
 @router.get("", response_model=schemas.UserProfileOut)
 def get_user_profile(
     current_user: models.User = Depends(get_current_user),
@@ -248,6 +268,9 @@ def get_user_profile(
         nutrition_context=current_user.nutrition_context or "no_especifica",
         supplements=current_user.supplements,
         health_notes=current_user.health_notes,
+        total_workouts=current_user.total_workouts or 0,
+        workout_days_count=current_user.workout_days_count or 0,
+        weekly_pattern=parse_weekly_pattern(current_user.weekly_pattern),
         updated_at=current_user.updated_at,
     )
 
@@ -333,11 +356,14 @@ def update_user_profile(
         current_user.supplements = payload.supplements
     if payload.health_notes is not None:
         current_user.health_notes = payload.health_notes
+    if payload.weekly_pattern is not None:
+        pattern = parse_weekly_pattern(payload.weekly_pattern)
+        current_user.weekly_pattern = json.dumps(pattern)
 
     current_user.updated_at = dt.datetime.now(dt.timezone.utc)
 
     # Sincronizar tabla user_profile
-    profile = db.get(models.UserProfile, 1)
+    profile = db.get(models.UserProfile, current_user.id) or db.get(models.UserProfile, 1)
     if not profile:
         profile = models.UserProfile(
             id=1,
@@ -354,6 +380,7 @@ def update_user_profile(
             nutrition_context=current_user.nutrition_context,
             supplements=current_user.supplements,
             health_notes=current_user.health_notes,
+            weekly_pattern=current_user.weekly_pattern,
             updated_at=dt.datetime.now(dt.timezone.utc),
         )
         db.add(profile)
@@ -371,6 +398,8 @@ def update_user_profile(
         profile.nutrition_context = current_user.nutrition_context
         profile.supplements = current_user.supplements
         profile.health_notes = current_user.health_notes
+        if current_user.weekly_pattern:
+            profile.weekly_pattern = current_user.weekly_pattern
         profile.updated_at = dt.datetime.now(dt.timezone.utc)
 
     db.commit()
@@ -391,8 +420,40 @@ def update_user_profile(
         nutrition_context=current_user.nutrition_context or "no_especifica",
         supplements=current_user.supplements,
         health_notes=current_user.health_notes,
+        total_workouts=current_user.total_workouts or 0,
+        workout_days_count=current_user.workout_days_count or 0,
+        weekly_pattern=parse_weekly_pattern(current_user.weekly_pattern),
         updated_at=current_user.updated_at,
     )
+
+
+@router.get("/weekly-pattern")
+def get_weekly_pattern(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return parse_weekly_pattern(current_user.weekly_pattern)
+
+
+@router.put("/weekly-pattern")
+def update_weekly_pattern(
+    payload: dict,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    pattern = parse_weekly_pattern(payload)
+    pattern_json = json.dumps(pattern)
+    current_user.weekly_pattern = pattern_json
+    current_user.updated_at = dt.datetime.now(dt.timezone.utc)
+
+    profile = db.get(models.UserProfile, current_user.id) or db.get(models.UserProfile, 1)
+    if profile:
+        profile.weekly_pattern = pattern_json
+        profile.updated_at = dt.datetime.now(dt.timezone.utc)
+
+    db.commit()
+    db.refresh(current_user)
+    return pattern
 
 
 @router.get("/analytics", response_model=schemas.ProfileAnalyticsOut)

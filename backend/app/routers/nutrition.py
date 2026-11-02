@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
@@ -35,7 +36,7 @@ def calculate_macros(
         prot_per_kg = payload.protein_per_kg or 2.3
         fat_per_kg = payload.fats_per_kg or 0.8
     elif goal == "hipertrofia":
-        # Superávit calórico controlado (Heavy Duty / Masa magra)
+        # Superávit calórico controlado (Alta Intensidad / Masa magra)
         cal_per_kg = 36
         prot_per_kg = payload.protein_per_kg or 2.2
         fat_per_kg = payload.fats_per_kg or 1.0
@@ -201,7 +202,7 @@ def get_nutrition_plan(
         ]
         plan = models.NutritionPlan(
             user_id=current_user.id,
-            title="Plan Nutricional Heavy Duty",
+            title="Plan Nutricional Alta Intensidad",
             notes="Dieta hipercalórica e hiperproteica limpia orientada al entrenamiento de alta intensidad.",
             meals_json=json.dumps(default_meals, ensure_ascii=False),
             created_at=dt.datetime.now(dt.timezone.utc),
@@ -319,3 +320,293 @@ def download_pdf(
         media_type="application/pdf",
         filename=safe_filename,
     )
+
+
+# ====================================================================
+# 3. BASE NUTRICIONAL ARGENTINA & BUSCADOR PREDICTIVO
+# ====================================================================
+
+@router.get("/foods", response_model=list[schemas.FoodItemOut])
+def get_foods(
+    q: str | None = None,
+    category: str | None = None,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Buscador predictivo rápido de alimentos e ingredientes con filtro por categoría."""
+    query = db.query(models.FoodItem)
+    if category and category != "all":
+        query = query.filter(models.FoodItem.category == category)
+    if q and q.strip():
+        search_pattern = f"%{q.strip().lower()}%"
+        query = query.filter(func.lower(models.FoodItem.name).like(search_pattern))
+
+    return [schemas.FoodItemOut.model_validate(f) for f in query.order_by(models.FoodItem.name.asc()).limit(200).all()]
+
+
+# ====================================================================
+# 4. COMIDAS CASERAS Y RECETAS DEL USUARIO
+# ====================================================================
+
+@router.post("/custom-recipe", response_model=schemas.CustomRecipeOut)
+def create_custom_recipe(
+    payload: schemas.CustomRecipeCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Crea una comida combinada calculando los macros proporcionales automáticamente
+    a partir de sus ingredientes y gramos.
+    """
+    if not payload.name or not payload.name.strip():
+        raise HTTPException(status_code=400, detail="El nombre de la receta es requerido.")
+    if not payload.ingredients:
+        raise HTTPException(status_code=400, detail="Debe incluir al menos un ingrediente.")
+    if payload.total_weight_g <= 0:
+        raise HTTPException(status_code=400, detail="El peso por unidad/porción debe ser mayor a 0.")
+
+    # Cache de alimentos para cálculo
+    food_ids = [ing.food_id for ing in payload.ingredients if ing.food_id]
+    db_foods = {f.id: f for f in db.query(models.FoodItem).filter(models.FoodItem.id.in_(food_ids)).all()} if food_ids else {}
+
+    total_batch_grams = 0.0
+    total_batch_cals = 0.0
+    total_batch_prot = 0.0
+    total_batch_carbs = 0.0
+    total_batch_fat = 0.0
+
+    ingredients_data = []
+
+    for ing in payload.ingredients:
+        grams = max(0.0, float(ing.grams))
+        total_batch_grams += grams
+        food = db_foods.get(ing.food_id) if ing.food_id else None
+
+        if food:
+            cals_100 = food.calories_100g
+            prot_100 = food.protein_100g
+            carbs_100 = food.carbs_100g
+            fat_100 = food.fat_100g
+        else:
+            cals_100 = (ing.calories / grams * 100.0) if ing.calories and grams > 0 else 0.0
+            prot_100 = (ing.protein / grams * 100.0) if ing.protein and grams > 0 else 0.0
+            carbs_100 = (ing.carbs / grams * 100.0) if ing.carbs and grams > 0 else 0.0
+            fat_100 = (ing.fat / grams * 100.0) if ing.fat and grams > 0 else 0.0
+
+        item_cals = round(grams * (cals_100 / 100.0), 2)
+        item_prot = round(grams * (prot_100 / 100.0), 2)
+        item_carbs = round(grams * (carbs_100 / 100.0), 2)
+        item_fat = round(grams * (fat_100 / 100.0), 2)
+
+        total_batch_cals += item_cals
+        total_batch_prot += item_prot
+        total_batch_carbs += item_carbs
+        total_batch_fat += item_fat
+
+        ingredients_data.append({
+            "food_id": ing.food_id,
+            "name": ing.name,
+            "grams": grams,
+            "calories": item_cals,
+            "protein": item_prot,
+            "carbs": item_carbs,
+            "fat": item_fat,
+        })
+
+    # Proporción según el peso de la porción / unidad especificado
+    ratio = (payload.total_weight_g / total_batch_grams) if total_batch_grams > 0 else 1.0
+
+    calc_calories = round(payload.calculated_calories if payload.calculated_calories is not None else (total_batch_cals * ratio), 1)
+    calc_protein = round(payload.calculated_protein if payload.calculated_protein is not None else (total_batch_prot * ratio), 1)
+    calc_carbs = round(payload.calculated_carbs if payload.calculated_carbs is not None else (total_batch_carbs * ratio), 1)
+    calc_fat = round(payload.calculated_fat if payload.calculated_fat is not None else (total_batch_fat * ratio), 1)
+
+    recipe = models.CustomRecipe(
+        user_id=current_user.id,
+        name=payload.name.strip(),
+        total_weight_g=float(payload.total_weight_g),
+        ingredients_json=json.dumps(ingredients_data, ensure_ascii=False),
+        calculated_calories=calc_calories,
+        calculated_protein=calc_protein,
+        calculated_carbs=calc_carbs,
+        calculated_fat=calc_fat,
+        servings=max(1, payload.servings),
+        created_at=dt.datetime.now(dt.timezone.utc),
+    )
+    db.add(recipe)
+    db.commit()
+    db.refresh(recipe)
+
+    return schemas.CustomRecipeOut.model_validate(recipe)
+
+
+@router.get("/custom-recipes", response_model=list[schemas.CustomRecipeOut])
+def get_custom_recipes(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Lista las recetas y comidas caseras creadas por el usuario."""
+    recipes = (
+        db.query(models.CustomRecipe)
+        .filter(models.CustomRecipe.user_id == current_user.id)
+        .order_by(models.CustomRecipe.created_at.desc(), models.CustomRecipe.id.desc())
+        .all()
+    )
+    return [schemas.CustomRecipeOut.model_validate(r) for r in recipes]
+
+
+@router.delete("/custom-recipes/{recipe_id}")
+def delete_custom_recipe(
+    recipe_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Elimina una receta casera creada por el usuario."""
+    recipe = (
+        db.query(models.CustomRecipe)
+        .filter(models.CustomRecipe.id == recipe_id, models.CustomRecipe.user_id == current_user.id)
+        .first()
+    )
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Receta no encontrada.")
+    db.delete(recipe)
+    db.commit()
+    return {"status": "ok", "deleted_id": recipe_id}
+
+
+# ====================================================================
+# 5. REGISTRO DE COMIDAS DIARIAS (CON ACOMPAÑAMIENTOS Y EXTRAS)
+# ====================================================================
+
+@router.post("/log", response_model=schemas.DailyFoodLogOut)
+def log_food(
+    payload: schemas.FoodLogCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Registra un plato o comida con sus modificadores/guarniciones
+    y actualiza automáticamente el acumulado diario de nutrición.
+    """
+    target_date = payload.log_date or dt.date.today()
+
+    food_log = models.DailyFoodLog(
+        user_id=current_user.id,
+        food_name=payload.food_name.strip(),
+        grams_or_units=payload.grams_or_units,
+        calories=round(payload.calories, 1),
+        protein=round(payload.protein, 1),
+        carbs=round(payload.carbs, 1),
+        fat=round(payload.fat, 1),
+        log_date=target_date,
+        side_dish_name=payload.side_dish_name.strip() if payload.side_dish_name else None,
+        side_dish_grams=payload.side_dish_grams,
+        meal_type=payload.meal_type or "comida",
+        recipe_id=payload.recipe_id,
+        food_id=payload.food_id,
+        created_at=dt.datetime.now(dt.timezone.utc),
+    )
+    db.add(food_log)
+
+    # Actualizar o inicializar el acumulado en daily_nutrition_logs
+    daily_nutri = (
+        db.query(models.DailyNutritionLog)
+        .filter(
+            models.DailyNutritionLog.user_id == current_user.id,
+            models.DailyNutritionLog.date == target_date,
+        )
+        .first()
+    )
+
+    if not daily_nutri:
+        bw = current_user.bodyweight or 75.0
+        target_prot = current_user.target_protein_g or round(bw * 2.2, 1)
+        target_fats = round(bw * 0.9, 1)
+        target_cals = round(bw * 34, 0)
+        target_carbs = round(max(0, target_cals - (target_prot * 4 + target_fats * 9)) / 4, 1)
+
+        daily_nutri = models.DailyNutritionLog(
+            user_id=current_user.id,
+            date=target_date,
+            calories_consumed=round(payload.calories, 1),
+            protein_consumed=round(payload.protein, 1),
+            carbs_consumed=round(payload.carbs, 1),
+            fats_consumed=round(payload.fat, 1),
+            target_calories=float(target_cals),
+            target_protein=float(target_prot),
+            target_carbs=float(target_carbs),
+            target_fats=float(target_fats),
+            notes="",
+            created_at=dt.datetime.now(dt.timezone.utc),
+        )
+        db.add(daily_nutri)
+    else:
+        daily_nutri.calories_consumed = round(daily_nutri.calories_consumed + payload.calories, 1)
+        daily_nutri.protein_consumed = round(daily_nutri.protein_consumed + payload.protein, 1)
+        daily_nutri.carbs_consumed = round(daily_nutri.carbs_consumed + payload.carbs, 1)
+        daily_nutri.fats_consumed = round(daily_nutri.fats_consumed + payload.fat, 1)
+
+    db.commit()
+    db.refresh(food_log)
+    return schemas.DailyFoodLogOut.model_validate(food_log)
+
+
+@router.get("/logs", response_model=list[schemas.DailyFoodLogOut])
+def get_food_logs(
+    date_str: str | None = None,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Obtiene los platos registrados para la fecha especificada."""
+    target_date = dt.date.today()
+    if date_str:
+        try:
+            target_date = dt.date.fromisoformat(date_str)
+        except ValueError:
+            pass
+
+    logs = (
+        db.query(models.DailyFoodLog)
+        .filter(
+            models.DailyFoodLog.user_id == current_user.id,
+            models.DailyFoodLog.log_date == target_date,
+        )
+        .order_by(models.DailyFoodLog.created_at.asc(), models.DailyFoodLog.id.asc())
+        .all()
+    )
+    return [schemas.DailyFoodLogOut.model_validate(l) for l in logs]
+
+
+@router.delete("/logs/{log_id}")
+def delete_food_log(
+    log_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Elimina un plato registrado y descuenta sus macros del progreso diario."""
+    log = (
+        db.query(models.DailyFoodLog)
+        .filter(models.DailyFoodLog.id == log_id, models.DailyFoodLog.user_id == current_user.id)
+        .first()
+    )
+    if not log:
+        raise HTTPException(status_code=404, detail="Registro de comida no encontrado.")
+
+    # Restar de daily_nutrition_logs
+    daily_nutri = (
+        db.query(models.DailyNutritionLog)
+        .filter(
+            models.DailyNutritionLog.user_id == current_user.id,
+            models.DailyNutritionLog.date == log.log_date,
+        )
+        .first()
+    )
+    if daily_nutri:
+        daily_nutri.calories_consumed = max(0.0, round(daily_nutri.calories_consumed - log.calories, 1))
+        daily_nutri.protein_consumed = max(0.0, round(daily_nutri.protein_consumed - log.protein, 1))
+        daily_nutri.carbs_consumed = max(0.0, round(daily_nutri.carbs_consumed - log.carbs, 1))
+        daily_nutri.fats_consumed = max(0.0, round(daily_nutri.fats_consumed - log.fat, 1))
+
+    db.delete(log)
+    db.commit()
+    return {"status": "ok", "deleted_id": log_id}

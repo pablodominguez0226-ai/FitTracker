@@ -1,11 +1,20 @@
 import React from "react";
 
-export default function Metric({ label, value, suffix = "", detail }) {
+export default function Metric({ label, value, suffix = "", detail, highlight = true }) {
   return (
-    <div className="rounded-2xl sm:rounded-3xl border border-white/5 bg-[#1C1C1E] p-3.5 sm:p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8E8E93]">{label}</p>
-      <p className="mt-2.5 text-2xl font-semibold tracking-tight leading-none text-white sm:text-3xl">{value ?? "--"}{value !== null && value !== undefined ? suffix : ""}</p>
-      {detail ? <p className="mt-2 text-xs text-[#8E8E93]">{detail}</p> : null}
+    <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-bento">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">{label}</p>
+      <p
+        className={`mt-2.5 text-2xl font-extrabold tracking-tight leading-none sm:text-3xl ${
+          highlight ? "text-red-500" : "text-[#0F172A]"
+        }`}
+      >
+        {value ?? "--"}
+        {value !== null && value !== undefined ? suffix : ""}
+      </p>
+      {detail ? <p className="mt-2 text-xs text-[#64748B]">{detail}</p> : null}
     </div>
   );
 }
+
+export { Metric as MetricsCard };

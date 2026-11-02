@@ -161,6 +161,19 @@ export function addCustomExerciseToCache(exercise) {
 }
 
 /**
+ * Elimina un ejercicio de la caché local por ID.
+ */
+export function removeExerciseFromCache(id) {
+  try {
+    const all = getCachedExercises();
+    const updated = all.filter((e) => e.id !== id && String(e.id) !== String(id));
+    setCachedExercises(updated);
+  } catch (err) {
+    console.warn("Error eliminando ejercicio de cache:", err);
+  }
+}
+
+/**
  * Reemplaza un ejercicio con ID temporal (temp_exercise_...) por el ejercicio final del servidor.
  */
 export function replaceTempExerciseInCache(tempId, realExercise) {
@@ -273,22 +286,32 @@ export async function fetchMuscleGroupsWithCache() {
  * Si hay red, consume la API y actualiza la caché.
  * Si falla o está offline, retorna inmediatamente la caché local.
  */
-export async function fetchExercisesWithCache(muscleGroupId = null) {
+export async function fetchExercisesWithCache(muscle = null, q = null) {
   if (!isOnline()) {
-    return getCachedExercises(muscleGroupId);
+    return getCachedExercises(muscle);
   }
 
   try {
-    const params = muscleGroupId ? { muscle_group_id: muscleGroupId } : {};
+    const params = {};
+    if (muscle !== null && muscle !== undefined && muscle !== "") {
+      if (typeof muscle === "number" || /^\d+$/.test(String(muscle))) {
+        params.muscle_group_id = Number(muscle);
+      } else {
+        params.muscle = String(muscle);
+      }
+    }
+    if (q !== null && q !== undefined && String(q).trim() !== "") {
+      params.q = String(q).trim();
+    }
     const res = await api.get("/exercises", { params });
     const data = Array.isArray(res.data) ? res.data : [];
-    if (data.length > 0 && !muscleGroupId) {
+    if (data.length > 0 && !muscle && !q) {
       setCachedExercises(data);
     }
-    return data.length > 0 ? data : getCachedExercises(muscleGroupId);
+    return data.length > 0 || muscle || q ? data : getCachedExercises(muscle);
   } catch (err) {
     console.warn("Error en red al obtener ejercicios, usando caché:", err);
-    return getCachedExercises(muscleGroupId);
+    return getCachedExercises(muscle);
   }
 }
 

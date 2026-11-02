@@ -412,7 +412,7 @@ export async function processSyncQueue() {
 
     if (syncedItemsCount > 0) {
       // Mostrar toast sutil requerido al completar la sincronización
-      showToast("✅ Entrenamientos sincronizados con el servidor", { variant: "emerald" });
+      showToast("✅ Entrenamientos sincronizados con el servidor", { variant: "red" });
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("fittracker:recordUpdated"));
       }

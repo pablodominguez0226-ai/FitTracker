@@ -1,3 +1,7 @@
+import datetime as dt
+import re
+import unicodedata
+from difflib import SequenceMatcher
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
@@ -8,12 +12,178 @@ from ..security import get_optional_current_user
 
 router = APIRouter()
 
+SPANISH_STOPWORDS = {
+    "de", "del", "en", "con", "al", "la", "el", "los", "las",
+    "un", "una", "unos", "unas", "para", "por", "a", "y", "o", "u", "se", "su",
+}
+
+
+def _normalize_text(text: str) -> str:
+    if not text:
+        return ""
+    norm = unicodedata.normalize("NFD", text.lower().strip())
+    no_accents = "".join(ch for ch in norm if unicodedata.category(ch) != "Mn")
+    cleaned = re.sub(r"[^a-z0-9\s]", " ", no_accents)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
+def _stem_token(tok: str) -> str:
+    if len(tok) > 5 and tok.endswith("iones"):
+        return tok[:-3]  # extensiones -> extension
+    if len(tok) > 4 and tok.endswith("es") and not tok.endswith("ps"):
+        return tok[:-2]
+    if len(tok) > 3 and tok.endswith("s"):
+        return tok[:-1]
+    return tok
+
+
+def _tokenize_exercise(text: str) -> list[str]:
+    norm = _normalize_text(text)
+    if not norm:
+        return []
+    tokens = []
+    for raw in norm.split(" "):
+        if not raw or raw in SPANISH_STOPWORDS or len(raw) < 2:
+            continue
+        tokens.append(_stem_token(raw))
+    return tokens
+
+
+def _get_user_exercise_usage_60d(db: Session, user_id: int | None, days: int = 60) -> dict[int, int]:
+    cutoff = dt.date.today() - dt.timedelta(days=days)
+    query = (
+        db.query(
+            models.WorkoutSet.exercise_id,
+            func.count(func.distinct(models.WorkoutSession.id)).label("session_cnt"),
+            func.count(models.WorkoutSet.id).label("set_cnt"),
+        )
+        .join(models.WorkoutSession, models.WorkoutSet.workout_session_id == models.WorkoutSession.id)
+        .filter(
+            models.WorkoutSet.completed == True,
+            models.WorkoutSession.date >= cutoff,
+        )
+    )
+    if user_id is not None:
+        query = query.filter(models.WorkoutSession.user_id == user_id)
+
+    rows = query.group_by(models.WorkoutSet.exercise_id).all()
+    if not rows and user_id is not None:
+        # Fallback a todo el historial del usuario si no entrenó en los últimos 60 días
+        fallback_q = (
+            db.query(
+                models.WorkoutSet.exercise_id,
+                func.count(func.distinct(models.WorkoutSession.id)).label("session_cnt"),
+                func.count(models.WorkoutSet.id).label("set_cnt"),
+            )
+            .join(models.WorkoutSession, models.WorkoutSet.workout_session_id == models.WorkoutSession.id)
+            .filter(
+                models.WorkoutSet.completed == True,
+                models.WorkoutSession.user_id == user_id,
+            )
+            .group_by(models.WorkoutSet.exercise_id)
+        )
+        rows = fallback_q.all()
+
+    usage_map: dict[int, int] = {}
+    for ex_id, session_cnt, set_cnt in rows:
+        if ex_id is not None:
+            # Guardamos cantidad de veces (series efectivas o sesiones ponderadas)
+            usage_map[int(ex_id)] = int(set_cnt or session_cnt or 0)
+    return usage_map
+
+
+def _to_exercise_out(ex: models.Exercise, usage_count: int = 0) -> schemas.ExerciseOut:
+    mg_name = ex.muscle_group.name if ex.muscle_group else None
+    subgroup = ex.subgroup or ex.primary_muscles
+    return schemas.ExerciseOut(
+        id=ex.id,
+        slug=ex.slug,
+        name=ex.name,
+        muscle_group_id=ex.muscle_group_id,
+        muscle_group_name=mg_name,
+        muscleGroup=mg_name,
+        subgroup=subgroup,
+        mediaUrl=ex.image_url,
+        target_muscle=mg_name,
+        category=ex.mechanics_type,
+        secondary_muscles=subgroup,
+        is_active=ex.is_active,
+        execution_tips=ex.execution_tips,
+        target_tempo=ex.target_tempo,
+        primary_muscles=subgroup,
+        equipment_type=None,
+        mechanics_type=ex.mechanics_type,
+        image_url=ex.image_url,
+        key_cue=ex.key_cue,
+        replacement_id=ex.replacement_id,
+        usage_count_60d=usage_count,
+    )
+
+
+def _matches_muscle_filter(ex: models.Exercise, muscle_filter: str) -> bool:
+    norm_filter = _normalize_text(muscle_filter)
+    if not norm_filter or norm_filter in ("all", "todos", "todos los musculos"):
+        return True
+    if norm_filter.isdigit():
+        return ex.muscle_group_id == int(norm_filter)
+
+    mg_norm = _normalize_text(ex.muscle_group.name if ex.muscle_group else "")
+    sub_norm = _normalize_text(ex.subgroup or ex.primary_muscles or "")
+    name_norm = _normalize_text(ex.name or "")
+
+    # Coincidencia directa con el grupo muscular principal o subgrupo
+    if (
+        norm_filter == mg_norm
+        or norm_filter.rstrip("s") == mg_norm.rstrip("s")
+        or norm_filter == sub_norm
+        or norm_filter.rstrip("s") == sub_norm.rstrip("s")
+    ):
+        return True
+
+    # Sinónimos directos de grupos musculares principales
+    synonyms_map = {
+        "pecho": {"pecho", "pectoral", "pectorales"},
+        "espalda": {"espalda", "lats", "dorsal", "dorsales", "columna", "columna vertebral"},
+        "brazos": {"brazo", "brazos"},
+        "piernas": {"pierna", "piernas"},
+    }
+    for group_key, aliases in synonyms_map.items():
+        if norm_filter in aliases and (mg_norm == group_key or mg_norm.rstrip("s") == group_key.rstrip("s")):
+            return True
+
+    # Sub-grupos anatómicos específicos
+    submuscle_keywords = {
+        "hombros": ["hombro", "deltoide"],
+        "hombro": ["hombro", "deltoide"],
+        "biceps": ["bicep", "biceps", "braquial"],
+        "triceps": ["tricep", "triceps"],
+        "cuadriceps": ["cuadriceps", "sentadilla", "prensa", "hack", "sissy"],
+        "isquios": ["isquio", "femoral", "peso muerto rumano", "buenos dias", "nordic"],
+        "isquiotibiales": ["isquio", "femoral", "peso muerto rumano", "buenos dias", "nordic"],
+        "femoral": ["isquio", "femoral", "peso muerto rumano", "buenos dias", "nordic"],
+        "gemelos": ["gemelo", "talon", "soleo", "pantorrilla"],
+        "gluteos": ["gluteo", "hip thrust", "puente", "abductor", "abduccion", "patada", "bulgara", "zancada"],
+        "aductores": ["aductor", "aduccion", "sumo"],
+        "antebrazos": ["antebrazo", "muneca", "inverso", "pronacion", "martillo", "farmer"],
+        "serrato": ["serrato", "pullover"],
+        "columna": ["lumbar", "hiperextension", "peso muerto", "buenos dias", "espinal", "cadena posterior"],
+    }
+    if norm_filter in submuscle_keywords:
+        for kw in submuscle_keywords[norm_filter]:
+            if kw in sub_norm or kw in name_norm:
+                return True
+
+    return norm_filter in mg_norm or norm_filter in sub_norm
+
 
 @router.get("", response_model=list[schemas.ExerciseOut])
 def list_exercises(
+    muscle: str | None = Query(None, description="Filtrar por grupo muscular (ej: pecho, espalda, triceps)"),
+    q: str | None = Query(None, description="Búsqueda por texto en el nombre del ejercicio"),
     muscle_group_id: int | None = Query(None, description="Filtrar por ID de grupo muscular"),
     include_archived: bool = Query(False, description="Incluir ejercicios archivados"),
     limit: int | None = Query(None, description="Límite opcional de resultados"),
+    current_user: models.User | None = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     query = db.query(models.Exercise).options(joinedload(models.Exercise.muscle_group))
@@ -22,28 +192,155 @@ def list_exercises(
     if muscle_group_id is not None:
         query = query.filter(models.Exercise.muscle_group_id == muscle_group_id)
     query = query.order_by(models.Exercise.name.asc())
-    if limit is not None:
-        query = query.limit(limit)
     exercises = query.all()
 
-    return [
-        schemas.ExerciseOut(
-            id=ex.id,
-            name=ex.name,
-            muscle_group_id=ex.muscle_group_id,
-            muscle_group_name=ex.muscle_group.name if ex.muscle_group else None,
-            is_active=ex.is_active,
-            execution_tips=ex.execution_tips,
-            target_tempo=ex.target_tempo,
-            primary_muscles=ex.primary_muscles,
-            equipment_type=ex.equipment_type,
-            mechanics_type=ex.mechanics_type,
-            image_url=ex.image_url,
-            key_cue=ex.key_cue,
-            replacement_id=ex.replacement_id,
+    if muscle is not None and muscle.strip():
+        exercises = [ex for ex in exercises if _matches_muscle_filter(ex, muscle)]
+
+    if q is not None and q.strip():
+        q_norm = _normalize_text(q)
+        if q_norm:
+            exercises = [
+                ex
+                for ex in exercises
+                if q_norm in _normalize_text(ex.name)
+                or q_norm in _normalize_text(ex.muscle_group.name if ex.muscle_group else "")
+                or q_norm in _normalize_text(ex.subgroup or ex.primary_muscles or "")
+            ]
+
+    if limit is not None:
+        exercises = exercises[:limit]
+
+    user_id = current_user.id if current_user else None
+    usage_map = _get_user_exercise_usage_60d(db, user_id, days=60)
+
+    return [_to_exercise_out(ex, usage_map.get(ex.id, 0)) for ex in exercises]
+
+
+@router.get("/frequent", response_model=list[schemas.ExerciseOut])
+def get_frequent_exercises(
+    days: int = Query(60, ge=1, le=365, description="Ventana de días para frecuencia"),
+    limit: int = Query(15, ge=1, le=50, description="Máximo de ejercicios frecuentes"),
+    current_user: models.User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+):
+    user_id = current_user.id if current_user else None
+    usage_map = _get_user_exercise_usage_60d(db, user_id, days=days)
+    if not usage_map:
+        return []
+
+    top_ids = sorted(usage_map.keys(), key=lambda eid: usage_map[eid], reverse=True)[:limit]
+    exercises = (
+        db.query(models.Exercise)
+        .options(joinedload(models.Exercise.muscle_group))
+        .filter(
+            models.Exercise.id.in_(top_ids),
+            models.Exercise.is_active == True,
         )
-        for ex in exercises
-    ]
+        .all()
+    )
+    ex_by_id = {ex.id: ex for ex in exercises}
+    result = []
+    for eid in top_ids:
+        ex = ex_by_id.get(eid)
+        if not ex:
+            continue
+        result.append(_to_exercise_out(ex, usage_map.get(ex.id, 0)))
+    return result
+
+
+@router.get("/similar", response_model=list[schemas.SimilarExerciseItem])
+def find_similar_exercises(
+    name: str = Query(..., min_length=2, description="Nombre del ejercicio a verificar"),
+    muscle_group_id: int | None = Query(None, description="ID del grupo muscular"),
+    limit: int = Query(5, ge=1, le=20),
+    db: Session = Depends(get_db),
+):
+    clean_input = _normalize_text(name)
+    if not clean_input or len(clean_input) < 2:
+        return []
+
+    input_tokens = set(_tokenize_exercise(name))
+
+    query = db.query(models.Exercise).options(joinedload(models.Exercise.muscle_group)).filter(models.Exercise.is_active == True)
+    candidates = query.all()
+
+    scored: list[schemas.SimilarExerciseItem] = []
+
+    for ex in candidates:
+        cand_norm = _normalize_text(ex.name)
+        if not cand_norm:
+            continue
+
+        # Exact match
+        if cand_norm == clean_input:
+            scored.append(
+                schemas.SimilarExerciseItem(
+                    id=ex.id,
+                    name=ex.name,
+                    muscle_group_id=ex.muscle_group_id,
+                    muscle_group_name=ex.muscle_group.name if ex.muscle_group else None,
+                    equipment_type=None,
+                    mechanics_type=ex.mechanics_type,
+                    similarity_score=1.0,
+                )
+            )
+            continue
+
+        cand_tokens = set(_tokenize_exercise(ex.name))
+        if not cand_tokens or not input_tokens:
+            continue
+
+        common_tokens = input_tokens.intersection(cand_tokens)
+        overlap_count = len(common_tokens)
+
+        # Cobertura de tokens del candidato y del input
+        cand_coverage = overlap_count / max(len(cand_tokens), 1)
+        input_coverage = overlap_count / max(len(input_tokens), 1)
+        jaccard = overlap_count / max(len(input_tokens.union(cand_tokens)), 1)
+        seq_ratio = SequenceMatcher(None, clean_input, cand_norm).ratio()
+
+        # Substring boost
+        substring_boost = 0.25 if (clean_input in cand_norm or cand_norm in clean_input) else 0.0
+
+        # Muscle group boost
+        mg_boost = 0.0
+        if muscle_group_id is not None:
+            if ex.muscle_group_id == muscle_group_id:
+                mg_boost = 0.12
+            else:
+                mg_boost = -0.15
+
+        score = (
+            max(cand_coverage * 0.65 + input_coverage * 0.35, jaccard, seq_ratio * 0.85)
+            + substring_boost
+            + mg_boost
+        )
+
+        is_relevant = (
+            (overlap_count >= 2 and score >= 0.52)
+            or (overlap_count >= 1 and len(cand_tokens) <= 2 and score >= 0.62)
+            or (seq_ratio >= 0.72)
+            or (substring_boost > 0 and len(clean_input) >= 4)
+        )
+        if muscle_group_id is not None and ex.muscle_group_id != muscle_group_id and score < 0.72:
+            is_relevant = False
+
+        if is_relevant:
+            scored.append(
+                schemas.SimilarExerciseItem(
+                    id=ex.id,
+                    name=ex.name,
+                    muscle_group_id=ex.muscle_group_id,
+                    muscle_group_name=ex.muscle_group.name if ex.muscle_group else None,
+                    equipment_type=None,
+                    mechanics_type=ex.mechanics_type,
+                    similarity_score=round(min(score, 0.99), 3),
+                )
+            )
+
+    scored.sort(key=lambda item: item.similarity_score, reverse=True)
+    return scored[:limit]
 
 
 @router.post("", response_model=schemas.ExerciseOut)
@@ -67,17 +364,23 @@ def create_exercise(payload: schemas.ExerciseCreate, db: Session = Depends(get_d
     if existing:
         if not existing.is_active:
             existing.is_active = True
+        if payload.slug is not None:
+            existing.slug = payload.slug
+        if payload.subgroup is not None:
+            existing.subgroup = payload.subgroup
+            existing.primary_muscles = payload.subgroup
         if payload.execution_tips is not None:
             existing.execution_tips = payload.execution_tips
         if payload.target_tempo is not None:
             existing.target_tempo = payload.target_tempo
         if payload.primary_muscles is not None:
             existing.primary_muscles = payload.primary_muscles
-        if payload.equipment_type is not None:
-            existing.equipment_type = payload.equipment_type
+        existing.equipment_type = None
         if payload.mechanics_type is not None:
             existing.mechanics_type = payload.mechanics_type
-        if payload.image_url is not None:
+        if payload.mediaUrl is not None:
+            existing.image_url = payload.mediaUrl
+        elif payload.image_url is not None:
             existing.image_url = payload.image_url
         if payload.key_cue is not None:
             existing.key_cue = payload.key_cue
@@ -85,53 +388,27 @@ def create_exercise(payload: schemas.ExerciseCreate, db: Session = Depends(get_d
             existing.replacement_id = payload.replacement_id
         db.commit()
         db.refresh(existing)
-        return schemas.ExerciseOut(
-            id=existing.id,
-            name=existing.name,
-            muscle_group_id=existing.muscle_group_id,
-            muscle_group_name=group.name,
-            is_active=existing.is_active,
-            execution_tips=existing.execution_tips,
-            target_tempo=existing.target_tempo,
-            primary_muscles=existing.primary_muscles,
-            equipment_type=existing.equipment_type,
-            mechanics_type=existing.mechanics_type,
-            image_url=existing.image_url,
-            key_cue=existing.key_cue,
-            replacement_id=existing.replacement_id,
-        )
+        return _to_exercise_out(existing)
 
     exercise = models.Exercise(
+        slug=payload.slug,
         name=clean_name,
+        subgroup=payload.subgroup or payload.primary_muscles or group.name,
         muscle_group_id=payload.muscle_group_id,
         is_active=True,
         execution_tips=payload.execution_tips,
         target_tempo=payload.target_tempo,
-        primary_muscles=payload.primary_muscles,
-        equipment_type=payload.equipment_type or "barra",
+        primary_muscles=payload.primary_muscles or payload.subgroup or group.name,
+        equipment_type=None,
         mechanics_type=payload.mechanics_type or "compuesto",
-        image_url=payload.image_url,
+        image_url=payload.mediaUrl or payload.image_url,
         key_cue=payload.key_cue,
         replacement_id=payload.replacement_id,
     )
     db.add(exercise)
     db.commit()
     db.refresh(exercise)
-    return schemas.ExerciseOut(
-        id=exercise.id,
-        name=exercise.name,
-        muscle_group_id=exercise.muscle_group_id,
-        muscle_group_name=group.name,
-        is_active=exercise.is_active,
-        execution_tips=exercise.execution_tips,
-        target_tempo=exercise.target_tempo,
-        primary_muscles=exercise.primary_muscles,
-        equipment_type=exercise.equipment_type,
-        mechanics_type=exercise.mechanics_type,
-        image_url=exercise.image_url,
-        key_cue=exercise.key_cue,
-        replacement_id=exercise.replacement_id,
-    )
+    return _to_exercise_out(exercise)
 
 
 @router.get("/{exercise_id}/guide", response_model=schemas.ExerciseGuideOut)
@@ -214,10 +491,123 @@ def get_exercise_guide(
     )
 
 
+@router.get("/{exercise_id}/last-performance", response_model=schemas.ExerciseLastPerformanceOut)
+def get_exercise_last_performance(
+    exercise_id: int,
+    exclude_session_id: int | None = Query(None, description="ID de sesión a excluir (ej. sesión en progreso)"),
+    current_user: models.User | None = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Devuelve la combinación más representativa (serie más pesada con sus reps y series totales)
+    de la última sesión en que se ejecutó el ejercicio.
+    """
+    exercise = db.get(models.Exercise, exercise_id)
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
+
+    query = (
+        db.query(models.WorkoutSession)
+        .join(models.WorkoutSet, models.WorkoutSet.workout_session_id == models.WorkoutSession.id)
+        .filter(
+            models.WorkoutSet.exercise_id == exercise_id,
+            (models.WorkoutSession.status == "completed") | (models.WorkoutSession.is_completed == True),
+        )
+    )
+    if current_user is not None:
+        query = query.filter(models.WorkoutSession.user_id == current_user.id)
+    if exclude_session_id is not None:
+        query = query.filter(models.WorkoutSession.id != exclude_session_id)
+
+    last_session = query.order_by(models.WorkoutSession.date.desc(), models.WorkoutSession.id.desc()).first()
+
+    # Fallback: si no hay sesión marcada como completed, buscar la última sesión previa con series completadas
+    if not last_session:
+        fb_query = (
+            db.query(models.WorkoutSession)
+            .join(models.WorkoutSet, models.WorkoutSet.workout_session_id == models.WorkoutSession.id)
+            .filter(
+                models.WorkoutSet.exercise_id == exercise_id,
+                models.WorkoutSet.completed == True,
+            )
+        )
+        if current_user is not None:
+            fb_query = fb_query.filter(models.WorkoutSession.user_id == current_user.id)
+        if exclude_session_id is not None:
+            fb_query = fb_query.filter(models.WorkoutSession.id != exclude_session_id)
+        last_session = fb_query.order_by(models.WorkoutSession.date.desc(), models.WorkoutSession.id.desc()).first()
+
+    if not last_session:
+        return schemas.ExerciseLastPerformanceOut(
+            exercise_id=exercise.id,
+            exercise_name=exercise.name,
+            has_previous=False,
+        )
+
+    sets = (
+        db.query(models.WorkoutSet)
+        .filter(
+            models.WorkoutSet.workout_session_id == last_session.id,
+            models.WorkoutSet.exercise_id == exercise_id,
+        )
+        .order_by(models.WorkoutSet.set_number.asc(), models.WorkoutSet.id.asc())
+        .all()
+    )
+
+    working_sets = [
+        s for s in sets
+        if s.completed and (s.set_type or "normal").lower() not in ["warmup", "w"]
+    ]
+    if not working_sets:
+        working_sets = [s for s in sets if s.completed] or sets
+
+    if not working_sets:
+        return schemas.ExerciseLastPerformanceOut(
+            exercise_id=exercise.id,
+            exercise_name=exercise.name,
+            has_previous=False,
+        )
+
+    sets_count = len(working_sets)
+    best_set = max(working_sets, key=lambda s: (float(s.weight or 0.0), int(s.reps or 0)))
+    rep_weight = round(float(best_set.weight or 0.0), 1)
+    rep_reps = int(best_set.reps or 0)
+    max_reps = max((int(s.reps or 0) for s in working_sets), default=rep_reps)
+    total_volume = round(sum((float(s.weight or 0.0) * int(s.reps or 0)) for s in working_sets), 1)
+
+    weight_str = f"{int(rep_weight)}" if rep_weight == int(rep_weight) else f"{rep_weight}"
+    formatted_summary = f"{sets_count}×{rep_reps} @ {weight_str} kg"
+
+    return schemas.ExerciseLastPerformanceOut(
+        exercise_id=exercise.id,
+        exercise_name=exercise.name,
+        has_previous=True,
+        session_id=last_session.id,
+        date=last_session.date,
+        sets_count=sets_count,
+        reps=rep_reps,
+        weight=rep_weight,
+        max_weight=rep_weight,
+        max_reps=max_reps,
+        total_volume=total_volume,
+        formatted_summary=formatted_summary,
+        sets=[
+            schemas.PreviousSessionSetOut(
+                set_number=s.set_number,
+                weight=float(s.weight or 0.0),
+                reps=int(s.reps or 0),
+                completed=bool(s.completed),
+            )
+            for s in sets
+        ],
+    )
+
+
 @router.get("/{exercise_id}/previous-session", response_model=schemas.PreviousExerciseSessionOut | None)
 def get_previous_session_for_exercise(
     exercise_id: int,
     exclude_session_id: int | None = Query(None, description="ID de sesión a excluir (ej. sesión en progreso)"),
+    current_user: models.User | None = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     exercise = db.get(models.Exercise, exercise_id)
@@ -233,6 +623,8 @@ def get_previous_session_for_exercise(
             models.WorkoutSession.status == "completed",
         )
     )
+    if current_user is not None:
+        query = query.filter(models.WorkoutSession.user_id == current_user.id)
     if exclude_session_id is not None:
         query = query.filter(models.WorkoutSession.id != exclude_session_id)
 
@@ -294,6 +686,11 @@ def delete_exercise(exercise_id: int, db: Session = Depends(get_db)):
             "message": "Ejercicio archivado. Tu historial de series previas se mantiene intacto.",
         }
 
+    # Clean references before full deletion
+    db.query(models.Exercise).filter(models.Exercise.replacement_id == exercise_id).update({"replacement_id": None})
+    db.query(models.RoutineExercise).filter(models.RoutineExercise.exercise_id == exercise_id).delete()
+    db.query(models.LiveBattle).filter(models.LiveBattle.exercise_id == exercise_id).delete()
+
     db.delete(exercise)
     db.commit()
     return {"deleted": True, "archived": False, "message": "Ejercicio eliminado exitosamente."}
@@ -324,17 +721,23 @@ def update_exercise(
         if not group:
             raise HTTPException(status_code=404, detail="Grupo muscular no encontrado.")
         exercise.muscle_group_id = payload.muscle_group_id
+    if payload.slug is not None:
+        exercise.slug = payload.slug
+    if payload.subgroup is not None:
+        exercise.subgroup = payload.subgroup
+        exercise.primary_muscles = payload.subgroup
     if payload.execution_tips is not None:
         exercise.execution_tips = payload.execution_tips
     if payload.target_tempo is not None:
         exercise.target_tempo = payload.target_tempo
     if payload.primary_muscles is not None:
         exercise.primary_muscles = payload.primary_muscles
-    if payload.equipment_type is not None:
-        exercise.equipment_type = payload.equipment_type
+    exercise.equipment_type = None
     if payload.mechanics_type is not None:
         exercise.mechanics_type = payload.mechanics_type
-    if payload.image_url is not None:
+    if payload.mediaUrl is not None:
+        exercise.image_url = payload.mediaUrl.strip() if payload.mediaUrl else None
+    elif payload.image_url is not None:
         exercise.image_url = payload.image_url.strip() if payload.image_url else None
     if payload.key_cue is not None:
         exercise.key_cue = payload.key_cue
@@ -344,21 +747,7 @@ def update_exercise(
     db.commit()
     db.refresh(exercise)
 
-    return schemas.ExerciseOut(
-        id=exercise.id,
-        name=exercise.name,
-        muscle_group_id=exercise.muscle_group_id,
-        muscle_group_name=exercise.muscle_group.name if exercise.muscle_group else None,
-        is_active=exercise.is_active,
-        execution_tips=exercise.execution_tips,
-        target_tempo=exercise.target_tempo,
-        primary_muscles=exercise.primary_muscles,
-        equipment_type=exercise.equipment_type,
-        mechanics_type=exercise.mechanics_type,
-        image_url=exercise.image_url,
-        key_cue=exercise.key_cue,
-        replacement_id=exercise.replacement_id,
-    )
+    return _to_exercise_out(exercise)
 
 
 
@@ -414,9 +803,13 @@ def get_exercise_guidance(
         mg_sub_name = sub_ex.muscle_group.name if sub_ex.muscle_group else None
         substitute_out = schemas.ExerciseSubstituteOut(
             id=sub_ex.id,
+            slug=sub_ex.slug,
             name=sub_ex.name,
             muscle_group_name=mg_sub_name,
-            equipment_type=sub_ex.equipment_type,
+            muscleGroup=mg_sub_name,
+            subgroup=sub_ex.subgroup or sub_ex.primary_muscles,
+            mediaUrl=sub_ex.image_url,
+            equipment_type=None,
             mechanics_type=sub_ex.mechanics_type,
             key_cue=sub_ex.key_cue,
             image_url=sub_ex.image_url,
@@ -508,7 +901,11 @@ def get_exercise_guidance(
     return schemas.ExerciseGuidanceOut(
         exercise_id=exercise.id,
         exercise_name=exercise.name,
-        equipment_type=exercise.equipment_type,
+        slug=exercise.slug,
+        muscleGroup=exercise.muscle_group.name if exercise.muscle_group else None,
+        subgroup=exercise.subgroup or exercise.primary_muscles,
+        mediaUrl=exercise.image_url,
+        equipment_type=None,
         mechanics_type=exercise.mechanics_type,
         key_cue=exercise.key_cue,
         image_url=exercise.image_url,

@@ -1,5 +1,6 @@
 import datetime as dt
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from .. import models, schemas
@@ -36,6 +37,55 @@ def get_cycle_status(
 
 
 
+LOWER_BODY_KEYWORDS = (
+    "pierna",
+    "piernas",
+    "cuádriceps",
+    "cuadriceps",
+    "isquiotibiales",
+    "isquio",
+    "femoral",
+    "glúteo",
+    "gluteo",
+    "gemelo",
+    "pantorrilla",
+    "sóleo",
+    "soleo",
+    "aductor",
+    "abductor",
+    "aducción",
+    "abducción",
+    "aduccion",
+    "abduccion",
+    "sentadilla",
+    "prensa",
+    "zancada",
+    "estocada",
+    "búlgara",
+    "bulgara",
+    "hip thrust",
+)
+
+
+def _classify_session_split(s: models.WorkoutSession) -> str:
+    for ws in s.sets or []:
+        ex = ws.exercise
+        if not ex:
+            continue
+        mg_name = (ex.muscle_group.name if ex.muscle_group else "").lower()
+        subgroup = (ex.subgroup or ex.primary_muscles or "").lower()
+        ex_name = (ex.name or "").lower()
+        combined = f"{mg_name} {subgroup} {ex_name}"
+        if any(kw in combined for kw in LOWER_BODY_KEYWORDS):
+            return "Tren Inferior"
+
+    if not s.sets and s.muscle_group and s.muscle_group.name:
+        if any(kw in s.muscle_group.name.lower() for kw in LOWER_BODY_KEYWORDS):
+            return "Tren Inferior"
+
+    return "Tren Superior"
+
+
 def _format_workout_session(
     s: models.WorkoutSession,
     previous_history: dict | None = None,
@@ -47,6 +97,16 @@ def _format_workout_session(
             workout_session_id=ws.workout_session_id,
             exercise_id=ws.exercise_id,
             exercise_name=ws.exercise.name if ws.exercise else None,
+            muscle_group_name=(
+                ws.exercise.muscle_group.name
+                if (ws.exercise and ws.exercise.muscle_group)
+                else None
+            ),
+            subgroup=(
+                (ws.exercise.subgroup or ws.exercise.primary_muscles)
+                if ws.exercise
+                else None
+            ),
             set_number=ws.set_number,
             weight=ws.weight,
             reps=ws.reps,
@@ -64,6 +124,7 @@ def _format_workout_session(
         for ws in s.sets
         if ws.completed and (ws.set_type or "normal") not in ("warmup", "W")
     )
+    session_split = _classify_session_split(s)
 
     # Detect broken PRs in this session
     broken_records = []
@@ -100,14 +161,29 @@ def _format_workout_session(
     if not dur_sec and s.duration_minutes:
         dur_sec = int(s.duration_minutes * 60)
 
+    # Date formatting safely in local time avoiding UTC day shift
+    spanish_weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+    spanish_months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+    session_date = s.date
+    local_date_str = session_date.isoformat() if hasattr(session_date, "isoformat") else str(session_date)
+    try:
+        w_day = spanish_weekdays[session_date.weekday()]
+        m_name = spanish_months[session_date.month - 1]
+        date_formatted = f"{w_day}, {session_date.day} {m_name} {session_date.year}"
+    except Exception:
+        date_formatted = str(session_date)
+
     return schemas.WorkoutSessionOut(
         id=s.id,
         user_id=s.user_id,
-        date=s.date,
+        date=session_date,
+        date_formatted=date_formatted,
+        local_date_str=local_date_str,
         status=s.status,
         is_completed=getattr(s, "is_completed", False) if getattr(s, "is_completed", None) is not None else (s.status == "completed"),
         started_at=s.started_at,
         completed_at=s.completed_at,
+        finished_at=getattr(s, "finished_at", None) or s.completed_at,
         readiness_energy=s.readiness_energy,
         readiness_motivation=s.readiness_motivation,
         mental_effort=s.mental_effort,
@@ -122,6 +198,7 @@ def _format_workout_session(
         calories_burned=s.calories_burned,
         muscle_group_id=s.muscle_group_id,
         muscle_group_name=s.muscle_group.name if s.muscle_group else None,
+        session_split=session_split,
         routine_id=getattr(s, "routine_id", None),
         routine_name=s.routine.name if getattr(s, "routine", None) else None,
         notes=s.notes,
@@ -220,7 +297,9 @@ def list_workouts(
         db.query(models.WorkoutSession)
         .options(
             joinedload(models.WorkoutSession.muscle_group),
-            selectinload(models.WorkoutSession.sets).joinedload(models.WorkoutSet.exercise),
+            selectinload(models.WorkoutSession.sets)
+            .joinedload(models.WorkoutSet.exercise)
+            .joinedload(models.Exercise.muscle_group),
         )
         .filter(models.WorkoutSession.user_id == current_user.id)
     )
@@ -541,6 +620,21 @@ def _insert_set_into_session(
         created_at=dt.datetime.now(dt.timezone.utc),
     )
     db.add(workout_set)
+    db.flush()
+    if workout_set.session:
+        s_sets = (
+            db.query(models.WorkoutSet)
+            .filter(models.WorkoutSet.workout_session_id == workout_set.workout_session_id)
+            .all()
+        )
+        workout_set.session.total_volume = round(
+            sum(
+                float(ws.weight or 0.0) * int(ws.reps or 0)
+                for ws in s_sets
+                if ws.completed and (ws.set_type or "normal").lower() not in ("warmup", "w")
+            ),
+            1,
+        )
     db.commit()
     db.refresh(workout_set)
 
@@ -619,6 +713,21 @@ def update_workout_set(
     if payload.set_type is not None:
         workout_set.set_type = payload.set_type
 
+    db.flush()
+    if workout_set.session:
+        s_sets = (
+            db.query(models.WorkoutSet)
+            .filter(models.WorkoutSet.workout_session_id == workout_set.workout_session_id)
+            .all()
+        )
+        workout_set.session.total_volume = round(
+            sum(
+                float(ws.weight or 0.0) * int(ws.reps or 0)
+                for ws in s_sets
+                if ws.completed and (ws.set_type or "normal").lower() not in ("warmup", "w")
+            ),
+            1,
+        )
     db.commit()
     db.refresh(workout_set)
 
@@ -656,35 +765,42 @@ def delete_workout_set(
     if workout_set.session and workout_set.session.user_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="No tenés permiso para eliminar esta serie.")
 
+    sess = workout_set.session
+    sess_id = workout_set.workout_session_id
     db.delete(workout_set)
+    db.flush()
+    if sess and sess_id:
+        s_sets = (
+            db.query(models.WorkoutSet)
+            .filter(models.WorkoutSet.workout_session_id == sess_id)
+            .all()
+        )
+        sess.total_volume = round(
+            sum(
+                float(ws.weight or 0.0) * int(ws.reps or 0)
+                for ws in s_sets
+                if ws.completed and (ws.set_type or "normal").lower() not in ("warmup", "w")
+            ),
+            1,
+        )
     db.commit()
     return {"deleted": True, "id": set_id}
 
 
-@router.post("/{workout_id}/finish", response_model=schemas.WorkoutSessionOut)
-def finish_workout(
-    workout_id: int,
+def _finish_workout_logic(
+    session: models.WorkoutSession,
     payload: schemas.WorkoutSessionFinish,
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    session = (
-        db.query(models.WorkoutSession)
-        .options(
-            joinedload(models.WorkoutSession.muscle_group),
-            selectinload(models.WorkoutSession.sets).joinedload(models.WorkoutSet.exercise),
-        )
-        .filter(models.WorkoutSession.id == workout_id)
-        .first()
-    )
-    if not session:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
-    if session.user_id != current_user.id and current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="No tenés permiso para finalizar esta sesión.")
+    current_user: models.User,
+    db: Session,
+) -> schemas.WorkoutSessionOut:
+    from sqlalchemy import func
 
+    now = dt.datetime.now(dt.timezone.utc)
     session.status = "completed"
     session.is_completed = True
-    session.completed_at = payload.completed_at or dt.datetime.now(dt.timezone.utc)
+    session.completed_at = payload.completed_at or now
+    session.finished_at = payload.completed_at or now
+
     if payload.date is not None:
         session.date = payload.date
     if payload.notes is not None:
@@ -710,6 +826,74 @@ def finish_workout(
     if payload.calories_burned is not None:
         session.calories_burned = payload.calories_burned
 
+    # 1. Calcular y sumar volumen total (total_volume = sum(peso * reps))
+    total_volume = sum(
+        float(ws.weight or 0) * int(ws.reps or 0)
+        for ws in session.sets
+        if ws.completed and (ws.set_type or "normal").lower() not in ("warmup", "w")
+    )
+    session.total_volume = round(total_volume, 1)
+
+    # 2. Si se solicitó guardar como nueva rutina desde el modal de cierre
+    if getattr(payload, "save_as_routine", False) and getattr(payload, "routine_name", None):
+        routine_name = payload.routine_name.strip()
+        if routine_name:
+            new_routine = models.Routine(
+                user_id=current_user.id,
+                name=routine_name,
+                description=f"Rutina creada a partir de sesión libre el {session.date}",
+                is_preset=False,
+            )
+            db.add(new_routine)
+            db.flush()
+
+            seen_exercises = set()
+            order_idx = 0
+            for ws in session.sets:
+                if ws.exercise_id not in seen_exercises:
+                    seen_exercises.add(ws.exercise_id)
+                    ex_sets = [s for s in session.sets if s.exercise_id == ws.exercise_id and s.completed]
+                    reps_str = str(ex_sets[0].reps) if ex_sets else "8-12"
+                    r_ex = models.RoutineExercise(
+                        routine_id=new_routine.id,
+                        exercise_id=ws.exercise_id,
+                        order_index=order_idx,
+                        target_sets=max(1, len(ex_sets) or 3),
+                        target_reps=reps_str,
+                    )
+                    db.add(r_ex)
+                    order_idx += 1
+
+    db.flush()
+
+    # 3. Actualizar el perfil del usuario (total_workouts += 1, workout_days_count += 1)
+    tot_workouts = (
+        db.query(models.WorkoutSession)
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .count()
+    )
+    tot_days = (
+        db.query(func.count(func.distinct(models.WorkoutSession.date)))
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .scalar()
+        or 1
+    )
+
+    current_user.total_workouts = tot_workouts
+    current_user.workout_days_count = tot_days
+
+    # Actualizar también UserProfile si existe
+    profile = db.get(models.UserProfile, current_user.id) or db.get(models.UserProfile, 1)
+    if profile:
+        profile.total_workouts = tot_workouts
+        profile.workout_days_count = tot_days
+
     try:
         db.commit()
         db.refresh(session)
@@ -732,6 +916,83 @@ def finish_workout(
     except Exception:
         updated_records = []
     return _format_workout_session(session, previous_history=prev_history, records=updated_records)
+
+
+@router.post("/finish", response_model=schemas.WorkoutSessionOut)
+def finish_active_workout(
+    payload: schemas.WorkoutSessionFinish,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    workout_id = payload.workout_id
+    if workout_id:
+        session = (
+            db.query(models.WorkoutSession)
+            .options(
+                joinedload(models.WorkoutSession.muscle_group),
+                selectinload(models.WorkoutSession.sets).joinedload(models.WorkoutSet.exercise),
+            )
+            .filter(models.WorkoutSession.id == workout_id)
+            .first()
+        )
+    else:
+        # Buscar la sesión activa en progreso del usuario
+        session = (
+            db.query(models.WorkoutSession)
+            .options(
+                joinedload(models.WorkoutSession.muscle_group),
+                selectinload(models.WorkoutSession.sets).joinedload(models.WorkoutSet.exercise),
+            )
+            .filter(
+                models.WorkoutSession.user_id == current_user.id,
+                models.WorkoutSession.is_completed == False,
+            )
+            .order_by(models.WorkoutSession.id.desc())
+            .first()
+        )
+        if not session:
+            # Si no hay sesión en progreso, buscar la última sesión del usuario
+            session = (
+                db.query(models.WorkoutSession)
+                .options(
+                    joinedload(models.WorkoutSession.muscle_group),
+                    selectinload(models.WorkoutSession.sets).joinedload(models.WorkoutSet.exercise),
+                )
+                .filter(models.WorkoutSession.user_id == current_user.id)
+                .order_by(models.WorkoutSession.id.desc())
+                .first()
+            )
+
+    if not session:
+        raise HTTPException(status_code=404, detail="No se encontró ninguna sesión para finalizar.")
+    if session.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="No tenés permiso para finalizar esta sesión.")
+
+    return _finish_workout_logic(session, payload, current_user, db)
+
+
+@router.post("/{workout_id}/finish", response_model=schemas.WorkoutSessionOut)
+def finish_workout(
+    workout_id: int,
+    payload: schemas.WorkoutSessionFinish,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    session = (
+        db.query(models.WorkoutSession)
+        .options(
+            joinedload(models.WorkoutSession.muscle_group),
+            selectinload(models.WorkoutSession.sets).joinedload(models.WorkoutSet.exercise),
+        )
+        .filter(models.WorkoutSession.id == workout_id)
+        .first()
+    )
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+    if session.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="No tenés permiso para finalizar esta sesión.")
+
+    return _finish_workout_logic(session, payload, current_user, db)
 
 
 @router.patch("/{workout_id}/date", response_model=schemas.WorkoutSessionOut)
@@ -893,6 +1154,73 @@ def _save_consolidated_workout(
         )
         session.sets.append(workout_set)
 
+    session.finished_at = session.completed_at
+    total_volume = sum(
+        float(item.weight) * int(item.reps)
+        for item in payload.sets
+        if bool(item.completed) and (item.set_type or "normal").lower() not in ("warmup", "w")
+    )
+    session.total_volume = round(total_volume, 1)
+
+    # Si se solicitó guardar como nueva rutina desde el modal de cierre
+    if getattr(payload, "save_as_routine", False) and getattr(payload, "routine_name", None):
+        routine_name = payload.routine_name.strip()
+        if routine_name:
+            new_routine = models.Routine(
+                user_id=current_user.id,
+                name=routine_name,
+                description=f"Rutina creada a partir de sesión libre el {session.date}",
+                is_preset=False,
+            )
+            db.add(new_routine)
+            db.flush()
+
+            seen_exercises = set()
+            order_idx = 0
+            for ws in session.sets:
+                if ws.exercise_id not in seen_exercises:
+                    seen_exercises.add(ws.exercise_id)
+                    ex_sets = [s for s in session.sets if s.exercise_id == ws.exercise_id and s.completed]
+                    reps_str = str(ex_sets[0].reps) if ex_sets else "8-12"
+                    r_ex = models.RoutineExercise(
+                        routine_id=new_routine.id,
+                        exercise_id=ws.exercise_id,
+                        order_index=order_idx,
+                        target_sets=max(1, len(ex_sets) or 3),
+                        target_reps=reps_str,
+                    )
+                    db.add(r_ex)
+                    order_idx += 1
+
+    db.flush()
+
+    from sqlalchemy import func
+    tot_workouts = (
+        db.query(models.WorkoutSession)
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .count()
+    )
+    tot_days = (
+        db.query(func.count(func.distinct(models.WorkoutSession.date)))
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .scalar()
+        or 1
+    )
+
+    current_user.total_workouts = tot_workouts
+    current_user.workout_days_count = tot_days
+
+    profile = db.get(models.UserProfile, current_user.id) or db.get(models.UserProfile, 1)
+    if profile:
+        profile.total_workouts = tot_workouts
+        profile.workout_days_count = tot_days
+
     try:
         db.commit()
         db.refresh(session)
@@ -948,7 +1276,9 @@ def get_workout(
         db.query(models.WorkoutSession)
         .options(
             joinedload(models.WorkoutSession.muscle_group),
-            selectinload(models.WorkoutSession.sets).joinedload(models.WorkoutSet.exercise),
+            selectinload(models.WorkoutSession.sets)
+            .joinedload(models.WorkoutSet.exercise)
+            .joinedload(models.Exercise.muscle_group),
         )
         .filter(models.WorkoutSession.id == workout_id)
     )
@@ -961,18 +1291,219 @@ def get_workout(
     return _format_workout_session(saved)
 
 
-@router.delete("/{workout_id}")
-def delete_workout(
+@router.patch("/{workout_id}", response_model=schemas.WorkoutSessionOut)
+@router.put("/{workout_id}", response_model=schemas.WorkoutSessionOut)
+def update_workout_session(
     workout_id: int,
+    payload: schemas.WorkoutSessionUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    session = (
+        db.query(models.WorkoutSession)
+        .options(
+            joinedload(models.WorkoutSession.muscle_group),
+            selectinload(models.WorkoutSession.sets)
+            .joinedload(models.WorkoutSet.exercise)
+            .joinedload(models.Exercise.muscle_group),
+        )
+        .filter(models.WorkoutSession.id == workout_id)
+        .first()
+    )
+    if not session:
+        raise HTTPException(status_code=404, detail="Entrenamiento no encontrado.")
+    if session.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="No tenés permiso para editar esta sesión.")
+
+    if payload.date is not None:
+        session.date = payload.date
+    if payload.notes is not None:
+        session.notes = payload.notes.strip() or None
+    if payload.muscle_group_id is not None:
+        session.muscle_group_id = payload.muscle_group_id
+
+    if payload.sets is not None:
+        existing_by_id = {ws.id: ws for ws in session.sets if ws.id is not None}
+        kept_ids = set()
+        new_sets_list = []
+
+        for idx, item in enumerate(payload.sets):
+            exercise = db.get(models.Exercise, item.exercise_id)
+            if not exercise:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Ejercicio ID {item.exercise_id} no encontrado.",
+                )
+
+            if item.id and item.id in existing_by_id:
+                ws = existing_by_id[item.id]
+                ws.exercise_id = item.exercise_id
+                ws.set_number = item.set_number or (idx + 1)
+                ws.weight = float(item.weight or 0.0)
+                ws.reps = int(item.reps or 0)
+                ws.completed = bool(item.completed)
+                if item.rest_effort is not None:
+                    ws.rest_effort = item.rest_effort
+                if item.rir is not None:
+                    ws.rir = item.rir
+                if item.set_type is not None:
+                    ws.set_type = item.set_type
+                kept_ids.add(ws.id)
+                new_sets_list.append(ws)
+            else:
+                new_ws = models.WorkoutSet(
+                    workout_session_id=session.id,
+                    exercise_id=item.exercise_id,
+                    set_number=item.set_number or (idx + 1),
+                    weight=float(item.weight or 0.0),
+                    reps=int(item.reps or 0),
+                    completed=bool(item.completed),
+                    rest_effort=item.rest_effort,
+                    rir=item.rir,
+                    set_type=item.set_type or "normal",
+                    created_at=dt.datetime.now(dt.timezone.utc),
+                )
+                db.add(new_ws)
+                new_sets_list.append(new_ws)
+
+        for old_id, old_ws in existing_by_id.items():
+            if old_id not in kept_ids:
+                db.delete(old_ws)
+
+        db.flush()
+
+    # Recalcular volumen total de la sesión tras las ediciones
+    fresh_sets = (
+        db.query(models.WorkoutSet)
+        .filter(models.WorkoutSet.workout_session_id == session.id)
+        .all()
+    )
+    total_vol = sum(
+        float(ws.weight or 0.0) * int(ws.reps or 0)
+        for ws in fresh_sets
+        if ws.completed and (ws.set_type or "normal").lower() not in ("warmup", "w")
+    )
+    session.total_volume = round(total_vol, 1)
+
+    # Recalcular métricas globales del usuario (total_workouts y workout_days_count)
+    tot_workouts = (
+        db.query(models.WorkoutSession)
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .count()
+    )
+    tot_days = (
+        db.query(func.count(func.distinct(models.WorkoutSession.date)))
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .scalar()
+        or 0
+    )
+    current_user.total_workouts = tot_workouts
+    current_user.workout_days_count = tot_days
+
+    profile = db.get(models.UserProfile, current_user.id) or db.get(models.UserProfile, 1)
+    if profile:
+        profile.total_workouts = tot_workouts
+        profile.workout_days_count = tot_days
+
+    db.commit()
+    db.expire_all()
+
+    updated = (
+        db.query(models.WorkoutSession)
+        .options(
+            joinedload(models.WorkoutSession.muscle_group),
+            selectinload(models.WorkoutSession.sets)
+            .joinedload(models.WorkoutSet.exercise)
+            .joinedload(models.Exercise.muscle_group),
+        )
+        .filter(models.WorkoutSession.id == session.id)
+        .first()
+    )
+    return _format_workout_session(updated)
+
+
+@router.delete("/{session_id}")
+def delete_workout(
+    session_id: int,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    session = db.get(models.WorkoutSession, workout_id)
+    session = db.get(models.WorkoutSession, session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Entrenamiento no encontrado.")
     if session.user_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="No tenés permiso para eliminar esta sesión.")
 
+    # 1. Elimina las series asociadas en workout_sets
+    db.query(models.WorkoutSet).filter(models.WorkoutSet.workout_session_id == session.id).delete(synchronize_session=False)
+
+    # 2. Elimina la sesión en workout_sessions
     db.delete(session)
+    db.flush()
+
+    # 3. Recalcula métricas globales del usuario (entrenamientos, días, series y volumen total)
+    tot_workouts = (
+        db.query(models.WorkoutSession)
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .count()
+    )
+    tot_days = (
+        db.query(func.count(func.distinct(models.WorkoutSession.date)))
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .scalar()
+        or 0
+    )
+
+    remaining_sets = (
+        db.query(models.WorkoutSet)
+        .join(models.WorkoutSession, models.WorkoutSet.workout_session_id == models.WorkoutSession.id)
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+            models.WorkoutSet.completed == True,
+            models.WorkoutSet.is_valid != False,
+        )
+        .all()
+    )
+    tot_sets = len(remaining_sets)
+    tot_volume = round(
+        sum(
+            float(st.weight or 0.0) * int(st.reps or 0)
+            for st in remaining_sets
+            if (st.set_type or "normal").lower() not in ("warmup", "w")
+        ),
+        1,
+    )
+
+    current_user.total_workouts = tot_workouts
+    current_user.workout_days_count = tot_days
+
+    profile = db.get(models.UserProfile, current_user.id) or db.get(models.UserProfile, 1)
+    if profile:
+        profile.total_workouts = tot_workouts
+        profile.workout_days_count = tot_days
+
     db.commit()
-    return {"deleted": True}
+    return {
+        "success": True,
+        "deleted_id": session_id,
+        "deleted": True,
+        "id": session_id,
+        "session_id": session_id,
+        "total_workouts": tot_workouts,
+        "workout_days_count": tot_days,
+        "total_sets": tot_sets,
+        "total_volume_kg": tot_volume,
+    }

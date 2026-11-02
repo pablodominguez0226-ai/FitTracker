@@ -55,13 +55,12 @@ def ensure_database_migration() -> None:
             )
         """))
 
-        default_groups = ["Pecho", "Espalda", "Piernas", "Hombros", "Bíceps", "Tríceps", "Core"]
+        default_groups = ["Pecho", "Espalda", "Brazos", "Piernas"]
         for name in default_groups:
             connection.execute(
                 text("INSERT OR IGNORE INTO muscle_groups (name) VALUES (:name)"),
                 {"name": name}
             )
-        connection.execute(text("DELETE FROM muscle_groups WHERE LOWER(name) IN ('brazo', 'brazos')"))
 
         connection.execute(text("""
             CREATE TABLE IF NOT EXISTS exercises (
@@ -76,6 +75,10 @@ def ensure_database_migration() -> None:
         # Safe idempotent migrations for exercises
         exercise_cols_result = connection.execute(text("PRAGMA table_info(exercises)"))
         exercise_cols = {row[1] for row in exercise_cols_result.fetchall()}
+        if "slug" not in exercise_cols:
+            connection.execute(text("ALTER TABLE exercises ADD COLUMN slug VARCHAR(120)"))
+        if "subgroup" not in exercise_cols:
+            connection.execute(text("ALTER TABLE exercises ADD COLUMN subgroup VARCHAR(120)"))
         if "is_active" not in exercise_cols:
             connection.execute(text("ALTER TABLE exercises ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT 1"))
         if "execution_tips" not in exercise_cols:
@@ -85,7 +88,8 @@ def ensure_database_migration() -> None:
         if "primary_muscles" not in exercise_cols:
             connection.execute(text("ALTER TABLE exercises ADD COLUMN primary_muscles VARCHAR(200)"))
         if "equipment_type" not in exercise_cols:
-            connection.execute(text("ALTER TABLE exercises ADD COLUMN equipment_type VARCHAR(50) DEFAULT 'barra'"))
+            connection.execute(text("ALTER TABLE exercises ADD COLUMN equipment_type VARCHAR(50) DEFAULT NULL"))
+        connection.execute(text("UPDATE exercises SET equipment_type = NULL WHERE equipment_type IS NOT NULL"))
         if "mechanics_type" not in exercise_cols:
             connection.execute(text("ALTER TABLE exercises ADD COLUMN mechanics_type VARCHAR(50) DEFAULT 'compuesto'"))
         if "image_url" not in exercise_cols:
@@ -133,6 +137,10 @@ def ensure_database_migration() -> None:
             connection.execute(text("ALTER TABLE workout_sessions ADD COLUMN started_at DATETIME"))
         if "completed_at" not in session_cols:
             connection.execute(text("ALTER TABLE workout_sessions ADD COLUMN completed_at DATETIME"))
+        if "finished_at" not in session_cols:
+            connection.execute(text("ALTER TABLE workout_sessions ADD COLUMN finished_at DATETIME"))
+        if "total_volume" not in session_cols:
+            connection.execute(text("ALTER TABLE workout_sessions ADD COLUMN total_volume FLOAT DEFAULT 0.0"))
         if "readiness_energy" not in session_cols:
             connection.execute(text("ALTER TABLE workout_sessions ADD COLUMN readiness_energy INTEGER"))
         if "readiness_motivation" not in session_cols:
@@ -314,6 +322,31 @@ def ensure_database_migration() -> None:
         if "target_water_l" not in profile_cols:
             connection.execute(text("ALTER TABLE user_profile ADD COLUMN target_water_l FLOAT"))
 
+        if "total_workouts" not in user_cols:
+            connection.execute(text("ALTER TABLE users ADD COLUMN total_workouts INTEGER NOT NULL DEFAULT 0"))
+        if "workout_days_count" not in user_cols:
+            connection.execute(text("ALTER TABLE users ADD COLUMN workout_days_count INTEGER NOT NULL DEFAULT 0"))
+        if "weekly_pattern" not in user_cols:
+            connection.execute(text("ALTER TABLE users ADD COLUMN weekly_pattern TEXT"))
+
+        if "total_workouts" not in profile_cols:
+            connection.execute(text("ALTER TABLE user_profile ADD COLUMN total_workouts INTEGER NOT NULL DEFAULT 0"))
+        if "workout_days_count" not in profile_cols:
+            connection.execute(text("ALTER TABLE user_profile ADD COLUMN workout_days_count INTEGER NOT NULL DEFAULT 0"))
+        if "weekly_pattern" not in profile_cols:
+            connection.execute(text("ALTER TABLE user_profile ADD COLUMN weekly_pattern TEXT"))
+
+        # Default weekly pattern for user_profile and users if null
+        default_pattern_json = '{"lunes":"entreno","martes":"entreno","miercoles":"flexible","jueves":"entreno","viernes":"entreno","sabado":"descanso","domingo":"descanso"}'
+        connection.execute(text(f"UPDATE user_profile SET weekly_pattern = '{default_pattern_json}' WHERE weekly_pattern IS NULL"))
+        connection.execute(text(f"UPDATE users SET weekly_pattern = '{default_pattern_json}' WHERE weekly_pattern IS NULL"))
+
+        # Ensure user_profiles view exists for backward and forward compatibility
+        try:
+            connection.execute(text("CREATE VIEW IF NOT EXISTS user_profiles AS SELECT * FROM user_profile"))
+        except Exception:
+            pass
+
         connection.execute(text("""
             INSERT OR IGNORE INTO user_profile (id, experience_level, training_goal, updated_at)
             VALUES (1, 'intermedio', 'hipertrofia', CURRENT_TIMESTAMP)
@@ -325,6 +358,47 @@ def ensure_database_migration() -> None:
                 SELECT experience_level FROM user_profile WHERE id = 1
             ) WHERE id = 1 AND EXISTS (SELECT 1 FROM user_profile WHERE id = 1)
         """))
+
+        # Backfill total_volume for completed workout sessions
+        try:
+            connection.execute(text("""
+                UPDATE workout_sessions
+                SET total_volume = (
+                    SELECT COALESCE(SUM(ws.weight * ws.reps), 0)
+                    FROM workout_sets ws
+                    WHERE ws.workout_session_id = workout_sessions.id
+                      AND ws.completed = 1
+                      AND LOWER(COALESCE(ws.set_type, 'normal')) NOT IN ('warmup', 'w')
+                )
+                WHERE (total_volume IS NULL OR total_volume = 0)
+                  AND (is_completed = 1 OR status = 'completed')
+            """))
+        except Exception:
+            pass
+
+        # Backfill and sync total_workouts and workout_days_count
+        try:
+            connection.execute(text("""
+                UPDATE users SET
+                    total_workouts = (
+                        SELECT COUNT(*) FROM workout_sessions WHERE workout_sessions.user_id = users.id AND (workout_sessions.is_completed = 1 OR workout_sessions.status = 'completed')
+                    ),
+                    workout_days_count = (
+                        SELECT COUNT(DISTINCT date) FROM workout_sessions WHERE workout_sessions.user_id = users.id AND (workout_sessions.is_completed = 1 OR workout_sessions.status = 'completed')
+                    )
+            """))
+            connection.execute(text("""
+                UPDATE user_profile SET
+                    total_workouts = (
+                        SELECT COUNT(*) FROM workout_sessions WHERE workout_sessions.user_id = 1 AND (workout_sessions.is_completed = 1 OR workout_sessions.status = 'completed')
+                    ),
+                    workout_days_count = (
+                        SELECT COUNT(DISTINCT date) FROM workout_sessions WHERE workout_sessions.user_id = 1 AND (workout_sessions.is_completed = 1 OR workout_sessions.status = 'completed')
+                    )
+                WHERE id = 1
+            """))
+        except Exception:
+            pass
 
         # Drop truly obsolete tables, keeping users, routines, and user_profile intact
         for lt in ["measurements", "photos", "personal_records", "workouts", "workout_entries"]:
@@ -550,6 +624,138 @@ def ensure_database_migration() -> None:
         user_cols = {row[1] for row in user_cols_res.fetchall()}
         if "checkin_frequency" not in user_cols:
             connection.execute(text("ALTER TABLE users ADD COLUMN checkin_frequency VARCHAR(20) DEFAULT 'weekly'"))
+
+        # Blood Tests Table (Analisis de sangre)
+        connection.execute(text("""
+            CREATE TABLE IF NOT EXISTS blood_tests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                test_date DATE NOT NULL,
+                hematocrit FLOAT,
+                hemoglobin FLOAT,
+                glucose FLOAT,
+                creatinine FLOAT,
+                urea FLOAT,
+                got_ast FLOAT,
+                gpt_alt FLOAT,
+                cholesterol_total FLOAT,
+                cholesterol_hdl FLOAT,
+                cholesterol_ldl FLOAT,
+                triglycerides FLOAT,
+                sodium FLOAT,
+                potassium FLOAT,
+                pdf_filename VARCHAR(255),
+                notes TEXT,
+                created_at DATETIME,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_blood_tests_user_id ON blood_tests(user_id)"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_blood_tests_test_date ON blood_tests(test_date)"))
+
+        # Safe idempotent migrations for blood_tests columns
+        blood_cols_res = connection.execute(text("PRAGMA table_info(blood_tests)"))
+        blood_cols = {row[1] for row in blood_cols_res.fetchall()}
+        if "entry_date" not in blood_cols:
+            connection.execute(text("ALTER TABLE blood_tests ADD COLUMN entry_date DATE"))
+        if "birth_date" not in blood_cols:
+            connection.execute(text("ALTER TABLE blood_tests ADD COLUMN birth_date DATE"))
+        if "petition_number" not in blood_cols:
+            connection.execute(text("ALTER TABLE blood_tests ADD COLUMN petition_number VARCHAR(50)"))
+        if "data_json" not in blood_cols:
+            connection.execute(text("ALTER TABLE blood_tests ADD COLUMN data_json JSON"))
+
+        # Food Items Table (Alimentos e ingredientes argentinos)
+        connection.execute(text("""
+            CREATE TABLE IF NOT EXISTS food_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name VARCHAR(120) NOT NULL,
+                category VARCHAR(50) NOT NULL,
+                calories_100g FLOAT NOT NULL,
+                protein_100g FLOAT NOT NULL,
+                carbs_100g FLOAT NOT NULL,
+                fat_100g FLOAT NOT NULL,
+                serving_unit VARCHAR(80) NOT NULL DEFAULT '100g',
+                serving_weight_g FLOAT NOT NULL DEFAULT 100.0,
+                created_at DATETIME
+            )
+        """))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_food_items_name ON food_items(name)"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_food_items_category ON food_items(category)"))
+
+        # Custom Recipes Table (Comidas caseras compuestas por el usuario)
+        connection.execute(text("""
+            CREATE TABLE IF NOT EXISTS custom_recipes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                name VARCHAR(150) NOT NULL,
+                total_weight_g FLOAT NOT NULL,
+                ingredients_json TEXT NOT NULL,
+                calculated_calories FLOAT NOT NULL,
+                calculated_protein FLOAT NOT NULL,
+                calculated_carbs FLOAT NOT NULL,
+                calculated_fat FLOAT NOT NULL,
+                servings INTEGER NOT NULL DEFAULT 1,
+                created_at DATETIME,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_custom_recipes_user_id ON custom_recipes(user_id)"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_custom_recipes_name ON custom_recipes(name)"))
+
+        # Daily Food Logs Table (Registro de comidas diarias con modificadores)
+        connection.execute(text("""
+            CREATE TABLE IF NOT EXISTS daily_food_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                food_name VARCHAR(150) NOT NULL,
+                grams_or_units VARCHAR(100),
+                calories FLOAT NOT NULL,
+                protein FLOAT NOT NULL,
+                carbs FLOAT NOT NULL,
+                fat FLOAT NOT NULL,
+                log_date DATE NOT NULL,
+                side_dish_name VARCHAR(150),
+                side_dish_grams FLOAT,
+                meal_type VARCHAR(50),
+                recipe_id INTEGER,
+                food_id INTEGER,
+                created_at DATETIME,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(recipe_id) REFERENCES custom_recipes(id) ON DELETE SET NULL,
+                FOREIGN KEY(food_id) REFERENCES food_items(id) ON DELETE SET NULL
+            )
+        """))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_daily_food_logs_user_id ON daily_food_logs(user_id)"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_daily_food_logs_log_date ON daily_food_logs(log_date)"))
+
+        # Normalización estricta de alimentos crudos en food_items
+        connection.execute(text("UPDATE food_items SET name = 'Zapallo coreano', calories_100g = 32.0, protein_100g = 1.0, carbs_100g = 7.0, fat_100g = 0.2 WHERE LOWER(name) LIKE '%zapallo coreano%'"))
+        connection.execute(text("UPDATE food_items SET name = 'Papa', calories_100g = 77.0, protein_100g = 2.0, carbs_100g = 17.0, fat_100g = 0.1 WHERE LOWER(name) IN ('papa cocida', 'papa hervida')"))
+        connection.execute(text("UPDATE food_items SET name = 'Batata', calories_100g = 86.0, protein_100g = 1.6, carbs_100g = 20.0, fat_100g = 0.1 WHERE LOWER(name) IN ('batata al horno', 'batata asada', 'batata cocida')"))
+        connection.execute(text("UPDATE food_items SET name = 'Espinaca', calories_100g = 23.0, protein_100g = 2.9, carbs_100g = 3.6, fat_100g = 0.4 WHERE LOWER(name) IN ('espinaca cocida', 'espinaca al vapor')"))
+        connection.execute(text("UPDATE food_items SET name = 'Brócoli', calories_100g = 34.0, protein_100g = 2.8, carbs_100g = 6.6, fat_100g = 0.4 WHERE LOWER(name) IN ('brócoli al vapor', 'brocoli al vapor', 'brócoli cocido')"))
+        connection.execute(text("UPDATE food_items SET name = 'Calabaza', calories_100g = 26.0, protein_100g = 1.0, carbs_100g = 6.5, fat_100g = 0.1 WHERE LOWER(name) IN ('calabaza asada', 'calabaza al horno')"))
+        connection.execute(text("UPDATE food_items SET name = 'Pechuga de pollo', calories_100g = 120.0, protein_100g = 26.0, carbs_100g = 0.0, fat_100g = 1.8 WHERE LOWER(name) LIKE 'pechuga de pollo a la plancha%'"))
+        connection.execute(text("UPDATE food_items SET name = 'Carne picada especial' WHERE LOWER(name) = 'picada especial'"))
+
+        # Eliminar cualquier plato con cocción prefabricada dentro de verduras o ensaladas
+        connection.execute(text("""
+            DELETE FROM food_items 
+            WHERE category IN ('verduras', 'ensaladas') 
+            AND (
+                LOWER(name) LIKE '%al horno%' 
+                OR LOWER(name) LIKE '%al vapor%' 
+                OR LOWER(name) LIKE '%cocid%' 
+                OR LOWER(name) LIKE '%asada%' 
+                OR LOWER(name) LIKE '%asado%'
+                OR LOWER(name) LIKE '%al aceite%' 
+                OR LOWER(name) LIKE '%frit%'
+                OR LOWER(name) LIKE '%saltead%'
+            )
+        """))
+        connection.execute(text("DELETE FROM food_items WHERE category = 'ensaladas'"))
+
 
 
 
