@@ -531,8 +531,8 @@ export default function WorkoutDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150 select-none">
-        <div className="w-full max-w-md sm:max-w-lg bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
+      <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-150 select-none">
+        <div className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] md:max-h-[85vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto">
           {/* Capa 1 - Cabecera Fija */}
           <div className="p-4 border-b border-slate-100 bg-white flex items-start justify-between gap-2 flex-shrink-0">
             <div className="space-y-1 min-w-0 flex-1">
@@ -1166,7 +1166,7 @@ export default function WorkoutDrawer({
       {/* MODAL / POPOVER: ALTERNATIVA RÁPIDA (MÁQUINA OCUPADA) */}
       {showSubstituteModal && (
         <div className="fixed inset-0 z-[75] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-sm rounded-3xl border border-red-400/30 bg-[#0F0F10] p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+          <div className="w-full max-w-sm md:max-w-md rounded-3xl border border-red-400/30 bg-[#0F0F10] p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 md:my-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <RotateCw size={17} className="text-red-400" />

@@ -398,8 +398,8 @@ export default function WorkoutSummaryModal({
   if (!isOpen || !summary) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-md sm:max-w-lg bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] overflow-hidden shadow-2xl shadow-black/80 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-200 select-none">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] md:max-h-[85vh] overflow-hidden shadow-2xl shadow-black/80 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto">
         
         {/* Capa 1 - CABECERA FESTIVA FIJA */}
         <div className="p-4 border-b border-slate-100 bg-white text-center space-y-1.5 flex-shrink-0">

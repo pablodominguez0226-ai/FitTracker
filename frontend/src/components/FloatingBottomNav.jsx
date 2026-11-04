@@ -53,7 +53,7 @@ export default function FloatingBottomNav({ activeTab, onTabChange }) {
 
   return (
     <nav
-      className="fixed bottom-4 left-4 right-4 max-w-[calc(theme(maxWidth.md)-2rem)] mx-auto bg-white/95 dark:bg-[#0A0E17]/90 backdrop-blur-xl rounded-full shadow-2xl border border-[#F1F5F9] dark:border-white/10 px-4 py-2 flex items-center justify-around z-40 select-none transition-colors duration-200"
+      className="fixed bottom-4 left-4 right-4 z-50 md:hidden max-w-md mx-auto bg-white/95 dark:bg-[#0A0E17]/90 backdrop-blur-xl rounded-full shadow-2xl border border-[#F1F5F9] dark:border-white/10 px-4 py-2 flex items-center justify-around select-none transition-colors duration-200"
       role="navigation"
       aria-label="Navegación principal móvil"
     >

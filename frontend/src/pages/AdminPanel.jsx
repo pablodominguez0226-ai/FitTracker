@@ -1270,7 +1270,7 @@ export default function AdminPanel({ currentUser }) {
           ========================================== */}
       {editingUser && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 backdrop-blur-md animate-fade-in select-none">
-          <div className="relative w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-slate-100 bg-white p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-[#0F172A] shadow-2xl space-y-4 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
+          <div className="relative w-full max-w-md md:max-w-xl rounded-t-2xl sm:rounded-2xl border border-slate-100 bg-white p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-[#0F172A] shadow-2xl space-y-4 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Edit2 size={18} className="text-red-500" />
@@ -1367,7 +1367,7 @@ export default function AdminPanel({ currentUser }) {
           ========================================== */}
       {deletingUser && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 backdrop-blur-md animate-fade-in select-none">
-          <div className="relative w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-red-500/30 bg-white p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-[#0F172A] text-center space-y-4 shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
+          <div className="relative w-full max-w-sm md:max-w-md rounded-t-3xl sm:rounded-2xl border border-red-500/30 bg-white p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-[#0F172A] text-center space-y-4 shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20">
               <Trash2 size={24} />
             </div>
@@ -1407,7 +1407,7 @@ export default function AdminPanel({ currentUser }) {
           ========================================== */}
       {targetSupportReq && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 p-0 sm:p-4 backdrop-blur-md animate-fade-in select-none">
-          <div className="relative w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-[#0F172A] space-y-3 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 shadow-2xl">
+          <div className="relative w-full max-w-md md:max-w-xl rounded-t-2xl sm:rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-[#0F172A] space-y-3 animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 shadow-2xl md:my-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-[#0F172A]">Marcar Solicitud como Resuelta</h3>
               <button

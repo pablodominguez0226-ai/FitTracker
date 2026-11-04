@@ -470,7 +470,7 @@ export default function ExerciseDetailView({
       className={`w-full flex flex-col bg-[#F8FAFC] dark:bg-[#05070B] text-slate-900 dark:text-white select-none ${
         isModal
           ? "h-full overflow-y-auto custom-scrollbar"
-          : "min-h-[100dvh] pb-[calc(6rem+env(safe-area-inset-bottom))]"
+          : "min-h-[100dvh] pb-[calc(6rem+env(safe-area-inset-bottom))] md:min-h-0 md:pb-12"
       }`}
     >
       {/* 1. Header: Botón regresar < a la izquierda, título "Detalles de ejercicios" centrado, y botón circular ? a la derecha */}

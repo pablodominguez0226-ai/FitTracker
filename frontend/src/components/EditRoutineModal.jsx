@@ -201,13 +201,13 @@ export default function EditRoutineModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-[65] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150 select-none"
+        className="fixed inset-0 z-[65] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-150 select-none"
         onClick={onClose}
       >
         <form
           onSubmit={handleSubmit}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md sm:max-w-lg bg-[#0B0F19] border border-white/10 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 text-white"
+          className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-[#0B0F19] border border-white/10 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] md:max-h-[85vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 text-white md:my-auto"
         >
           {/* Cabecera */}
           <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#0E131F] shrink-0">

@@ -1227,7 +1227,7 @@ export default function Suplements() {
       {/* ==================================================================== */}
       {isSuppModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-3xl border border-[#2C2C2E] bg-slate-50 p-6 space-y-4 shadow-2xl">
+          <div className="w-full max-w-md md:max-w-xl rounded-3xl md:rounded-2xl border border-[#2C2C2E] bg-slate-50 p-6 space-y-4 shadow-2xl md:my-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#0F172A]">
                 {editingSupp ? "Editar Suplemento" : "Nuevo Suplemento"}
@@ -1317,7 +1317,7 @@ export default function Suplements() {
       {/* ==================================================================== */}
       {isChemModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-3xl border border-[#2C2C2E] bg-slate-50 p-6 space-y-4 shadow-2xl">
+          <div className="w-full max-w-md md:max-w-xl rounded-3xl md:rounded-2xl border border-[#2C2C2E] bg-slate-50 p-6 space-y-4 shadow-2xl md:my-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#0F172A]">
                 {editingChem ? "Editar Compuesto" : "Nuevo Compuesto"}
@@ -1419,7 +1419,7 @@ export default function Suplements() {
       {/* ==================================================================== */}
       {isLabModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-lg rounded-3xl border border-[#2C2C2E] bg-slate-50 p-6 space-y-4 shadow-2xl my-8">
+          <div className="w-full max-w-lg md:max-w-xl rounded-3xl md:rounded-2xl border border-[#2C2C2E] bg-slate-50 p-6 space-y-4 shadow-2xl my-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#0F172A]">
                 {editingLab ? "Editar Análisis" : "Registrar Análisis de Sangre"}
@@ -1566,7 +1566,7 @@ export default function Suplements() {
       {/* ==================================================================== */}
       {isBloodManualModalOpen && (
         <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full max-w-md sm:max-w-lg bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] overflow-hidden shadow-2xl">
+          <div className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] md:max-h-[85vh] overflow-hidden shadow-2xl md:my-auto">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white flex-shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">
                 Cargar Análisis de Sangre Manual

@@ -161,6 +161,11 @@ export const updateExercise = async (id, data) => {
 };
 
 
+export const createManualWorkout = async (manualData) => {
+  const res = await api.post("/workouts/manual", manualData);
+  return res.data;
+};
+
 export const saveWorkoutSession = async (workoutData) => {
   const res = await api.post("/workouts/session", workoutData);
   return res.data;

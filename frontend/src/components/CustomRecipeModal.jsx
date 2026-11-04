@@ -218,8 +218,8 @@ export default function CustomRecipeModal({
   const savingState = isSaving || localSaving;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="w-full max-w-lg bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[92dvh] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+      <div className="w-full max-w-lg md:max-w-xl bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[92dvh] md:max-h-[85vh] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150 md:my-auto">
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white flex-shrink-0">
           <div className="flex items-center gap-2.5">

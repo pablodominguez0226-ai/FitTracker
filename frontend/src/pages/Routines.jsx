@@ -458,7 +458,7 @@ export default function Routines() {
           </div>
         ) : (
           /* Grid de Rutinas Creadas */
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {userRoutines.map((routine) => (
               <div
                 key={routine.id}
@@ -570,7 +570,7 @@ export default function Routines() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 gap-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {presetRoutines.map((routine) => {
               const isExpanded = expandedPresets[routine.id] ?? false;
 
@@ -657,11 +657,11 @@ export default function Routines() {
       {viewingRoutine && (
         <div
           onClick={() => setViewingRoutine(null)}
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 select-none animate-in fade-in duration-150"
+          className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 select-none animate-in fade-in duration-150"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md flex flex-col max-h-[88dvh] rounded-2xl bg-[#0B0F17] border border-white/10 overflow-hidden shadow-2xl pt-2"
+            className="w-full max-w-md md:max-w-xl flex flex-col max-h-[88dvh] md:max-h-[90%] rounded-t-3xl sm:rounded-2xl bg-[#0B0F17] border border-white/10 overflow-hidden shadow-2xl pt-2 md:my-auto"
           >
             {/* Header del Modal ultra compacto */}
             <div className="px-4 mb-2 pt-1 pb-2 border-b border-white/5 flex items-start justify-between gap-2 shrink-0 bg-[#0B0F17]">
@@ -767,7 +767,7 @@ export default function Routines() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0B0F17] p-6 shadow-2xl space-y-4 text-center"
+            className="w-full max-w-sm md:max-w-md rounded-2xl border border-white/10 bg-[#0B0F17] p-6 shadow-2xl space-y-4 text-center md:my-auto"
           >
             <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mx-auto">
               <Trash2 size={22} />

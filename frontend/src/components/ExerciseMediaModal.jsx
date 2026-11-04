@@ -21,7 +21,7 @@ export default function ExerciseMediaModal({
       aria-modal="true"
     >
       <div
-        className="w-full max-w-md h-[92dvh] sm:h-[86dvh] rounded-t-3xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-[#0B0F17] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200"
+        className="w-full max-w-md md:max-w-2xl h-[92dvh] sm:h-[86dvh] md:h-[85vh] rounded-t-3xl sm:rounded-2xl border border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-[#0B0F17] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <ExerciseDetailView

@@ -280,10 +280,10 @@ export default function CreateExerciseModal({
   const allDisplayGroups = [...displayGroups, ...extraGroups];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 select-none animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto select-none animate-in fade-in duration-150">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md sm:max-w-lg bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[88dvh] overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200"
+        className="w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border border-slate-100 rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[88dvh] md:max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto"
       >
         {/* CABECERA */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white flex-shrink-0">

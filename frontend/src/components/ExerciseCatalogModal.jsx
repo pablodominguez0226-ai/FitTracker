@@ -469,7 +469,7 @@ export function ExerciseList({
     <div
       className={`w-full flex flex-col bg-[#F8FAFC] dark:bg-[#05070B] text-slate-900 dark:text-white select-none relative ${
         isStandalonePage
-          ? "min-h-[100dvh] pb-[calc(6rem+env(safe-area-inset-bottom))]"
+          ? "min-h-[100dvh] pb-[calc(6rem+env(safe-area-inset-bottom))] md:min-h-0 md:pb-12"
           : "h-full overflow-hidden"
       }`}
     >
@@ -590,7 +590,13 @@ export function ExerciseList({
       </div>
 
       {/* Listado de Ejercicios Scrolleable */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-28 space-y-5 custom-scrollbar">
+      <div
+        className={`flex-1 px-4 space-y-5 custom-scrollbar ${
+          isStandalonePage
+            ? "pb-28 md:pb-8 md:overflow-visible"
+            : "overflow-y-auto overscroll-contain pb-28"
+        }`}
+      >
         {/* Sección 1: Ejercicios recomendados */}
         {recommendedExercises.length > 0 &&
           !searchQuery.trim() &&
@@ -608,7 +614,7 @@ export function ExerciseList({
                 </span>
               </div>
 
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {recommendedExercises.map((ex) => (
                   <ExerciseRow
                     key={`rec-${ex.id}`}
@@ -651,7 +657,7 @@ export function ExerciseList({
           </div>
 
           {filteredExercises.length > 0 ? (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {filteredExercises.map((ex) => (
                 <ExerciseRow
                   key={ex.id}
@@ -685,7 +691,7 @@ export function ExerciseList({
       </div>
 
       {/* Barra inferior fija flotante: Botón tipo píldora "Agregar X ejercicios" */}
-      <div className="fixed sm:absolute bottom-0 inset-x-0 z-30 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent dark:from-[#05070B] dark:via-[#05070B]/95 pointer-events-none max-w-md mx-auto">
+      <div className="fixed sm:absolute bottom-0 inset-x-0 z-30 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-[#F8FAFC] via-[#F8FAFC]/95 to-transparent dark:from-[#05070B] dark:via-[#05070B]/95 pointer-events-none max-w-md md:max-w-2xl mx-auto">
         <button
           type="button"
           disabled={selectedIds.size === 0}
@@ -753,13 +759,13 @@ export default function ExerciseCatalogModal({
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150 select-none"
+      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-150 select-none"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="w-full max-w-md h-[94dvh] sm:h-[88dvh] rounded-t-3xl sm:rounded-3xl border border-slate-100 dark:border-white/[0.07] bg-[#F8FAFC] dark:bg-[#05070B] overflow-hidden shadow-2xl flex flex-col relative animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200"
+        className="w-full max-w-md md:max-w-3xl h-[94dvh] sm:h-[88dvh] md:h-[85vh] rounded-t-3xl sm:rounded-2xl border border-slate-100 dark:border-white/10 bg-[#F8FAFC] dark:bg-[#05070B] overflow-hidden shadow-2xl flex flex-col relative animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <ExerciseList

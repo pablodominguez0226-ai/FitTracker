@@ -191,6 +191,35 @@ class WorkoutSessionUpdate(BaseModel):
     sets: list[WorkoutSetPatchItem] | None = None
 
 
+class ManualWorkoutSetIn(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    setNumber: int | None = Field(None, alias="set_number")
+    weightKg: float = Field(0.0, alias="weight")
+    reps: int = 0
+    isWarmup: bool = Field(False, alias="is_warmup")
+    completed: bool = True
+    rir: int | None = None
+    set_type: str | None = None
+
+
+class ManualWorkoutExerciseIn(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    exerciseId: Any = Field(..., alias="exercise_id")
+    sets: list[ManualWorkoutSetIn] = []
+
+
+class ManualWorkoutCreate(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    date: Any
+    durationMinutes: float | None = Field(60.0, alias="duration_minutes")
+    notes: str | None = None
+    exercises: list[ManualWorkoutExerciseIn] = []
+    sport_type: str = "strength"
+
+
 class WorkoutCreate(BaseModel):
     date: dt.date | None = None
     muscle_group_id: int | None = None
@@ -331,6 +360,8 @@ class UserProfileBase(BaseModel):
     total_workouts: int = 0
     workout_days_count: int = 0
     weekly_pattern: Any | None = None
+    weekly_goal_days: int = 4
+    weeklyGoalDays: int = 4
 
 
 class UserProfileUpdate(BaseModel):
@@ -348,6 +379,8 @@ class UserProfileUpdate(BaseModel):
     supplements: str | None = Field(None, max_length=1000, description="Suplementos habituales")
     health_notes: str | None = Field(None, max_length=5000, description="Notas de salud, lesiones y análisis")
     weekly_pattern: Any | None = Field(None, description="Patrón de entrenamiento semanal (JSON o diccionario)")
+    weekly_goal_days: int | None = Field(None, ge=1, le=7, description="Días objetivo de entrenamiento por semana")
+    weeklyGoalDays: int | None = Field(None, ge=1, le=7, description="Días objetivo de entrenamiento por semana")
 
 
 class UserProfileOut(UserProfileBase):
@@ -381,6 +414,8 @@ class ProfileOut(BaseModel):
     total_workouts: int = 0
     workout_days_count: int = 0
     weekly_pattern: Any | None = None
+    weekly_goal_days: int = 4
+    weeklyGoalDays: int = 4
     updated_at: dt.datetime | None = None
 
 
@@ -462,6 +497,8 @@ class UserOut(BaseModel):
     total_workouts: int = 0
     workout_days_count: int = 0
     weekly_pattern: Any | None = None
+    weekly_goal_days: int = 4
+    weeklyGoalDays: int = 4
     created_at: dt.datetime | None = None
     updated_at: dt.datetime | None = None
 

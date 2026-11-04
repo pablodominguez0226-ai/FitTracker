@@ -1071,8 +1071,8 @@ export default function Workouts({ currentUser: propCurrentUser }) {
 
       {/* Modal de Confirmación para Finalizar Entrenamiento */}
       {isFinishConfirmOpen && (
-        <div className="fixed inset-0 z-[70] bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150 select-none">
-          <div className="w-full max-w-md bg-white dark:bg-[#121824] border border-slate-100 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[88dvh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 duration-200">
+        <div className="fixed inset-0 z-[70] bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-150 select-none">
+          <div className="w-full max-w-md md:max-w-xl bg-white dark:bg-[#121824] border border-slate-100 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[88dvh] md:max-h-[85vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-600 text-white font-bold">

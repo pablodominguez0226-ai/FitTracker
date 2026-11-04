@@ -806,7 +806,7 @@ export default function Nutrition({ currentUser }) {
       {/* Modal para registrar alimentos en la comida seleccionada */}
       {activeMealSlot && (
         <div className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-white rounded-t-[28px] sm:rounded-[28px] border border-slate-100 flex flex-col max-h-[85dvh] overflow-hidden shadow-xl">
+          <div className="w-full max-w-md md:max-w-xl bg-white rounded-t-[28px] sm:rounded-2xl border border-slate-100 flex flex-col max-h-[85dvh] md:max-h-[85vh] overflow-hidden shadow-xl md:my-auto">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 block">
@@ -926,7 +926,7 @@ export default function Nutrition({ currentUser }) {
       {/* Modal de ajuste de Límite Diario y Calculadora */}
       {isLimitModalOpen && (
         <div className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-white rounded-t-[28px] sm:rounded-[28px] border border-slate-100 p-5 space-y-4 shadow-xl">
+          <div className="w-full max-w-md md:max-w-xl bg-white rounded-t-[28px] sm:rounded-2xl border border-slate-100 p-5 space-y-4 shadow-xl md:my-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-extrabold text-slate-900">
                 Meta Diaria de Calorías

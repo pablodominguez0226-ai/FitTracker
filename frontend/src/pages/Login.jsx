@@ -120,11 +120,16 @@ export default function Login({ onAuthenticated }) {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#F8FAFC] dark:bg-[#0B0F17] text-[#0F172A] dark:text-[#F8FAFC] flex flex-col justify-center px-4 py-8 relative overflow-x-hidden transition-colors duration-200">
-      <div className="absolute top-4 right-4 z-10">
-        <ThemeToggle variant="icon" />
-      </div>
-      <div className="relative mx-auto w-full max-w-md">
+    <div className="min-h-[100dvh] bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] flex flex-col justify-center px-4 py-8 relative overflow-x-hidden transition-colors duration-200 md:bg-[#05070B] md:min-h-screen md:flex md:items-center md:justify-center md:py-12 md:px-6">
+      {/* Fondo ambiental sutil en PC */}
+      <div
+        aria-hidden="true"
+        className="hidden md:block pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(239,68,68,0.07)_0%,transparent_70%)] z-0"
+      />
+      <div className="relative mx-auto w-full max-w-md my-auto relative z-10">
+        <div className="absolute top-4 right-4 z-10">
+          <ThemeToggle variant="icon" />
+        </div>
         {/* Brand Header */}
         <div className="text-center mb-6">
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-600 text-white shadow-lg shadow-red-600/20">

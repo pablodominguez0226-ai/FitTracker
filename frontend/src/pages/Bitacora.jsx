@@ -484,11 +484,11 @@ export default function Bitacora({ currentUser }) {
       {selectedRoutineForModal && (
         <div
           onClick={() => setSelectedRoutineForModal(null)}
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 select-none animate-in fade-in duration-150"
+          className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 select-none animate-in fade-in duration-150"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md flex flex-col max-h-[88dvh] rounded-2xl bg-[#0B0F17] border border-white/10 overflow-hidden shadow-2xl pt-2"
+            className="w-full max-w-md md:max-w-xl flex flex-col max-h-[88dvh] md:max-h-[85vh] rounded-t-3xl sm:rounded-2xl bg-[#0B0F17] border border-white/10 overflow-hidden shadow-2xl pt-2 md:my-auto"
           >
             {/* Header del Modal ultra compacto */}
             <div className="px-4 mb-2 pt-1 pb-2 border-b border-white/5 flex items-start justify-between gap-2 shrink-0 bg-[#0B0F17]">
@@ -580,7 +580,7 @@ export default function Bitacora({ currentUser }) {
           onClick={() => setRoutineToDelete(null)}
         >
           <div
-            className="w-full max-w-xs rounded-2xl bg-[#0E131F] border border-white/10 p-5 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-150"
+            className="w-full max-w-xs md:max-w-sm rounded-2xl bg-[#0E131F] border border-white/10 p-5 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-150 md:my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/30 text-red-400 flex items-center justify-center">

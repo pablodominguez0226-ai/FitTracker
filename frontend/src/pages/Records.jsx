@@ -7,6 +7,7 @@ import {
   Hourglass,
   Layers,
   Loader2,
+  Plus,
   Scale,
   Share2,
   Trash2,
@@ -17,6 +18,7 @@ import {
 import { deleteWorkout, getRecords, getWorkouts } from "../api/client";
 import EditSessionModal from "../components/EditSessionModal";
 import HistoryModal, { SessionHistoryRow } from "../components/HistoryModal";
+import ManualWorkoutLogModal from "../components/ManualWorkoutLogModal";
 import { showToast } from "../components/Toast";
 import {
   getLocalDateString,
@@ -94,6 +96,8 @@ export function TrainingRecordsScreen({ defaultTab = null }) {
   const [deletingId, setDeletingId] = useState(null);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [editingSession, setEditingSession] = useState(null);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualModalDate, setManualModalDate] = useState("");
 
   const loadData = useCallback(async () => {
     try {
@@ -354,12 +358,25 @@ export function TrainingRecordsScreen({ defaultTab = null }) {
   return (
     <div className="w-full pb-[calc(6rem+env(safe-area-inset-bottom))] select-none">
       {/* 1. Encabezado */}
-      <div className="flex items-center justify-between gap-3 mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <h1 className="font-extrabold text-2xl text-slate-900 dark:text-white tracking-tight">
           Registros de entrenamiento
         </h1>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Botón píldora: + Registrar sesión pasada */}
+          <button
+            type="button"
+            onClick={() => {
+              setManualModalDate(selectedDateStr || "");
+              setIsManualModalOpen(true);
+            }}
+            className="bg-[#161B26] hover:bg-[#1f2636] text-slate-200 border border-white/10 text-xs font-bold py-2.5 px-4 rounded-full flex items-center gap-2 cursor-pointer transition active:scale-95 shadow-sm"
+          >
+            <Plus size={14} className="text-red-500" />
+            <span>Registrar sesión pasada</span>
+          </button>
+
           {/* Botón de Historial de Sesiones */}
           <button
             type="button"
@@ -504,8 +521,8 @@ export function TrainingRecordsScreen({ defaultTab = null }) {
         </div>
       </div>
 
-      {/* Sesiones registradas en el día seleccionado (si existen) */}
-      {selectedDayWorkouts.length > 0 && (
+      {/* Sesiones registradas en el día seleccionado (o banner para cargar retroactivo si está vacío) */}
+      {selectedDayWorkouts.length > 0 ? (
         <div className="mb-6 space-y-2.5 animate-in fade-in duration-150">
           {selectedDayWorkouts.map((w) => (
             <SessionHistoryRow
@@ -517,7 +534,34 @@ export function TrainingRecordsScreen({ defaultTab = null }) {
             />
           ))}
         </div>
-      )}
+      ) : selectedDateStr ? (
+        <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-100 dark:border-white/[0.07] flex flex-col sm:flex-row items-center justify-between gap-3 animate-in fade-in duration-150 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#161B26] flex items-center justify-center text-slate-500 text-sm font-mono font-bold shrink-0">
+              📅
+            </span>
+            <div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                Sin entrenamiento registrado el {formatSessionShortDayMonth(selectedDateStr)}
+              </p>
+              <p className="text-[11px] text-slate-400">
+                ¿Entrenaste este día? Puedes registrarlo ahora de forma retroactiva.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setManualModalDate(selectedDateStr);
+              setIsManualModalOpen(true);
+            }}
+            className="w-full sm:w-auto bg-[#161B26] hover:bg-[#1f2636] text-slate-200 border border-white/10 text-xs font-bold py-2.5 px-4 rounded-full flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shrink-0"
+          >
+            <Plus size={14} className="text-red-500" />
+            <span>+ Cargar entrenamiento de este día</span>
+          </button>
+        </div>
+      ) : null}
 
       {/* 3. Sección "Resumen mensual" */}
       <section className="mb-6">
@@ -684,11 +728,11 @@ export function TrainingRecordsScreen({ defaultTab = null }) {
       {/* Modal de Récords Personales (PRs) al pulsar el botón de línea de tendencia */}
       {showPrModal && (
         <div
-          className="fixed inset-0 z-[75] flex items-end justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-150"
+          className="fixed inset-0 z-[75] flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
           onClick={() => setShowPrModal(false)}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl bg-white dark:bg-[#0E131F] border-t border-slate-100 dark:border-white/[0.07] p-5 max-h-[82dvh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-6 duration-200"
+            className="w-full max-w-md md:max-w-xl rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-100 dark:border-white/[0.07] p-5 max-h-[82dvh] md:max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-3" />
@@ -748,7 +792,7 @@ export function TrainingRecordsScreen({ defaultTab = null }) {
           onClick={() => setSessionToDelete(null)}
         >
           <div
-            className="w-full max-w-xs rounded-2xl bg-[#0E131F] border border-white/10 p-5 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-150"
+            className="w-full max-w-xs md:max-w-sm rounded-2xl bg-[#0E131F] border border-white/10 p-5 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-150 md:my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/30 text-red-400 flex items-center justify-center">
@@ -802,6 +846,14 @@ export function TrainingRecordsScreen({ defaultTab = null }) {
         initialSessions={workouts}
         onSessionDeleted={() => loadData()}
         onSessionUpdated={() => loadData()}
+      />
+
+      {/* Modal de Registro Retroactivo / Carga Manual */}
+      <ManualWorkoutLogModal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
+        initialDate={manualModalDate}
+        onSaved={() => loadData()}
       />
     </div>
   );

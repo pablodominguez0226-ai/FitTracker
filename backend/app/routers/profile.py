@@ -271,6 +271,8 @@ def get_user_profile(
         total_workouts=current_user.total_workouts or 0,
         workout_days_count=current_user.workout_days_count or 0,
         weekly_pattern=parse_weekly_pattern(current_user.weekly_pattern),
+        weekly_goal_days=getattr(current_user, "weekly_goal_days", 4) or 4,
+        weeklyGoalDays=getattr(current_user, "weeklyGoalDays", 4) or 4,
         updated_at=current_user.updated_at,
     )
 
@@ -423,6 +425,8 @@ def update_user_profile(
         total_workouts=current_user.total_workouts or 0,
         workout_days_count=current_user.workout_days_count or 0,
         weekly_pattern=parse_weekly_pattern(current_user.weekly_pattern),
+        weekly_goal_days=getattr(current_user, "weekly_goal_days", 4) or 4,
+        weeklyGoalDays=getattr(current_user, "weeklyGoalDays", 4) or 4,
         updated_at=current_user.updated_at,
     )
 

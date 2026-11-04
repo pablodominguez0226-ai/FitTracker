@@ -150,6 +150,8 @@ def get_auth_profile(current_user: models.User = Depends(get_current_user)):
         total_workouts=current_user.total_workouts or 0,
         workout_days_count=current_user.workout_days_count or 0,
         weekly_pattern=pattern,
+        weekly_goal_days=getattr(current_user, "weekly_goal_days", 4) or 4,
+        weeklyGoalDays=getattr(current_user, "weeklyGoalDays", 4) or 4,
         updated_at=current_user.updated_at,
     )
 
@@ -331,6 +333,8 @@ def update_auth_profile(
         total_workouts=current_user.total_workouts or 0,
         workout_days_count=current_user.workout_days_count or 0,
         weekly_pattern=out_pattern,
+        weekly_goal_days=getattr(current_user, "weekly_goal_days", 4) or 4,
+        weeklyGoalDays=getattr(current_user, "weeklyGoalDays", 4) or 4,
         updated_at=current_user.updated_at,
     )
 

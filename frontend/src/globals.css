@@ -94,9 +94,11 @@
     margin: 0;
     padding: 0;
     width: 100%;
-    min-height: 100vh;
+    min-height: 100%;
     min-height: 100dvh;
     overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
     background-color: var(--color-bg-canvas);
     background-image: var(--bg-canvas-gradient);
     background-attachment: fixed;
@@ -108,9 +110,28 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
+  @media (min-width: 768px) {
+    html,
+    body {
+      min-height: 100%;
+      height: auto;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      background-color: #05070B;
+    }
+
+    #root {
+      min-height: 100vh;
+      height: auto;
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+  }
+
   #root {
     width: 100%;
-    min-height: 100vh;
+    min-height: 100%;
     min-height: 100dvh;
     overflow-x: hidden;
     background-color: transparent;
@@ -151,6 +172,24 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-secondary);
+}
+
+/* Scrollbar moderno, ultra discreto y estético para PC */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #05070B;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #EF4444;
+  }
 }
 
 ::selection {

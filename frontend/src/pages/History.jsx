@@ -220,7 +220,7 @@ export default function History() {
           onClick={() => setSessionToDelete(null)}
         >
           <div
-            className="w-full max-w-xs rounded-2xl bg-[#0E131F] border border-white/10 p-5 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-150"
+            className="w-full max-w-xs md:max-w-sm rounded-2xl bg-[#0E131F] border border-white/10 p-5 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-150 md:my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/30 text-red-400 flex items-center justify-center">

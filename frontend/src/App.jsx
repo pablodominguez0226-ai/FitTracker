@@ -22,6 +22,7 @@ import Metrics from "./pages/Metrics.jsx";
 import Login from "./pages/Login.jsx";
 import Admin from "./pages/Admin.jsx";
 import FloatingBottomNav from "./components/FloatingBottomNav.jsx";
+import Layout from "./components/Layout.jsx";
 import CheckInModal from "./components/CheckInModal.jsx";
 import ProfileModal from "./components/ProfileModal.jsx";
 import SupportModal from "./components/SupportModal.jsx";
@@ -49,7 +50,9 @@ export function AppShell() {
       const saved = localStorage.getItem(AUTH_USER_KEY);
       if (!saved) return null;
       const parsed = JSON.parse(saved);
-      return parsed && typeof parsed === "object" ? parsed : null;
+      return parsed && typeof parsed === "object"
+        ? { weeklyGoalDays: parsed.weeklyGoalDays ?? parsed.weekly_goal_days ?? 4, ...parsed }
+        : null;
     } catch {
       return null;
     }
@@ -137,9 +140,13 @@ export function AppShell() {
       .then((user) => {
         if (!isMounted) return;
         if (user && typeof user === "object") {
-          setCurrentUser(user);
+          const userWithDefaults = {
+            weeklyGoalDays: user.weeklyGoalDays ?? user.weekly_goal_days ?? 4,
+            ...user,
+          };
+          setCurrentUser(userWithDefaults);
           try {
-            localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+            localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userWithDefaults));
           } catch (e) {
             console.warn("Error guardando usuario en localStorage:", e);
           }
@@ -324,7 +331,7 @@ export function AppShell() {
   // If initial auth check is running (e.g. token in localStorage without user data)
   if (isCheckingAuth) {
     return (
-      <div className="min-h-[100dvh] bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] flex flex-col items-center justify-center p-4 select-none transition-colors duration-200">
+      <div className="min-h-[100dvh] bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] flex flex-col items-center justify-center p-4 select-none transition-colors duration-200 md:bg-[#020408]">
         <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center animate-pulse mb-4 shadow-bento">
           <Dumbbell size={24} />
         </div>
@@ -355,152 +362,72 @@ export function AppShell() {
   );
 
   return (
-    <div className="w-full min-h-[100dvh] bg-[#F8FAFC] dark:bg-[#05070B] text-[#0F172A] dark:text-[#F8FAFC] overflow-x-hidden transition-colors duration-200">
-      {/* 1. Contenedor Base Mobile-First */}
-      <div className="max-w-md mx-auto min-h-[100dvh] bg-[#F9FAFB] dark:bg-[#05070B] relative pb-[calc(7rem+env(safe-area-inset-bottom))] px-4 pt-6 transition-colors duration-200">
-        {/* Gradiente ambiental de fondo fijo en el top derecho */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed top-0 right-0 w-72 h-72 rounded-full bg-gradient-to-bl from-[#EF4444]/[0.06] dark:from-[#EF4444]/[0.08] via-slate-400/[0.04] dark:via-slate-900/[0.1] to-transparent blur-3xl z-0"
-        />
-
-        {/* Header minimalista Bento Dual Theme */}
-        <header className="relative z-10 flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center shadow-xs border border-red-100/60 dark:border-red-900/30">
-              <Dumbbell size={20} strokeWidth={2.5} />
+    <Layout
+      currentUser={currentUser}
+      globalRank={globalRank}
+      gymTimerText={gymTimerText}
+      isAdmin={isAdmin}
+      onOpenCheckIn={() => setIsCheckInOpen(true)}
+      onOpenProfile={() => setIsProfileOpen(true)}
+      onRequestLogout={() => setIsLogoutConfirmOpen(true)}
+    >
+      {/* Micro-notificación de subida de rango */}
+      {rankUpToast && (
+        <div className="fixed top-6 inset-x-4 max-w-md mx-auto z-50 rounded-3xl border border-[#F1F5F9] dark:border-white/[0.07] bg-[#FFFFFF]/95 dark:bg-[#0E131F]/95 p-4 backdrop-blur-md shadow-lg animate-in slide-in-from-top-4 duration-300 flex items-center justify-between gap-3 select-none">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-lg flex-shrink-0">
+              ⚡
             </div>
             <div>
-              <span className="text-[#0F172A] dark:text-[#F8FAFC] font-extrabold tracking-tight text-lg leading-none block">
-                FiTracker
-              </span>
-              <span className="text-[11px] font-medium text-[#64748B] dark:text-[#94A3B8]">
-                {globalRank?.icon || "🥉"} {globalRank?.name || "Liga Bronce"}
-              </span>
+              <div className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+                ⚡ Subida de Rango
+              </div>
+              <p className="text-xs font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
+                Has alcanzado el rango{" "}
+                <span className="uppercase font-extrabold text-red-600 dark:text-red-400">
+                  {rankUpToast.rankName}
+                </span>{" "}
+                en {rankUpToast.exerciseName || "este ejercicio"}
+              </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setRankUpToast(null)}
+            className="text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] p-1 transition"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
-          <div className="flex items-center gap-1.5">
-            {gymTimerText && (
-              <NavLink
-                to="/workouts"
-                className="flex items-center gap-1 rounded-full border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-950/40 px-3 py-1.5 text-xs font-mono font-bold text-red-600 dark:text-red-400 transition hover:bg-red-100 dark:hover:bg-red-950/70"
-                title="Sesión de gimnasio activa. Clic para volver a la sesión."
-              >
-                <span className="animate-pulse">⏱️</span>
-                <span>{gymTimerText.replace(/^⏱️\s*/, "")}</span>
-              </NavLink>
-            )}
-
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => navigate("/admin")}
-                className="flex items-center gap-1 bg-[#FFFFFF] dark:bg-[#0E131F] border border-[#F1F5F9] dark:border-white/[0.07] text-red-600 dark:text-red-400 text-xs font-bold px-3 py-2 rounded-full shadow-bento hover:bg-red-50 dark:hover:bg-red-950/40 transition active:scale-95 cursor-pointer"
-                title="Panel de Control de Administrador"
-              >
-                <span>🛡️</span>
-                <span className="hidden xs:inline">Admin</span>
-              </button>
-            )}
-
-            {/* Toggle Minimalista de Tema (Light / Dark) */}
-            <ThemeToggle variant="icon" />
-
-            <button
-              type="button"
-              onClick={() => setIsCheckInOpen(true)}
-              className="w-10 h-10 rounded-2xl bg-[#FFFFFF] dark:bg-[#0E131F] border border-[#F1F5F9] dark:border-white/[0.07] text-[#0F172A] dark:text-[#F8FAFC] hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center shadow-bento transition active:scale-95 cursor-pointer"
-              title="Control Biométrico & Check-In Periódico"
-            >
-              <Scale size={18} />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsProfileOpen(true)}
-              className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-transparent dark:border-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center transition active:scale-95 cursor-pointer"
-              title={`Mi Perfil (${currentUser?.bodyweight || 75} kg)`}
-            >
-              <User size={18} />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsLogoutConfirmOpen(true)}
-              className="w-10 h-10 rounded-2xl bg-[#FFFFFF] dark:bg-[#0E131F] border border-[#F1F5F9] dark:border-white/[0.07] text-[#64748B] dark:text-[#94A3B8] hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 flex items-center justify-center shadow-bento transition active:scale-95 cursor-pointer"
-              title="Cerrar sesión"
-            >
-              <LogOut size={17} />
-            </button>
-          </div>
-        </header>
-
-        {/* Micro-notificación de subida de rango */}
-        {rankUpToast && (
-          <div className="fixed top-6 inset-x-4 max-w-md mx-auto z-50 rounded-3xl border border-[#F1F5F9] dark:border-white/[0.07] bg-[#FFFFFF]/95 dark:bg-[#0E131F]/95 p-4 backdrop-blur-md shadow-lg animate-in slide-in-from-top-4 duration-300 flex items-center justify-between gap-3 select-none">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-lg flex-shrink-0">
-                ⚡
-              </div>
-              <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
-                  ⚡ Subida de Rango
-                </div>
-                <p className="text-xs font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
-                  Has alcanzado el rango{" "}
-                  <span className="uppercase font-extrabold text-red-600 dark:text-red-400">
-                    {rankUpToast.rankName}
-                  </span>{" "}
-                  en {rankUpToast.exerciseName || "este ejercicio"}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setRankUpToast(null)}
-              className="text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-[#F8FAFC] p-1 transition"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
-
-        {/* Main Content Area protected by ErrorBoundary */}
-        <main className="relative w-full flex flex-col">
-          <ErrorBoundary>
-            <Routes>
-              <Route path="/" element={<Dashboard currentUser={currentUser} />} />
-              <Route path="/train" element={<Bitacora currentUser={currentUser} />} />
-              <Route path="/bitacora" element={<Bitacora currentUser={currentUser} />} />
-              <Route path="/workouts" element={<Workouts currentUser={currentUser} />} />
-              <Route path="/routines" element={<Routines />} />
-              <Route path="/nutri" element={<Nutrition currentUser={currentUser} />} />
-              <Route path="/nutrition" element={<Nutrition currentUser={currentUser} />} />
-              <Route path="/suple" element={<Suplements currentUser={currentUser} />} />
-              <Route path="/supplements" element={<Suplements currentUser={currentUser} />} />
-              <Route path="/metrics" element={<Metrics currentUser={currentUser} />} />
-              <Route path="/analytics" element={<Metrics currentUser={currentUser} />} />
-              <Route path="/dashboard" element={<Dashboard currentUser={currentUser} />} />
-              <Route path="/records" element={<Records />} />
-              <Route path="/registros" element={<Records />} />
-              <Route path="/history" element={<Records defaultTab="history" />} />
-              <Route path="/exercises" element={<Exercises />} />
-              <Route path="/ejercicios" element={<Exercises />} />
-              <Route path="/exercises/:id" element={<ExerciseDetailView />} />
-              <Route path="/ejercicios/:id" element={<ExerciseDetailView />} />
-              {isAdmin && (
-                <Route path="/admin" element={<Admin currentUser={currentUser} />} />
-              )}
-            </Routes>
-          </ErrorBoundary>
-        </main>
-
-        {/* 2. Bottom Navigation Bar Flotante (Dock iOS) */}
-        {!location.pathname.startsWith("/workouts") &&
-          !location.pathname.startsWith("/exercises") &&
-          !location.pathname.startsWith("/ejercicios") && <FloatingBottomNav />}
-      </div>
+      {/* Contenido scrolleable interno */}
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Dashboard currentUser={currentUser} />} />
+          <Route path="/train" element={<Bitacora currentUser={currentUser} />} />
+          <Route path="/bitacora" element={<Bitacora currentUser={currentUser} />} />
+          <Route path="/workouts" element={<Workouts currentUser={currentUser} />} />
+          <Route path="/routines" element={<Routines />} />
+          <Route path="/nutri" element={<Nutrition currentUser={currentUser} />} />
+          <Route path="/nutrition" element={<Nutrition currentUser={currentUser} />} />
+          <Route path="/suple" element={<Suplements currentUser={currentUser} />} />
+          <Route path="/supplements" element={<Suplements currentUser={currentUser} />} />
+          <Route path="/metrics" element={<Metrics currentUser={currentUser} />} />
+          <Route path="/analytics" element={<Metrics currentUser={currentUser} />} />
+          <Route path="/dashboard" element={<Dashboard currentUser={currentUser} />} />
+          <Route path="/records" element={<Records />} />
+          <Route path="/registros" element={<Records />} />
+          <Route path="/history" element={<Records defaultTab="history" />} />
+          <Route path="/exercises" element={<Exercises />} />
+          <Route path="/ejercicios" element={<Exercises />} />
+          <Route path="/exercises/:id" element={<ExerciseDetailView />} />
+          <Route path="/ejercicios/:id" element={<ExerciseDetailView />} />
+          {isAdmin && (
+            <Route path="/admin" element={<Admin currentUser={currentUser} />} />
+          )}
+        </Routes>
+      </ErrorBoundary>
 
       {/* Periodic Check-Ins Modal */}
       <CheckInModal
@@ -541,8 +468,8 @@ export function AppShell() {
 
       {/* Modal de Confirmación de Cierre de Sesión */}
       {isLogoutConfirmOpen && (
-        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-900/50 dark:bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150 select-none">
-          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-[#F1F5F9] dark:border-white/[0.07] bg-[#FFFFFF] dark:bg-[#0E131F] p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-center space-y-4 shadow-xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto select-none animate-in fade-in duration-150">
+          <div className="w-full max-w-sm md:max-w-md rounded-t-3xl sm:rounded-2xl border border-[#F1F5F9] dark:border-white/10 bg-[#FFFFFF] dark:bg-[#0E131F] p-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6 text-center space-y-4 shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-150 md:my-auto">
             <div className="mx-auto w-10 h-10 rounded-2xl flex items-center justify-center bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400">
               <LogOut size={20} />
             </div>
@@ -577,7 +504,7 @@ export function AppShell() {
 
       {/* Floating Global Toast */}
       <Toast />
-    </div>
+    </Layout>
   );
 }
 

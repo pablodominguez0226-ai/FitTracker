@@ -130,6 +130,14 @@ class User(Base):
     created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
     updated_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), onupdate=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
 
+    @property
+    def weekly_goal_days(self) -> int:
+        return 4
+
+    @property
+    def weeklyGoalDays(self) -> int:
+        return 4
+
     sessions: Mapped[list["WorkoutSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     support_requests: Mapped[list["SupportRequest"]] = relationship(back_populates="user")
     routines: Mapped[list["Routine"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -212,6 +220,14 @@ class UserProfile(Base):
     workout_days_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False, server_default="0")
     weekly_pattern: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[dt.datetime | None] = mapped_column(DateTime, default=lambda: dt.datetime.now(dt.timezone.utc), onupdate=lambda: dt.datetime.now(dt.timezone.utc), nullable=True)
+
+    @property
+    def weekly_goal_days(self) -> int:
+        return 4
+
+    @property
+    def weeklyGoalDays(self) -> int:
+        return 4
 
 
 class LiveBattle(Base):

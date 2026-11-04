@@ -94,14 +94,14 @@ export function MuscleFilterBottomSheet({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-150 select-none"
+      className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-150 select-none"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label="Filtrar por grupo muscular"
     >
       <div
-        className="w-full max-w-md rounded-t-3xl bg-white dark:bg-[#0E131F] border-t border-slate-100 dark:border-white/[0.07] shadow-2xl flex flex-col max-h-[88dvh] overflow-hidden animate-in slide-in-from-bottom-6 duration-200"
+        className="w-full max-w-md md:max-w-xl rounded-t-3xl md:rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-100 dark:border-white/10 shadow-2xl flex flex-col max-h-[88dvh] md:max-h-[85vh] overflow-hidden animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 1. Tirador superior gris */}

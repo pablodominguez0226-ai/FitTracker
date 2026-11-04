@@ -1,17 +1,29 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Activity,
+  BarChart3,
   Calendar,
   Check,
   ChevronRight,
   Dumbbell,
   Flame,
+  Layers,
   Play,
+  Plus,
   Scale,
+  TrendingUp,
 } from "lucide-react";
 import { getProfile, getWorkouts, getMetricsSummary } from "../api/client";
 import HistoryModal from "../components/HistoryModal";
+import ManualWorkoutLogModal from "../components/ManualWorkoutLogModal";
 import { getLocalDateString, parseDateSafe } from "../utils/dateUtils";
+import WeeklyGoalsCard, {
+  WeeklyGoalCard,
+  WEEKLY_GOAL_TARGET,
+} from "../components/WeeklyGoalsCard";
+
+export { WeeklyGoalsCard, WeeklyGoalCard, WEEKLY_GOAL_TARGET };
 
 const DAY_LABELS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 
@@ -106,7 +118,7 @@ function calculateStreakDays(completedDatesSet) {
 /**
  * 1. Header Principal
  */
-function HomeHeader({ formattedDate, onOpenHistory, onStartWorkout }) {
+function HomeHeader({ formattedDate, onOpenHistory, onStartWorkout, onOpenManualWorkout }) {
   return (
     <section className="space-y-3.5">
       <button
@@ -128,14 +140,23 @@ function HomeHeader({ formattedDate, onOpenHistory, onStartWorkout }) {
         </p>
       </div>
 
-      <div className="pt-1">
+      <div className="pt-1 flex flex-col sm:flex-row items-center gap-2.5">
         <button
           type="button"
           onClick={onStartWorkout}
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-full flex items-center justify-center gap-2 shadow-sm shadow-red-600/20 active:scale-[0.99] transition-all cursor-pointer"
+          className="flex-1 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-full flex items-center justify-center gap-2 shadow-sm shadow-red-600/20 active:scale-[0.99] transition-all cursor-pointer"
         >
           <Play size={16} fill="currentColor" strokeWidth={2} />
           <span>Iniciar entrenamiento</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenManualWorkout}
+          className="w-full sm:w-auto bg-[#161B26] hover:bg-[#1f2636] text-slate-200 border border-white/10 text-xs font-bold py-3.5 px-4 rounded-full flex items-center justify-center gap-2 cursor-pointer transition active:scale-95 shrink-0"
+        >
+          <Plus size={15} className="text-red-500" />
+          <span>Registrar sesión pasada</span>
         </button>
       </div>
     </section>
@@ -207,99 +228,41 @@ function WeeklyDayStrip({ weekDays, onSelectDay }) {
 }
 
 /**
- * 3. Tarjeta Meta Semanal
+ * 4. Bento Grid de Métricas (Racha, Tonelaje, Volumen) en fila de 3 cards
  */
-function WeeklyGoalCard({ completedCount = 0, targetCount = 3, onClick }) {
-  const safeCompleted = Math.max(0, completedCount);
-  const safeTarget = Math.max(1, targetCount);
-  const remaining = Math.max(0, safeTarget - safeCompleted);
-  const progressRatio = Math.min(1, safeCompleted / safeTarget);
-
-  const size = 64;
-  const strokeWidth = 6;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference * (1 - progressRatio);
-
-  return (
-    <section
-      onClick={onClick}
-      className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 flex items-center gap-5 shadow-sm cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99]"
-    >
-      {/* Lado izquierdo: Progress ring circular SVG minimalista */}
-      <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
-        <svg className="w-16 h-16 -rotate-90" viewBox={`0 0 ${size} ${size}`}>
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="transparent"
-            stroke="currentColor"
-            strokeWidth={strokeWidth}
-            className="text-[#F1F5F9] dark:text-slate-800"
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="transparent"
-            stroke="#EF4444"
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-500 ease-out"
-          />
-        </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-[#0F172A] dark:text-[#F8FAFC] tracking-tight">
-          {safeCompleted}/{safeTarget}
-        </span>
-      </div>
-
-      {/* Lado derecho: Título en negrita y contador destacado */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="font-bold text-base text-[#0F172A] dark:text-[#F8FAFC] truncate">
-            Metas de esta semana
-          </h2>
-          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8] flex-shrink-0" />
-        </div>
-        <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
-          Mantén el ritmo semanal de entrenamiento
-        </p>
-        <p className="text-sm font-bold text-red-600 dark:text-red-500 mt-1.5">
-          {remaining > 0
-            ? `Faltan ${remaining} • Vamos`
-            : "¡Meta cumplida! • Vamos"}
-        </p>
-      </div>
-    </section>
-  );
-}
-
-/**
- * 4. Bento Grid 2 Columnas (Métricas Rápidas: Racha y Volumen/Tiempo)
- */
-function QuickMetricsBentoGrid({ streakDays = 0, totalHours = 0, onOpenMetrics }) {
+function QuickMetricsBentoGrid({
+  streakDays = 0,
+  tonnageKg = 0,
+  totalHours = 0,
+  totalSets = 0,
+  onOpenMetrics,
+}) {
   const formattedHours =
     totalHours === 0
-      ? "0 Hora"
+      ? "0h"
       : totalHours === 1
-      ? "1 Hora"
-      : `${totalHours} Horas`;
+      ? "1h"
+      : `${totalHours}h`;
+
+  const formattedTonnage =
+    tonnageKg >= 1000
+      ? `${(tonnageKg / 1000).toFixed(1)} Tn`
+      : tonnageKg > 0
+      ? `${Math.round(tonnageKg)} kg`
+      : "0.0 Tn";
 
   return (
-    <section className="grid grid-cols-2 gap-3.5">
-      {/* Card Racha */}
+    <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+      {/* Card 1: Racha */}
       <div
         onClick={onOpenMetrics}
-        className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-[152px] relative overflow-hidden cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99]"
+        className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-[148px] relative overflow-hidden cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99] group"
       >
         <div className="flex items-start justify-between">
           <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center">
             <Flame size={20} strokeWidth={2.25} />
           </div>
-          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8]" />
+          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8] group-hover:translate-x-0.5 transition-transform" />
         </div>
 
         <div className="mt-4 flex items-end justify-between gap-2">
@@ -308,14 +271,14 @@ function QuickMetricsBentoGrid({ streakDays = 0, totalHours = 0, onOpenMetrics }
               Racha
             </span>
             <p className="text-2xl font-black text-[#0F172A] dark:text-[#F8FAFC] tracking-tight leading-none">
-              {streakDays} Días
+              {streakDays} {streakDays === 1 ? "Día" : "Días"}
             </p>
           </div>
 
           {/* Mini sparkline chart SVG minimalista de tendencia */}
           <svg
-            width="64"
-            height="32"
+            width="52"
+            height="28"
             viewBox="0 0 64 32"
             fill="none"
             aria-hidden="true"
@@ -333,32 +296,74 @@ function QuickMetricsBentoGrid({ streakDays = 0, totalHours = 0, onOpenMetrics }
         </div>
       </div>
 
-      {/* Card Volumen/Horas */}
+      {/* Card 2: Tonelaje */}
       <div
         onClick={onOpenMetrics}
-        className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-[152px] relative overflow-hidden cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99]"
+        className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-[148px] relative overflow-hidden cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99] group"
       >
         <div className="flex items-start justify-between">
           <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center">
-            <Dumbbell size={20} strokeWidth={2.25} />
+            <TrendingUp size={20} strokeWidth={2.25} />
           </div>
-          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8]" />
+          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8] group-hover:translate-x-0.5 transition-transform" />
         </div>
 
         <div className="mt-4 flex items-end justify-between gap-2">
           <div>
             <span className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] block mb-0.5">
-              Tiempo
+              Tonelaje
             </span>
             <p className="text-2xl font-black text-[#0F172A] dark:text-[#F8FAFC] tracking-tight leading-none">
-              {formattedHours}
+              {formattedTonnage}
             </p>
           </div>
 
-          {/* Mini gráfico de barras SVG vertical a la derecha */}
           <svg
-            width="48"
-            height="34"
+            width="44"
+            height="28"
+            viewBox="0 0 44 28"
+            fill="none"
+            aria-hidden="true"
+            className="flex-shrink-0"
+          >
+            <path
+              d="M2 22 L14 16 L24 20 L34 8 L42 4"
+              stroke="#EF4444"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="42" cy="4" r="2.5" fill="#EF4444" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Card 3: Volumen / Tiempo */}
+      <div
+        onClick={onOpenMetrics}
+        className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm flex flex-col justify-between min-h-[148px] relative overflow-hidden cursor-pointer hover:border-slate-200 dark:hover:border-white/15 transition-all active:scale-[0.99] group"
+      >
+        <div className="flex items-start justify-between">
+          <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center">
+            <Dumbbell size={20} strokeWidth={2.25} />
+          </div>
+          <ChevronRight size={18} className="text-[#64748B] dark:text-[#94A3B8] group-hover:translate-x-0.5 transition-transform" />
+        </div>
+
+        <div className="mt-4 flex items-end justify-between gap-2">
+          <div>
+            <span className="text-xs font-semibold text-[#64748B] dark:text-[#94A3B8] block mb-0.5">
+              Volumen
+            </span>
+            <p className="text-2xl font-black text-[#0F172A] dark:text-[#F8FAFC] tracking-tight leading-none">
+              {totalSets > 0 ? `${totalSets} Series` : formattedHours}
+            </p>
+          </div>
+
+          {/* Mini gráfico de barras SVG vertical */}
+          <svg
+            width="42"
+            height="30"
             viewBox="0 0 48 34"
             fill="none"
             aria-hidden="true"
@@ -412,11 +417,66 @@ function BodyMetricsCard({ weightKg, heightCm, onOpenBodyMetrics }) {
   );
 }
 
+/**
+ * 6. Tarjeta Acceso a Rutinas
+ */
+function RoutineQuickAccessCard({ onNavigateRoutines, onStartWorkout }) {
+  return (
+    <section className="bg-[#FFFFFF] border border-[#F1F5F9] dark:bg-[#0E131F] dark:border-white/[0.07] rounded-3xl p-5 shadow-sm space-y-4 transition-all">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center shrink-0">
+            <Layers size={20} strokeWidth={2.25} />
+          </div>
+          <div className="min-w-0">
+            <h2 className="font-bold text-base text-[#0F172A] dark:text-[#F8FAFC] truncate">
+              Acceso a Rutinas
+            </h2>
+            <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5 truncate">
+              Planes y sesiones guiadas
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onNavigateRoutines}
+          className="text-xs font-bold text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+        >
+          <span>Ver todas</span>
+          <ChevronRight size={14} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2.5 pt-1">
+        <button
+          type="button"
+          onClick={onNavigateRoutines}
+          className="h-11 px-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-[#161B26] dark:hover:bg-[#1E2534] border border-slate-200/80 dark:border-white/5 text-[#0F172A] dark:text-[#F8FAFC] text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+        >
+          <Layers size={14} className="text-red-500" />
+          <span>Mis Rutinas</span>
+        </button>
+        <button
+          type="button"
+          onClick={onStartWorkout}
+          className="h-11 px-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shadow-red-600/20 transition active:scale-95 cursor-pointer"
+        >
+          <Play size={13} fill="currentColor" />
+          <span>Entrenar</span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function HomeScreen({ currentUser }) {
   const navigate = useNavigate();
   const [workouts, setWorkouts] = useState([]);
   const [profile, setProfile] = useState(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualModalDate, setManualModalDate] = useState("");
 
   const loadHomeData = async () => {
     try {
@@ -474,11 +534,33 @@ export function HomeScreen({ currentUser }) {
     [completedDatesSet]
   );
 
-  // Cantidad de días entrenados esta semana
-  const completedThisWeek = useMemo(
-    () => weekDays.filter((d) => d.isCompleted).length,
+  // Sesiones únicas completadas lun-dom en la semana actual
+  const workoutsThisWeek = useMemo(
+    () => weekDays.filter((d) => d.isCompleted),
     [weekDays]
   );
+
+  // Estado o modelo de usuario (UserProfile / UserPreferences) con fallback a 4 días
+  const user = useMemo(() => {
+    const baseUser = profile || currentUser || {};
+    return {
+      weeklyGoalDays:
+        baseUser?.weeklyGoalDays ??
+        baseUser?.weekly_goal_days ??
+        WEEKLY_GOAL_TARGET,
+      ...baseUser,
+    };
+  }, [profile, currentUser]);
+
+  // Cálculo dinámico del widget según especificación (4 días semanales)
+  const targetDays = user?.weeklyGoalDays || WEEKLY_GOAL_TARGET;
+  const completedDays = workoutsThisWeek.length; // Sesiones únicas completadas lun-dom
+  const remainingDays = Math.max(0, targetDays - completedDays);
+  const progressPercentage = Math.min(
+    100,
+    Math.round((completedDays / targetDays) * 100)
+  );
+  const completedThisWeek = completedDays;
 
   // Racha de días entrenando
   const streakDays = useMemo(
@@ -486,7 +568,7 @@ export function HomeScreen({ currentUser }) {
     [completedDatesSet]
   );
 
-  // Horas estimadas de entrenamiento en la semana actual (aprox. 1h por sesión registrada esta semana)
+  // Horas estimadas de entrenamiento en la semana actual
   const totalHoursThisWeek = useMemo(() => {
     if (!workouts.length) return 0;
     const weekKeys = new Set(weekDays.map((d) => d.key));
@@ -503,6 +585,45 @@ export function HomeScreen({ currentUser }) {
     });
 
     return Math.round(totalMinutes / 60);
+  }, [workouts, weekDays]);
+
+  // Tonelaje y series estimadas de la semana
+  const { totalTonnageKg, totalSetsThisWeek } = useMemo(() => {
+    let tonnage = 0;
+    let sets = 0;
+    const weekKeys = new Set(weekDays.map((d) => d.key));
+    (workouts || []).forEach((w) => {
+      const parsed = parseDateSafe(w?.date || w?.workout_date || w?.created_at);
+      if (!parsed) return;
+      const dateStr = getLocalDateString(parsed);
+      const isThisWeek = weekKeys.has(dateStr);
+      (w?.sets || []).forEach((s) => {
+        if (s?.completed !== false) {
+          const wKg = parseFloat(s?.weight) || 0;
+          const r = parseInt(s?.reps, 10) || 0;
+          if (isThisWeek) {
+            tonnage += wKg * r;
+            sets += 1;
+          }
+        }
+      });
+    });
+
+    // Fallback: si aún no hay series registradas esta semana, calcular de los últimos entrenamientos para visualización
+    if (tonnage === 0 && Array.isArray(workouts) && workouts.length > 0) {
+      workouts.slice(0, 5).forEach((w) => {
+        (w?.sets || []).forEach((s) => {
+          if (s?.completed !== false) {
+            const wKg = parseFloat(s?.weight) || 0;
+            const r = parseInt(s?.reps, 10) || 0;
+            tonnage += wKg * r;
+            sets += 1;
+          }
+        });
+      });
+    }
+
+    return { totalTonnageKg: tonnage, totalSetsThisWeek: sets };
   }, [workouts, weekDays]);
 
   // Fecha formateada para el header superior
@@ -530,40 +651,75 @@ export function HomeScreen({ currentUser }) {
   };
 
   return (
-    <div className="w-full space-y-5 pb-6 select-none">
-      {/* 1. Header */}
-      <HomeHeader
-        formattedDate={formattedToday}
-        onOpenHistory={() => setIsHistoryOpen(true)}
-        onStartWorkout={() => navigate("/workouts")}
-      />
+    <div className="w-full pb-6 select-none">
+      {/* Grid responsivo dual: 1 columna en mobile, 12 columnas en desktop (8 + 4) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6">
+        {/* Columna Izquierda (8 cols en desktop): Bienvenida, Días semanal, Bento 3 métricas */}
+        <div className="space-y-5 lg:col-span-8 flex flex-col justify-start">
+          {/* 1. Header de Bienvenida */}
+          <HomeHeader
+            formattedDate={formattedToday}
+            onOpenHistory={() => setIsHistoryOpen(true)}
+            onStartWorkout={() => navigate("/workouts")}
+            onOpenManualWorkout={() => {
+              setManualModalDate("");
+              setIsManualModalOpen(true);
+            }}
+          />
 
-      {/* 2. Selector Semanal de Días (Horizontal Strip) */}
-      <WeeklyDayStrip
-        weekDays={weekDays}
-        onSelectDay={() => setIsHistoryOpen(true)}
-      />
+          {/* 2. Selector Semanal de Días Expandido Horizontalmente */}
+          <WeeklyDayStrip
+            weekDays={weekDays}
+            onSelectDay={(day) => {
+              if (day?.isCompleted) {
+                setIsHistoryOpen(true);
+              } else if (day?.key) {
+                setManualModalDate(day.key);
+                setIsManualModalOpen(true);
+              } else {
+                setIsHistoryOpen(true);
+              }
+            }}
+          />
 
-      {/* 3. Tarjeta Meta Semanal */}
-      <WeeklyGoalCard
-        completedCount={completedThisWeek}
-        targetCount={3}
-        onClick={() => navigate("/train")}
-      />
+          {/* 3. Bento de Métricas en fila de 3 cards (Racha, Tonelaje, Volumen) */}
+          <QuickMetricsBentoGrid
+            streakDays={streakDays}
+            tonnageKg={totalTonnageKg}
+            totalHours={totalHoursThisWeek}
+            totalSets={totalSetsThisWeek}
+            onOpenMetrics={() => navigate("/records")}
+          />
+        </div>
 
-      {/* 4. Bento Grid 2 Columnas (Métricas Rápidas) */}
-      <QuickMetricsBentoGrid
-        streakDays={streakDays}
-        totalHours={totalHoursThisWeek}
-        onOpenMetrics={() => navigate("/records")}
-      />
+        {/* Columna Derecha (4 cols en desktop): Widget Metas Semanales, Métricas Corporales, Acceso a Rutinas */}
+        <div className="space-y-5 lg:col-span-4 flex flex-col justify-start">
+          {/* 4. Widget de Metas Semanales (anillo circular 0/4) */}
+          <WeeklyGoalsCard
+            user={user}
+            targetDays={targetDays}
+            completedDays={completedDays}
+            remainingDays={remainingDays}
+            progressPercentage={progressPercentage}
+            completedCount={completedDays}
+            targetCount={targetDays}
+            onClick={() => navigate("/train")}
+          />
 
-      {/* 5. Tarjeta Métricas Corporales */}
-      <BodyMetricsCard
-        weightKg={weightKg}
-        heightCm={heightCm}
-        onOpenBodyMetrics={handleOpenBodyMetrics}
-      />
+          {/* 5. Tarjeta Estadísticas Corporales */}
+          <BodyMetricsCard
+            weightKg={weightKg}
+            heightCm={heightCm}
+            onOpenBodyMetrics={handleOpenBodyMetrics}
+          />
+
+          {/* 6. Acceso a Rutinas */}
+          <RoutineQuickAccessCard
+            onNavigateRoutines={() => navigate("/routines")}
+            onStartWorkout={() => navigate("/workouts")}
+          />
+        </div>
+      </div>
 
       {/* Modal de Historial */}
       <HistoryModal
@@ -571,6 +727,14 @@ export function HomeScreen({ currentUser }) {
         onClose={() => setIsHistoryOpen(false)}
         onWorkoutDeleted={() => loadHomeData()}
         onSessionUpdated={() => loadHomeData()}
+      />
+
+      {/* Modal de Registro Manual Retroactivo */}
+      <ManualWorkoutLogModal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
+        initialDate={manualModalDate}
+        onSaved={() => loadHomeData()}
       />
     </div>
   );

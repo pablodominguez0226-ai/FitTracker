@@ -150,7 +150,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckinSaved, currentU
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto select-none animate-in fade-in duration-150">
-      <div className="w-full max-w-2xl rounded-2xl border border-slate-100 bg-white p-5 sm:p-6 space-y-5 shadow-2xl my-8">
+      <div className="w-full max-w-xl rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-[#0E131F] p-5 sm:p-6 space-y-5 shadow-2xl my-auto max-h-[90vh] overflow-y-auto custom-scrollbar">
         {/* HEADER MODAL OLED */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">

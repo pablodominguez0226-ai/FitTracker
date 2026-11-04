@@ -380,8 +380,8 @@ export default function ProfileModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-150">
-      <div className="relative w-full max-w-2xl max-h-[88dvh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-[#F1F5F9] dark:border-[#1E293B]/60 bg-[#FFFFFF] dark:bg-[#121824] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-md p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-150">
+      <div className="relative w-full max-w-xl max-h-[88dvh] md:max-h-[85vh] flex flex-col rounded-t-3xl sm:rounded-2xl border border-[#F1F5F9] dark:border-[#1E293B]/60 bg-[#FFFFFF] dark:bg-[#121824] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-200 md:my-auto">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-[#F1F5F9] dark:border-slate-800 bg-[#F8FAFC] dark:bg-[#0B0F17] p-4 sm:p-5 flex-shrink-0">
           <div className="flex items-center gap-3">

@@ -1266,6 +1266,181 @@ def save_workout_session(
     return _save_consolidated_workout(payload, current_user, db)
 
 
+@router.post("/manual", response_model=schemas.WorkoutSessionOut, status_code=201)
+def create_manual_workout(
+    payload: schemas.ManualWorkoutCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    # 1. Determinar timestamp y fecha exacta provista (sin forzar now())
+    session_date = None
+    session_started_at = None
+
+    if isinstance(payload.date, dt.datetime):
+        session_started_at = payload.date
+        session_date = payload.date.date()
+    elif isinstance(payload.date, dt.date):
+        session_date = payload.date
+        session_started_at = dt.datetime.combine(payload.date, dt.time(12, 0), tzinfo=dt.timezone.utc)
+    elif isinstance(payload.date, str):
+        val = payload.date.strip()
+        clean = val.replace("Z", "+00:00")
+        try:
+            session_started_at = dt.datetime.fromisoformat(clean)
+            session_date = session_started_at.date()
+        except Exception:
+            try:
+                session_date = dt.date.fromisoformat(clean[:10])
+                session_started_at = dt.datetime.combine(session_date, dt.time(12, 0), tzinfo=dt.timezone.utc)
+            except Exception:
+                session_date = dt.date.today()
+                session_started_at = dt.datetime.now(dt.timezone.utc)
+    else:
+        session_date = dt.date.today()
+        session_started_at = dt.datetime.now(dt.timezone.utc)
+
+    # 2. Duración
+    dur_min = float(payload.durationMinutes if payload.durationMinutes is not None else 60.0)
+    dur_sec = int(dur_min * 60)
+    session_completed_at = session_started_at + dt.timedelta(seconds=dur_sec)
+
+    # 3. Crear sesión con fecha histórica
+    session = models.WorkoutSession(
+        user_id=current_user.id,
+        date=session_date,
+        notes=payload.notes.strip() if payload.notes else None,
+        status="completed",
+        is_completed=True,
+        started_at=session_started_at,
+        completed_at=session_completed_at,
+        finished_at=session_completed_at,
+        sport_type=payload.sport_type or "strength",
+        duration_minutes=dur_min,
+        duration_seconds=dur_sec,
+    )
+    db.add(session)
+    db.flush()
+
+    # 4. Ejercicios y Series
+    exercise_ids = []
+    first_muscle_group_id = None
+
+    for ex_item in payload.exercises:
+        ex_id_raw = ex_item.exerciseId
+        exercise = None
+
+        if isinstance(ex_id_raw, int) or (isinstance(ex_id_raw, str) and str(ex_id_raw).isdigit()):
+            exercise = db.get(models.Exercise, int(ex_id_raw))
+        if not exercise and isinstance(ex_id_raw, str):
+            clean_slug = ex_id_raw.strip().lower()
+            exercise = (
+                db.query(models.Exercise)
+                .filter(
+                    (models.Exercise.slug == clean_slug) |
+                    (models.Exercise.name.ilike(ex_id_raw.strip()))
+                )
+                .first()
+            )
+        if not exercise:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Ejercicio '{ex_id_raw}' no encontrado en el catálogo.",
+            )
+
+        exercise_ids.append(exercise.id)
+        if first_muscle_group_id is None and exercise.muscle_group_id:
+            first_muscle_group_id = exercise.muscle_group_id
+
+        for s_idx, s_item in enumerate(ex_item.sets or []):
+            is_warmup = bool(s_item.isWarmup) or (s_item.set_type or "").lower() in ("warmup", "w")
+            set_type = "warmup" if is_warmup else (s_item.set_type or "normal")
+            w_val = float(s_item.weightKg if s_item.weightKg is not None else 0.0)
+            r_val = int(s_item.reps if s_item.reps is not None else 0)
+            set_num = s_item.setNumber if s_item.setNumber is not None else (s_idx + 1)
+
+            ws = models.WorkoutSet(
+                workout_session_id=session.id,
+                exercise_id=exercise.id,
+                set_number=set_num,
+                weight=w_val,
+                reps=r_val,
+                completed=bool(s_item.completed),
+                rir=s_item.rir,
+                set_type=set_type,
+                created_at=session_started_at,
+            )
+            db.add(ws)
+            session.sets.append(ws)
+
+    # 5. Calcular volumen total (SUM(weightKg * reps)) excluyendo calentamientos
+    total_volume = sum(
+        float(ws.weight or 0) * int(ws.reps or 0)
+        for ws in session.sets
+        if ws.completed and (ws.set_type or "normal").lower() not in ("warmup", "w")
+    )
+    session.total_volume = round(total_volume, 1)
+    if first_muscle_group_id:
+        session.muscle_group_id = first_muscle_group_id
+
+    db.flush()
+
+    # 6. Recalcular contadores del usuario y perfil
+    tot_workouts = (
+        db.query(models.WorkoutSession)
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .count()
+    )
+    tot_days = (
+        db.query(func.count(func.distinct(models.WorkoutSession.date)))
+        .filter(
+            models.WorkoutSession.user_id == current_user.id,
+            (models.WorkoutSession.is_completed == True) | (models.WorkoutSession.status == "completed"),
+        )
+        .scalar()
+        or 1
+    )
+
+    current_user.total_workouts = tot_workouts
+    current_user.workout_days_count = tot_days
+
+    profile = db.get(models.UserProfile, current_user.id) or db.get(models.UserProfile, 1)
+    if profile:
+        profile.total_workouts = tot_workouts
+        profile.workout_days_count = tot_days
+
+    try:
+        db.commit()
+        db.refresh(session)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error al guardar entrenamiento retroactivo: {str(e)}",
+        )
+
+    # 7. Recalcular récords de fuerza (PRs)
+    try:
+        updated_records = compute_user_records(db=db, current_user=current_user)
+    except Exception:
+        updated_records = []
+
+    saved = (
+        db.query(models.WorkoutSession)
+        .options(
+            joinedload(models.WorkoutSession.muscle_group),
+            selectinload(models.WorkoutSession.sets)
+            .joinedload(models.WorkoutSet.exercise)
+            .joinedload(models.Exercise.muscle_group),
+        )
+        .filter(models.WorkoutSession.id == session.id)
+        .first()
+    )
+    return _format_workout_session(saved, records=updated_records)
+
+
 @router.get("/{workout_id}", response_model=schemas.WorkoutSessionOut)
 def get_workout(
     workout_id: int,
